@@ -45,6 +45,9 @@ export async function getAllSkills(filters?: SkillFilters): Promise<Skill[]> {
  */
 export async function createSkill(payload: CreateSkillPayload): Promise<Skill | null> {
   try {
+    // Get current user
+    const { data: { user } } = await supabase.auth.getUser();
+    
     const { data, error } = await supabase
       .from('skills')
       .insert({
@@ -53,7 +56,8 @@ export async function createSkill(payload: CreateSkillPayload): Promise<Skill | 
         level: payload.level,
         description: payload.description || null,
         color: payload.color || 'text-blue-500',
-        users_count: 0
+        users_count: 0,
+        created_by: user?.id || null
       })
       .select()
       .single();
@@ -185,3 +189,26 @@ export async function searchSkills(searchTerm: string): Promise<Skill[]> {
     return [];
   }
 }
+
+/**
+ * Delete a skill (only if created by current user)
+ */
+export async function deleteSkill(skillId: string): Promise<boolean> {
+  try {
+    const { error } = await supabase
+      .from('skills')
+      .delete()
+      .eq('id', skillId);
+
+    if (error) {
+      console.error('Error deleting skill:', error);
+      throw error;
+    }
+
+    return true;
+  } catch (error: any) {
+    console.error('deleteSkill error:', error);
+    throw error;
+  }
+}
+

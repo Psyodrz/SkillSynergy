@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "../lib/supabaseClient";
 import { subscriptionService } from "../services/subscriptionService";
-import type { UserSubscription, Plan } from "../services/subscriptionService";
+import type { UserSubscription } from "../services/subscriptionService";
 import type { RealtimePostgresChangesPayload } from "@supabase/supabase-js";
 
 export function useSubscription(userId: string | undefined) {

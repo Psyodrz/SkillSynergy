@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "../lib/supabaseClient";
-import { useRealtimeSubscription, UserSubscription } from "./useRealtimeSubscription";
+import { useRealtimeSubscription } from "./useRealtimeSubscription";
+import type { UserSubscription } from "./useRealtimeSubscription";
 
 export interface Plan {
   id: string;

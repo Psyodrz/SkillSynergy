@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { supabase } from "../lib/supabaseClient";
-import { RealtimePostgresChangesPayload } from "@supabase/supabase-js";
+import type { RealtimePostgresChangesPayload } from "@supabase/supabase-js";
 
 export interface UserSubscription {
   id: string;

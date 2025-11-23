@@ -12,9 +12,10 @@ import UserCard from '../components/UserCard';
 import Button from '../components/Button';
 import Modal from '../components/Modal';
 import { useAuth } from '../context/AuthContext';
-import { getAllSkills, createSkill, getSkillCategories } from '../api/skillsApi';
+import { getAllSkills, createSkill, getSkillCategories, deleteSkill } from '../api/skillsApi';
 import { getAllProfiles } from '../api/profileApi';
 import type { Skill, SkillLevel } from '../types';
+import { TrashIcon } from '@heroicons/react/24/outline';
 
 const DiscoverPage = () => {
   const { user: currentUser } = useAuth();
@@ -197,6 +198,21 @@ const DiscoverPage = () => {
     }
   };
 
+  const handleDeleteSkill = async (skillId: string) => {
+    if (!confirm('Are you sure you want to delete this skill? It will be removed from all user profiles.')) {
+      return;
+    }
+
+    try {
+      await deleteSkill(skillId);
+      setSkills(skills.filter(s => s.id !== skillId));
+      alert('✅ Skill deleted successfully!');
+    } catch (error: any) {
+      console.error('Error deleting skill:', error);
+      alert(error.message || 'Failed to delete skill. You can only delete skills you created.');
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -301,10 +317,25 @@ const DiscoverPage = () => {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.4, delay: index * 0.05 }}
                 >
-                  <SkillCard
-                    skill={skill}
-                    onConnect={handleSkillConnect}
-                  />
+                  <div className="relative">
+                    <SkillCard
+                      skill={skill}
+                      onConnect={handleSkillConnect}
+                    />
+                    {/* Delete button for own skills or legacy skills */}
+                    {(skill.created_by === currentUser?.id || skill.created_by === null) && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteSkill(skill.id);
+                        }}
+                        className="absolute top-2 right-2 p-1.5 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-all hover:scale-110 shadow-lg z-10"
+                        title="Delete skill"
+                      >
+                        <TrashIcon className="w-5 h-5" />
+                      </button>
+                    )}
+                  </div>
                 </motion.div>
               ))}
             </div>

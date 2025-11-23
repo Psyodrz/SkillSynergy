@@ -11,6 +11,7 @@ export type Skill = {
   users_count: number;
   color: string;
   created_at: string;
+  created_by?: string | null;
 };
 
 export type ProfileSkill = {
