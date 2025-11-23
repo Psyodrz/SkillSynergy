@@ -1,0 +1,354 @@
+// ==========================================
+// QUICK START: Realtime Hooks Usage
+// Copy-paste these into your components
+// ==========================================
+
+// ==========================================
+// 1. REALTIME PROJECTS - MyProjectsPage.tsx
+// ==========================================
+
+import { useProjects } from '../hooks/useProjects';
+import { useAuth } from '../context/AuthContext';
+
+const MyProjectsPage = () => {
+  const { user } = useAuth();
+  
+  // 🔥 Replace all manual fetching with this:
+  const { 
+    projects,           // Realtime project list
+    loading,            // Loading state
+    error,              // Error message if any
+    createProject,      // Create function
+    updateProject,      // Update function
+    deleteProject       // Delete function
+  } = useProjects({
+    ownerOnly: true,
+    ownerId: user?.id
+  });
+
+  // Create project
+  const handleCreate = async () => {
+    await createProject({
+      title: 'New Project',
+      description: 'Project description',
+      status: 'active',
+      tags: ['react', 'typescript']
+    });
+    // UI updates automatically!
+  };
+
+  // Update project
+  const handleUpdate = async (projectId: string) => {
+    await updateProject(projectId, {
+      title: 'Updated Title'
+    });
+    // UI updates automatically!
+  };
+
+  // Delete project
+  const handleDelete = async (projectId: string) => {
+    await deleteProject(projectId);
+    // UI updates automatically!
+  };
+
+  return (
+    <div>
+      {loading && <div>Loading...</div>}
+      {projects.map(project => (
+        <div key={project.id}>{project.title}</div>
+      ))}
+    </div>
+  );
+};
+
+// ==========================================
+// 2. DISCOVER PROJECTS - ProjectsPage.jsx
+// ==========================================
+
+import { useProjects } from '../hooks/useProjects';
+import { useAuth } from '../context/AuthContext';
+
+const ProjectsPage = () => {
+  const { user } = useAuth();
+  
+  // 🔥 Show all projects except user's own:
+  const { projects, loading } = useProjects({
+    ownerOnly: false  // Get all projects
+  });
+
+  // Filter out user's own projects
+  const discoveryProjects = projects.filter(p => p.owner_id !== user?.id);
+
+  return (
+    <div>
+      {loading && <div>Loading...</div>}
+      {discoveryProjects.map(project => (
+        <div key={project.id}>{project.title}</div>
+      ))}
+    </div>
+  );
+};
+
+// ==========================================
+// 3. ONLINE PRESENCE - DashboardPage.tsx
+// ==========================================
+
+import { usePresence } from '../hooks/usePresence';
+import { useAuth } from '../context/AuthContext';
+
+const DashboardPage = () => {
+  const { user } = useAuth();
+  
+  // 🔥 Track presence and show online users:
+  const { onlineUsers, isOnline } = usePresence(user?.id, {
+    full_name: user?.name,
+    avatar_url: user?.avatar_url
+  });
+
+  return (
+    <div>
+      <h2>Online Now: {onlineUsers.length}</h2>
+      <ul>
+        {onlineUsers.map(u => (
+          <li key={u.user_id}>
+            {u.full_name}
+            <span className="green-dot">●</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+};
+
+// ==========================================
+// 4. ONLINE INDICATORS - UserCard.tsx
+// ==========================================
+
+import { usePresence } from '../hooks/usePresence';
+
+interface UserCardProps {
+  user: { id: string; name: string };
+}
+
+const UserCard = ({ user }: UserCardProps) => {
+  const { isOnline } = usePresence(currentUserId); // Get from context
+  
+  return (
+    <div className="relative">
+      <h3>{user.name}</h3>
+      
+      {/* 🔥 Show green dot if online */}
+      {isOnline(user.id) && (
+        <span className="absolute top-0 right-0 w-3 h-3 bg-green-500 rounded-full" />
+      )}
+    </div>
+  );
+};
+
+// ==========================================
+// 5. REALTIME CHAT - MessagesPage.jsx
+// ==========================================
+
+import { useState } from 'react';
+import { useDirectMessages } from '../hooks/useDirectMessages';
+import { useAuth } from '../context/AuthContext';
+
+const MessagesPage = () => {
+  const { user } = useAuth();
+  const [selectedUserId, setSelectedUserId] = useState('other-user-id');
+  const [messageText, setMessageText] = useState('');
+  
+  // 🔥 Realtime chat with another user:
+  const { 
+    messages,      // Realtime message list
+    loading,
+    sendMessage,   // Send function
+    markAsRead     // Mark as read function
+  } = useDirectMessages(user?.id, selectedUserId);
+
+  const handleSend = async () => {
+    if (!messageText.trim()) return;
+    await sendMessage(messageText);
+    setMessageText(''); // Clear input
+    // Message appears for both users instantly!
+  };
+
+  const handleMarkAsRead = async () => {
+    const unreadIds = messages
+      .filter(m => !m.read && m.receiver_id === user?.id)
+      .map(m => m.id);
+    
+    if (unreadIds.length > 0) {
+      await markAsRead(unreadIds);
+    }
+  };
+
+  return (
+    <div>
+      {/* Message list */}
+      <div className="messages">
+        {messages.map(msg => (
+          <div key={msg.id} className={msg.sender_id === user?.id ? 'sent' : 'received'}>
+            {msg.content}
+            {msg.read && <span>✓✓</span>}
+          </div>
+        ))}
+      </div>
+
+      {/* Input */}
+      <input
+        value={messageText}
+        onChange={(e) => setMessageText(e.target.value)}
+        onKeyPress={(e) => e.key === 'Enter' && handleSend()}
+      />
+      <button onClick={handleSend}>Send</button>
+    </div>
+  );
+};
+
+// ==========================================
+// 6. REALTIME PROFILES - DiscoverPage.tsx
+// ==========================================
+
+import { useProfiles } from '../hooks/useProfiles';
+
+const DiscoverPage = () => {
+  // 🔥 Get all profiles with realtime updates:
+  const { profiles, loading } = useProfiles();
+
+  return (
+    <div>
+      <h2>Professionals ({profiles.length})</h2>
+      {loading && <div>Loading...</div>}
+      {profiles.map(profile => (
+        <div key={profile.id}>
+          {profile.full_name}
+          {/* Profile updates appear instantly! */}
+        </div>
+      ))}
+    </div>
+  );
+};
+
+// ==========================================
+// 7. DASHBOARD WITH EVERYTHING
+// ==========================================
+
+import { useProjects } from '../hooks/useProjects';
+import { usePresence } from '../hooks/usePresence';
+import { useAuth } from '../context/AuthContext';
+
+const DashboardPage = () => {
+  const { user } = useAuth();
+  
+  // Realtime projects
+  const { projects } = useProjects({ ownerOnly: false });
+  
+  // Realtime presence
+  const { onlineUsers } = usePresence(user?.id, {
+    full_name: user?.name,
+    avatar_url: user?.avatar_url
+  });
+
+  // Show stats
+  const stats = {
+    totalProjects: projects.length,
+    onlineUsers: onlineUsers.length,
+    recentProjects: projects.slice(0, 6)
+  };
+
+  return (
+    <div>
+      <h1>Dashboard</h1>
+      
+      {/* Stats */}
+      <div className="stats">
+        <div>{stats.totalProjects} Projects</div>
+        <div>{stats.onlineUsers} Online</div>
+      </div>
+
+      {/* Recent Projects (realtime) */}
+      <div className="recent-projects">
+        <h2>Recent Projects</h2>
+        {stats.recentProjects.map(project => (
+          <div key={project.id}>{project.title}</div>
+        ))}
+      </div>
+
+      {/* Online Users (realtime) */}
+      <div className="online-users">
+        <h2>Who's Online</h2>
+        {onlineUsers.map(u => (
+          <div key={u.user_id}>
+            {u.full_name}
+            <span className="green-dot">●</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+// ==========================================
+// CSS FOR GREEN ONLINE INDICATOR
+// ==========================================
+
+/*
+.green-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  background: #22c55e;
+  border-radius: 50%;
+  margin-left: 8px;
+}
+
+.online-indicator {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 12px;
+  height: 12px;
+  background: #22c55e;
+  border: 2px solid white;
+  border-radius: 50%;
+  box-shadow: 0 0 4px rgba(34, 197, 94, 0.5);
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.online-indicator.pulse {
+  animation: pulse 2s ease-in-out infinite;
+}
+*/
+
+// ==========================================
+// TESTING: Open Two Browser Windows
+// ==========================================
+
+/*
+WINDOW 1 (Chrome):
+1. Login as User A
+2. Go to My Projects
+3. Create a project
+
+WINDOW 2 (Chrome Incognito):
+1. Login as User B
+2. Go to All Projects
+3. Watch project appear instantly! ✅
+
+Test messaging:
+- Both go to Messages
+- Select each other
+- Send messages back and forth
+- They appear instantly! ✅
+
+Test presence:
+- Both go to Dashboard
+- See each other in "Online Users"
+- Logout from Window 1
+- Watch User A disappear from Window 2's online list! ✅
+*/

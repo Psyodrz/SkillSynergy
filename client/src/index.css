@@ -1,0 +1,67 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-mint-50 dark:bg-charcoal-950 text-charcoal-900 dark:text-mint-100 transition-colors duration-300;
+  }
+
+  /* Custom Scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-emerald-400/50 dark:bg-teal-500/50 rounded-full hover:bg-emerald-500/70 dark:hover:bg-teal-400/70 transition-colors;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-500 hover:opacity-90 text-white font-medium rounded-xl shadow-emerald-glow transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98];
+  }
+
+  .card {
+    background-color: rgb(229 247 241);
+    border: 1px solid rgb(207 237 226);
+    border-radius: 1rem;
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
+    backdrop-filter: blur(12px);
+  }
+  
+  .dark .card {
+    background-color: rgb(17 22 21);
+    border-color: rgb(35 42 42);
+  }
+
+  .input-field {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    background-color: rgb(255 255 255);
+    border: 1px solid rgb(163 250 223);
+    border-radius: 0.75rem;
+    outline: none;
+    transition: all 0.2s;
+  }
+  
+  .input-field:focus {
+    border-color: rgb(46 230 168);
+    box-shadow: 0 0 0 2px rgb(46 230 168 / 0.5);
+  }
+  
+  .dark .input-field {
+    background-color: rgb(26 33 32);
+    border-color: rgb(35 42 42);
+  }
+  
+  .dark .input-field:focus {
+    border-color: rgb(46 230 168);
+    box-shadow: 0 0 0 2px rgb(46 230 168 / 0.5);
+  }
+}
