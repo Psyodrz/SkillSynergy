@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabaseClient';
+import { useRealtimeTable } from './useRealtimeTable';
 
 
 export interface Message {
@@ -67,67 +68,47 @@ export function useDirectMessages(
     fetchMessages();
   }, [currentUserId, otherUserId]);
 
-  // Subscribe to realtime changes
-  useEffect(() => {
-    if (!currentUserId || !otherUserId) return;
+  // Subscribe to incoming messages
+  useRealtimeTable({
+    table: 'messages',
+    event: 'INSERT',
+    filter: currentUserId && otherUserId ? `sender_id=eq.${otherUserId},receiver_id=eq.${currentUserId}` : '',
+    onChange: (payload) => {
+      console.log('New message (received):', payload);
+      setMessages((prev) => {
+        if (prev.some(m => m.id === payload.new.id)) return prev;
+        return [...prev, payload.new as Message];
+      });
+    },
+  });
 
-    // Create a unique channel name for this conversation
-    const channelName = `messages:${[currentUserId, otherUserId].sort().join('-')}`;
+  // Subscribe to outgoing messages (for multi-device sync)
+  useRealtimeTable({
+    table: 'messages',
+    event: 'INSERT',
+    filter: currentUserId && otherUserId ? `sender_id=eq.${currentUserId},receiver_id=eq.${otherUserId}` : '',
+    onChange: (payload) => {
+      console.log('New message (sent):', payload);
+      setMessages((prev) => {
+        if (prev.some(m => m.id === payload.new.id)) return prev;
+        return [...prev, payload.new as Message];
+      });
+    },
+  });
 
-    const messageChannel = supabase
-      .channel(channelName)
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'messages',
-          filter: `sender_id=eq.${currentUserId},receiver_id=eq.${otherUserId}`,
-        },
-        (payload) => {
-          console.log('New message (sent):', payload);
-          setMessages((prev) => [...prev, payload.new as Message]);
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'messages',
-          filter: `sender_id=eq.${otherUserId},receiver_id=eq.${currentUserId}`,
-        },
-        (payload) => {
-          console.log('New message (received):', payload);
-          setMessages((prev) => [...prev, payload.new as Message]);
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'messages',
-        },
-        (payload) => {
-          console.log('Message updated:', payload);
-          setMessages((prev) =>
-            prev.map((msg) =>
-              msg.id === payload.new.id ? (payload.new as Message) : msg
-            )
-          );
-        }
-      )
-      .subscribe();
-
-
-
-    // Cleanup subscription on unmount
-    return () => {
-      console.log('Unsubscribing from messages channel');
-      messageChannel.unsubscribe();
-    };
-  }, [currentUserId, otherUserId]);
+  // Subscribe to message updates (e.g. read status)
+  useRealtimeTable({
+    table: 'messages',
+    event: 'UPDATE',
+    onChange: (payload) => {
+      console.log('Message updated:', payload);
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === payload.new.id ? (payload.new as Message) : msg
+        )
+      );
+    },
+  });
 
   // Send a new message
   const sendMessage = useCallback(

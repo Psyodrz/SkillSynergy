@@ -23,7 +23,6 @@ const getSkillLevelColor = (level: string) => {
 
 const SkillCard: React.FC<SkillCardProps> = ({ skill, onConnect, className = '' }) => {
   // Extract background color from tailwind text class
-  const bgColorClass = skill.color.replace('text-', 'bg-');
 
   return (
     <motion.div

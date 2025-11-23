@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
   CheckCircleIcon, 
@@ -8,6 +8,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { useAuth } from '../context/AuthContext';
 import { getNotifications, markAsRead, markAllAsRead } from '../api/notificationsApi';
+import { useRealtimeTable } from '../hooks/useRealtimeTable';
 import type { Notification } from '../types';
 
 const NotificationsPage = () => {
@@ -20,6 +21,16 @@ const NotificationsPage = () => {
       fetchNotifications();
     }
   }, [user]);
+
+  useRealtimeTable({
+    table: 'notifications',
+    filter: user ? `user_id=eq.${user.id}` : '',
+    onChange: (payload) => {
+      if (payload.eventType === 'INSERT') {
+        setNotifications((prev) => [payload.new as Notification, ...prev]);
+      }
+    },
+  });
 
   const fetchNotifications = async () => {
     if (!user) return;

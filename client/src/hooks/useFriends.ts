@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabaseClient';
+import { useRealtimeTable } from './useRealtimeTable';
 import type { FriendRequest } from '../types';
 
 export type FriendStatus = 'none' | 'pending' | 'friends' | 'received';
@@ -50,30 +51,15 @@ export function useFriends(currentUserId: string | null) {
 
   useEffect(() => {
     fetchIncomingRequests();
-    
-    // Subscribe to changes
-    if (!currentUserId) return;
+  }, [fetchIncomingRequests]);
 
-    const channel = supabase
-      .channel('friend_requests_changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'friend_requests',
-          filter: `receiver_id=eq.${currentUserId}`
-        },
-        () => {
-          fetchIncomingRequests();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [currentUserId, fetchIncomingRequests]);
+  useRealtimeTable({
+    table: 'friend_requests',
+    filter: currentUserId ? `receiver_id=eq.${currentUserId}` : '',
+    onChange: () => {
+      fetchIncomingRequests();
+    },
+  });
 
   // Check status with another user
   const getFriendStatus = async (otherUserId: string): Promise<FriendStatus> => {
