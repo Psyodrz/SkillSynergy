@@ -11,7 +11,8 @@ import {
   SparklesIcon,
   PlusCircleIcon,
   FolderIcon,
-  XMarkIcon
+  XMarkIcon,
+  BanknotesIcon
 } from '@heroicons/react/24/outline';
 
 const Sidebar = ({ isOpen, onClose }: { isOpen?: boolean; onClose?: () => void }) => {
@@ -25,6 +26,7 @@ const Sidebar = ({ isOpen, onClose }: { isOpen?: boolean; onClose?: () => void }
     { name: 'Projects', href: '/projects', icon: BriefcaseIcon },
     { name: 'My Projects', href: '/my-projects', icon: FolderIcon },
     { name: 'Requests', href: '/requests', icon: UserGroupIcon },
+    { name: 'Plans', href: '/plans', icon: BanknotesIcon },
     { name: 'Profile', href: '/profile', icon: UserCircleIcon },
     { name: 'Settings', href: '/settings', icon: Cog6ToothIcon }
   ];

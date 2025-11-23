@@ -15,6 +15,7 @@ import ProfilePage from './pages/ProfilePage';
 import RequestsPage from './pages/RequestsPage';
 import SettingsPage from './pages/SettingsPage';
 import NotificationsPage from './pages/NotificationsPage';
+import PlansPage from './pages/PlansPage';
 import { useAuth } from './context/AuthContext';
 
 function App() {
@@ -101,6 +102,11 @@ function App() {
               <Route path="/notifications" element={
                 <ProtectedRoute>
                   <NotificationsPage />
+                </ProtectedRoute>
+              } />
+              <Route path="/plans" element={
+                <ProtectedRoute>
+                  <PlansPage />
                 </ProtectedRoute>
               } />
 
