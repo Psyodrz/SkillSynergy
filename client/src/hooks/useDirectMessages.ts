@@ -1,7 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabaseClient';
-import { useRealtimeTable } from './useRealtimeTable';
-
 
 export interface Message {
   id: string;
@@ -32,7 +30,6 @@ export function useDirectMessages(
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>();
-
 
   // Fetch initial messages
   useEffect(() => {
@@ -68,55 +65,71 @@ export function useDirectMessages(
     fetchMessages();
   }, [currentUserId, otherUserId]);
 
-  // Subscribe to incoming messages
-  useRealtimeTable({
-    table: 'messages',
-    event: 'INSERT',
-    filter: currentUserId && otherUserId ? `sender_id=eq.${otherUserId},receiver_id=eq.${currentUserId}` : '',
-    onChange: (payload) => {
-      console.log('New message (received):', payload);
-      setMessages((prev) => {
-        if (prev.some(m => m.id === payload.new.id)) return prev;
-        return [...prev, payload.new as Message];
-      });
-    },
-  });
+  // Realtime subscription
+  useEffect(() => {
+    if (!currentUserId || !otherUserId) return;
 
-  // Subscribe to outgoing messages (for multi-device sync)
-  useRealtimeTable({
-    table: 'messages',
-    event: 'INSERT',
-    filter: currentUserId && otherUserId ? `sender_id=eq.${currentUserId},receiver_id=eq.${otherUserId}` : '',
-    onChange: (payload) => {
-      console.log('New message (sent):', payload);
-      setMessages((prev) => {
-        if (prev.some(m => m.id === payload.new.id)) return prev;
-        return [...prev, payload.new as Message];
-      });
-    },
-  });
+    const channel = supabase
+      .channel(`messages:${currentUserId}:${otherUserId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'messages',
+        },
+        (payload) => {
+          const newMessage = payload.new as Message;
+          // Filter for messages relevant to this conversation
+          if (
+            (newMessage.sender_id === currentUserId && newMessage.receiver_id === otherUserId) ||
+            (newMessage.sender_id === otherUserId && newMessage.receiver_id === currentUserId)
+          ) {
+            setMessages((prev) => {
+              // Prevent duplicates
+              if (prev.some((m) => m.id === newMessage.id)) return prev;
+              // Add and sort
+              const updated = [...prev, newMessage];
+              return updated.sort((a, b) => 
+                new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+              );
+            });
+          }
+        }
+      )
+      .subscribe();
 
-  // Subscribe to message updates (e.g. read status)
-  useRealtimeTable({
-    table: 'messages',
-    event: 'UPDATE',
-    onChange: (payload) => {
-      console.log('Message updated:', payload);
-      setMessages((prev) =>
-        prev.map((msg) =>
-          msg.id === payload.new.id ? (payload.new as Message) : msg
-        )
-      );
-    },
-  });
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [currentUserId, otherUserId]);
 
-  // Send a new message
+  // Send a new message with optimistic update
   const sendMessage = useCallback(
     async (text: string) => {
       if (!text.trim() || !currentUserId || !otherUserId) return;
 
+      // Generate a temporary ID (or real UUID if possible) for optimistic update
+      const optimisticId = crypto.randomUUID();
+      const timestamp = new Date().toISOString();
+
+      const optimisticMessage: Message = {
+        id: optimisticId,
+        created_at: timestamp,
+        sender_id: currentUserId,
+        receiver_id: otherUserId,
+        content: text.trim(),
+        read: false,
+      };
+
+      // 1. Optimistic UI update
+      setMessages((prev) => [...prev, optimisticMessage]);
+
       try {
+        // 2. Send to Supabase
+        // We use the same ID to ensure the realtime event matches our optimistic message
         const { error: sendError } = await supabase.from('messages').insert({
+          id: optimisticId,
           sender_id: currentUserId,
           receiver_id: otherUserId,
           content: text.trim(),
@@ -127,6 +140,8 @@ export function useDirectMessages(
       } catch (err: any) {
         console.error('Error sending message:', err);
         setError(err.message);
+        // Revert optimistic update on error
+        setMessages((prev) => prev.filter((m) => m.id !== optimisticId));
         throw err;
       }
     },

@@ -8,14 +8,31 @@ import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
 import DiscoverPage from './pages/DiscoverPage';
 import MessagesPage from './pages/MessagesPage';
-import ProjectsPage from './pages/ProjectsPage';
+import ProjectsPage from './pages/ProjectsPage'; // This is the dashboard projects page
 import CreateProjectPage from './pages/CreateProjectPage';
-import MyProjectsPage from './pages/MyProjectsPage';
 import ProfilePage from './pages/ProfilePage';
 import RequestsPage from './pages/RequestsPage';
 import SettingsPage from './pages/SettingsPage';
 import NotificationsPage from './pages/NotificationsPage';
 import PlansPage from './pages/PlansPage';
+import TermsPage from './pages/TermsPage';
+import PrivacyPage from './pages/PrivacyPage';
+import RefundPage from './pages/RefundPage';
+import AboutPage from './pages/AboutPage';
+import ContactPage from './pages/ContactPage';
+import PricingPage from './pages/PricingPage';
+import CookiePolicyPage from './pages/CookiePolicyPage';
+import FAQPage from './pages/FAQPage';
+import ConnectPage from './pages/ConnectPage';
+import LearnPage from './pages/LearnPage';
+import ProjectFeaturePage from './pages/ProjectFeaturePage';
+import ChatPage from './pages/ChatPage';
+import DemoPage from './pages/DemoPage';
+import BlogPage from './pages/BlogPage';
+import BlogPostPage from './pages/BlogPostPage';
+import MySkillsPage from './pages/MySkillsPage';
+import MyProjectsPage from './pages/MyProjectsPage';
+import DiscoverProjectsPage from './pages/DiscoverProjectsPage';
 import { useAuth } from './context/AuthContext';
 
 function App() {
@@ -23,8 +40,14 @@ function App() {
   const { isAuthenticated } = useAuth();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   
-  // Check if current route is a public route (home or login)
-  const isPublicRoute = location.pathname === '/' || location.pathname === '/login';
+  // Check if current route is a public route
+  const publicRoutes = [
+    '/', '/login', '/terms', '/privacy', '/refund', '/about', '/contact', '/pricing',
+    '/cookies', '/faq', '/connect', '/learn', '/projects', '/chat', '/demo', '/blog'
+  ];
+  // Helper to check if path starts with public route (for dynamic routes like /blog/:slug)
+  const isPublicRoute = publicRoutes.some(route => location.pathname === route) || location.pathname.startsWith('/blog/');
+  
   const showSidebar = isAuthenticated && !isPublicRoute;
 
   return (
@@ -47,6 +70,25 @@ function App() {
               {/* Public Routes */}
               <Route path="/" element={<HomePage />} />
               <Route path="/login" element={<LoginPage />} />
+              <Route path="/terms" element={<TermsPage />} />
+              <Route path="/privacy" element={<PrivacyPage />} />
+              <Route path="/refund" element={<RefundPage />} />
+              <Route path="/cookies" element={<CookiePolicyPage />} />
+              <Route path="/about" element={<AboutPage />} />
+              <Route path="/contact" element={<ContactPage />} />
+              <Route path="/pricing" element={<PricingPage />} />
+              <Route path="/faq" element={<FAQPage />} />
+              
+              {/* Feature Pages */}
+              <Route path="/connect" element={<ConnectPage />} />
+              <Route path="/learn" element={<LearnPage />} />
+              <Route path="/projects" element={<ProjectFeaturePage />} />
+              <Route path="/chat" element={<ChatPage />} />
+              <Route path="/demo" element={<DemoPage />} />
+              
+              {/* Blog */}
+              <Route path="/blog" element={<BlogPage />} />
+              <Route path="/blog/:slug" element={<BlogPostPage />} />
               
               {/* Protected Routes */}
               <Route path="/dashboard" element={
@@ -69,21 +111,37 @@ function App() {
                   <MessagesPage />
                 </ProtectedRoute>
               } />
-              <Route path="/projects" element={
+              
+              {/* Renamed internal projects route to avoid conflict with public page */}
+              <Route path="/app/projects" element={
                 <ProtectedRoute>
                   <ProjectsPage />
                 </ProtectedRoute>
               } />
+              
               <Route path="/projects/create" element={
                 <ProtectedRoute>
                   <CreateProjectPage />
                 </ProtectedRoute>
               } />
-              <Route path="/my-projects" element={
+              
+              {/* New Feature Routes */}
+              <Route path="/app/my-skills" element={
+                <ProtectedRoute>
+                  <MySkillsPage />
+                </ProtectedRoute>
+              } />
+              <Route path="/app/my-projects" element={
                 <ProtectedRoute>
                   <MyProjectsPage />
                 </ProtectedRoute>
               } />
+              <Route path="/app/discover-projects" element={
+                <ProtectedRoute>
+                  <DiscoverProjectsPage />
+                </ProtectedRoute>
+              } />
+
               <Route path="/profile" element={
                 <ProtectedRoute>
                   <ProfilePage />

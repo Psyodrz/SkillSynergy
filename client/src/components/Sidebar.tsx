@@ -21,10 +21,11 @@ const Sidebar = ({ isOpen, onClose }: { isOpen?: boolean; onClose?: () => void }
 
   const navigation = [
     { name: 'Dashboard', href: '/dashboard', icon: HomeIcon },
-    { name: 'Discover', href: '/discover', icon: SparklesIcon },
+    { name: 'Discover People & Skills', href: '/discover', icon: SparklesIcon },
+    { name: 'Discover Projects', href: '/app/discover-projects', icon: BriefcaseIcon },
     { name: 'Messages', href: '/messages', icon: ChatBubbleLeftRightIcon },
-    { name: 'Projects', href: '/projects', icon: BriefcaseIcon },
-    { name: 'My Projects', href: '/my-projects', icon: FolderIcon },
+    { name: 'My Projects', href: '/app/my-projects', icon: FolderIcon },
+    { name: 'My Skills', href: '/app/my-skills', icon: SparklesIcon },
     { name: 'Requests', href: '/requests', icon: UserGroupIcon },
     { name: 'Plans', href: '/plans', icon: BanknotesIcon },
     { name: 'Profile', href: '/profile', icon: UserCircleIcon },
@@ -108,9 +109,17 @@ const Sidebar = ({ isOpen, onClose }: { isOpen?: boolean; onClose?: () => void }
           <div className="p-4 mt-auto border-t border-teal-200 dark:border-charcoal-700">
             <div className="flex items-center mb-4">
               <div className="flex-shrink-0">
-                <div className="w-8 h-8 rounded-full bg-gradient-emerald flex items-center justify-center text-white font-bold text-sm">
-                  {profile?.full_name?.charAt(0) || user?.email?.charAt(0).toUpperCase()}
-                </div>
+                {profile?.avatar_url ? (
+                  <img
+                    className="w-8 h-8 rounded-full object-cover border border-teal-200 dark:border-charcoal-600"
+                    src={profile.avatar_url}
+                    alt={profile.full_name || 'User'}
+                  />
+                ) : (
+                  <div className="w-8 h-8 rounded-full bg-gradient-emerald flex items-center justify-center text-white font-bold text-sm">
+                    {profile?.full_name?.charAt(0) || user?.email?.charAt(0).toUpperCase()}
+                  </div>
+                )}
               </div>
               <div className="ml-3">
                 <p className="text-sm font-medium text-teal-900 dark:text-white truncate max-w-[120px]">

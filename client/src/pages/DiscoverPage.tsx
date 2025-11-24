@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { 
   MagnifyingGlassIcon, 
   StarIcon,
@@ -16,15 +17,24 @@ import { getAllSkills, createSkill, getSkillCategories, deleteSkill } from '../a
 import { getAllProfiles } from '../api/profileApi';
 import type { Skill, SkillLevel } from '../types';
 import { TrashIcon } from '@heroicons/react/24/outline';
+import { addSkillToUser } from '../lib/skillHelpers';
+import { useTeacherMatch } from '../hooks/useTeacherMatch';
+import TeacherMatchList from '../components/TeacherMatchList';
 
 const DiscoverPage = () => {
   const { user: currentUser } = useAuth();
+  const navigate = useNavigate();
+  const { teachers: matchedTeachers, loading: matchTeachersLoading, error: matchTeachersError, findTeachers } = useTeacherMatch();
+  
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [selectedLevel, setSelectedLevel] = useState<SkillLevel | 'All'>('All');
   const [selectedSkill, setSelectedSkill] = useState<Skill | null>(null);
   const [isSkillModalOpen, setIsSkillModalOpen] = useState(false);
   const [isCreateSkillModalOpen, setIsCreateSkillModalOpen] = useState(false);
+  const [isTeacherMatchOpen, setIsTeacherMatchOpen] = useState(false);
+  const [addingSkill, setAddingSkill] = useState(false);
+  const [toastMessage, setToastMessage] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   
   // Data states
   const [skills, setSkills] = useState<Skill[]>([]);
@@ -54,6 +64,78 @@ const DiscoverPage = () => {
     'text-teal-500',
     'text-yellow-500'
   ];
+
+  // Toast auto-hide
+  useEffect(() => {
+    if (toastMessage) {
+      const timer = setTimeout(() => setToastMessage(null), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [toastMessage]);
+
+  // Handle Add to My Skills
+  const handleAddSkillToProfile = async () => {
+    if (!currentUser || !selectedSkill) return;
+
+    console.log('Adding skill to user:', { userId: currentUser.id, skillId: selectedSkill.id });
+
+    setAddingSkill(true);
+    try {
+      const result = await addSkillToUser(currentUser.id, selectedSkill.id, selectedSkill.level);
+
+      if (result.success) {
+        setToastMessage({ type: 'success', message: `${selectedSkill.name} added to your skills!` });
+        setIsSkillModalOpen(false);
+      } else if (result.alreadyExists) {
+        setToastMessage({ type: 'error', message: 'You already have this skill!' });
+      } else {
+        setToastMessage({ type: 'error', message: result.error || 'Failed to add skill' });
+      }
+    } catch (error: any) {
+      setToastMessage({ type: 'error', message: 'An error occurred' });
+    } finally {
+      setAddingSkill(false);
+    }
+  };
+
+  // Handle Find Professionals - Now includes AI teacher matching
+  const handleFindProfessionals = async () => {
+    if (!selectedSkill) return;
+
+    console.log('Finding professionals for skill:', { skillId: selectedSkill.id });
+
+    // Close modal
+    setIsSkillModalOpen(false);
+
+    // Call teacher matching API if user is logged in
+    if (currentUser) {
+      await findTeachers({
+        userId: currentUser.id,
+        skillIds: [selectedSkill.id],
+        limit: 10
+      });
+      // Show teacher match results
+      setIsTeacherMatchOpen(true);
+    } else {
+      // Fallback: Set search query and scroll to users section
+      setSearchQuery(selectedSkill.name);
+      const usersSection = document.getElementById('users-section');
+      if (usersSection) {
+        usersSection.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+  };
+
+  // Handle Start a Project
+  const handleStartProject = () => {
+    if (!selectedSkill) return;
+
+    console.log('Starting project with skill:', { skillId: selectedSkill.id, skillName: selectedSkill.name });
+
+    // Navigate to projects page with skill pre-selected
+    navigate(`/projects?skillId=${selectedSkill.id}&skillName=${encodeURIComponent(selectedSkill.name)}`);
+    setIsSkillModalOpen(false);
+  };
 
   // Fetch skills from database
   useEffect(() => {
@@ -215,6 +297,17 @@ const DiscoverPage = () => {
 
   return (
     <div className="space-y-6">
+      {/* Toast Notification */}
+      {toastMessage && (
+        <div className={`fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg ${
+          toastMessage.type === 'success' 
+            ? 'bg-emerald-500 text-white' 
+            : 'bg-red-500 text-white'
+        }`}>
+          {toastMessage.message}
+        </div>
+      )}
+
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
@@ -322,8 +415,8 @@ const DiscoverPage = () => {
                       skill={skill}
                       onConnect={handleSkillConnect}
                     />
-                    {/* Delete button for own skills or legacy skills */}
-                    {(skill.created_by === currentUser?.id || skill.created_by === null) && (
+                    {/* Delete button for own skills */}
+                    {skill.created_by === currentUser?.id && (
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
@@ -558,13 +651,25 @@ const DiscoverPage = () => {
                 What would you like to do?
               </h4>
               <div className="space-y-2">
-                <Button variant="primary" className="w-full" onClick={() => {}}>
-                  Add to My Skills
+                <Button 
+                  variant="primary" 
+                  className="w-full" 
+                  onClick={handleAddSkillToProfile}
+                  disabled={addingSkill}
+                >
+                  {addingSkill ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                      Adding...
+                    </>
+                  ) : (
+                    'Add to My Skills'
+                  )}
                 </Button>
-                <Button variant="outline" className="w-full" onClick={() => {}}>
+                <Button variant="outline" className="w-full" onClick={handleFindProfessionals}>
                   Find Professionals
                 </Button>
-                <Button variant="outline" className="w-full" onClick={() => {}}>
+                <Button variant="outline" className="w-full" onClick={handleStartProject}>
                   Start a Project
                 </Button>
               </div>
@@ -572,6 +677,17 @@ const DiscoverPage = () => {
           </div>
         )}
       </Modal>
+
+      {/* Teacher Match List Modal */}
+      {isTeacherMatchOpen && (
+        <TeacherMatchList
+          teachers={matchedTeachers}
+          loading={matchTeachersLoading}
+          error={matchTeachersError}
+          onClose={() => setIsTeacherMatchOpen(false)}
+          skillName={selectedSkill?.name}
+        />
+      )}
     </div>
   );
 };

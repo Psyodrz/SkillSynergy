@@ -284,14 +284,21 @@ const Navbar = ({ onSearch = null, className = '', onToggleSidebar }) => {
             onClick={() => setIsProfileOpen(!isProfileOpen)}
             className="flex items-center space-x-2 sm:space-x-3 p-2 hover:bg-teal-100 dark:hover:bg-charcoal-800 rounded-xl transition-colors"
           >
-            <div className="w-8 h-8 sm:w-9 sm:h-9 bg-primary-500 rounded-full flex items-center justify-center">
-              <span className="text-white text-xs sm:text-sm font-medium">
-                {/* UPDATED: Get initials from profile.full_name instead of user.name */}
-                {profile?.full_name 
-                  ? profile.full_name.split(' ').map(n => n[0]).join('').toUpperCase() 
-                  : user?.email ? user.email[0].toUpperCase() : 'U'}
-              </span>
-            </div>
+            {profile?.avatar_url ? (
+              <img
+                src={profile.avatar_url}
+                alt={profile.full_name || 'User'}
+                className="w-8 h-8 sm:w-9 sm:h-9 rounded-full object-cover border border-teal-200 dark:border-charcoal-600"
+              />
+            ) : (
+              <div className="w-8 h-8 sm:w-9 sm:h-9 bg-primary-500 rounded-full flex items-center justify-center">
+                <span className="text-white text-xs sm:text-sm font-medium">
+                  {profile?.full_name 
+                    ? profile.full_name.split(' ').map(n => n[0]).join('').toUpperCase() 
+                    : user?.email ? user.email[0].toUpperCase() : 'U'}
+                </span>
+              </div>
+            )}
             <div className="hidden lg:block text-left">
               <p className="text-sm font-medium text-charcoal-900 dark:text-white">
                 {/* UPDATED: Display profile.full_name from the database */}

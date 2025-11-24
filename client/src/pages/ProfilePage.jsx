@@ -12,6 +12,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabaseClient';
+import AvatarUploader from '../components/AvatarUploader';
 
 // Modal Component for adding Experience
 const ExperienceModal = ({ isOpen, onClose, onSave }) => {
@@ -111,6 +112,7 @@ const ProfilePage = () => {
   // Form State
   const [formData, setFormData] = useState({
     full_name: '',
+    avatar_url: '',
     role: '',
     location: '',
     bio: '',
@@ -138,6 +140,7 @@ const ProfilePage = () => {
     if (profile) {
       setFormData({
         full_name: profile.full_name || '',
+        avatar_url: profile.avatar_url || '',
         role: profile.role || '',
         location: profile.location || '',
         bio: profile.bio || '',
@@ -205,6 +208,7 @@ const ProfilePage = () => {
       
       const updates = {
         full_name: formData.full_name?.trim() || null,
+        avatar_url: formData.avatar_url || null,
         role: formData.role?.trim() || null,
         location: formData.location?.trim() || null,
         bio: formData.bio?.trim() || null,
@@ -352,9 +356,17 @@ const ProfilePage = () => {
           <div className="h-32 bg-gradient-to-r from-emerald-500 to-teal-500 relative">
             <div className="absolute -bottom-12 left-8">
               <div className="w-24 h-24 rounded-full bg-white dark:bg-charcoal-800 p-1 shadow-lg">
-                <div className="w-full h-full rounded-full bg-mint-200 dark:bg-charcoal-700 flex items-center justify-center text-2xl font-bold text-charcoal-700 dark:text-mint-300">
-                  {formData.full_name ? formData.full_name.charAt(0).toUpperCase() : <UserCircleIcon className="w-12 h-12" />}
-                </div>
+                <AvatarUploader
+                  url={formData.avatar_url}
+                  size={88} // 24 * 4 - padding (approx) or just fit parent
+                  onUpload={(url) => {
+                    setFormData(prev => ({ ...prev, avatar_url: url }));
+                    // Optional: Auto-save or just let user click save
+                  }}
+                  editable={isEditing}
+                  userId={user?.id}
+                  name={formData.full_name}
+                />
               </div>
             </div>
             <div className="absolute top-4 right-4">

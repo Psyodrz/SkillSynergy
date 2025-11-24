@@ -10,6 +10,7 @@ import { getAllSkills } from '../api/skillsApi';
 import { getAllProfiles } from '../api/profileApi';
 import type { Skill } from '../types';
 
+import { supabase } from '../lib/supabaseClient';
 import 'keen-slider/keen-slider.min.css';
 
 const DashboardPage = () => {
@@ -31,7 +32,7 @@ const DashboardPage = () => {
     connections: 0,
   });
 
-  // Fetch real skills from database
+  // Fetch real skills and projects from database
   useEffect(() => {
     const fetchSkills = async () => {
       try {
@@ -45,7 +46,25 @@ const DashboardPage = () => {
       }
     };
 
+    const fetchProjectsCount = async () => {
+      try {
+        const { count, error } = await supabase
+          .from('projects')
+          .select('*', { count: 'exact', head: true })
+          .eq('status', 'active')
+          .eq('visibility', 'public');
+        
+        if (error) throw error;
+        if (count !== null) {
+          setStats(prev => ({ ...prev, projects: count }));
+        }
+      } catch (error) {
+        console.error('Error fetching projects count:', error);
+      }
+    };
+
     fetchSkills();
+    fetchProjectsCount();
   }, []);
 
   // Fetch real users from database

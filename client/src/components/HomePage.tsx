@@ -1,65 +1,45 @@
-
 import { Link } from 'react-router-dom';
+import Footer from './Footer';
+import FeatureShowcase from './FeatureShowcase';
 import { motion } from 'framer-motion';
 import {
   RocketLaunchIcon,
-  UserGroupIcon,
-  AcademicCapIcon,
-  BriefcaseIcon,
-  ChatBubbleLeftRightIcon,
   ArrowRightIcon,
   CheckBadgeIcon,
   FireIcon,
-  StarIcon,
-  SparklesIcon
+  SparklesIcon,
+  ChatBubbleLeftRightIcon,
+  GlobeAltIcon
 } from '@heroicons/react/24/outline';
 
+import { Helmet } from 'react-helmet-async';
+
 const HomePage = () => {
-  const features = [
-    {
-      icon: UserGroupIcon,
-      title: 'Connect with Experts',
-      description: 'Find professionals with complementary skills and build your dream team',
-      color: 'from-teal-500 to-emerald-500'
-    },
-    {
-      icon: AcademicCapIcon,
-      title: 'Learn Together',
-      description: 'Share knowledge, mentor others, and grow your skills through collaboration',
-      color: 'from-emerald-500 to-teal-600'
-    },
-    {
-      icon: BriefcaseIcon,
-      title: 'Build Projects',
-      description: 'Collaborate on real-world projects and showcase your expertise',
-      color: 'from-cyan-500 to-teal-500'
-    },
-    {
-      icon: ChatBubbleLeftRightIcon,
-      title: 'Real-time Chat',
-      description: 'Instant messaging and video calls to stay connected with your network',
-      color: 'from-teal-400 to-emerald-400'
-    }
-  ];
+
 
   const stats = [
-    { label: 'Active Users', value: '10,000+', icon: UserGroupIcon },
-    { label: 'Skills Matched', value: '50,000+', icon: SparklesIcon },
-    { label: 'Projects Created', value: '5,000+', icon: RocketLaunchIcon },
-    { label: 'Success Stories', value: '15,000+', icon: StarIcon }
+    { label: 'AI-Assisted Discovery', value: 'Smart Match', icon: SparklesIcon },
+    { label: 'Curated Skills', value: '200+', icon: CheckBadgeIcon },
+    { label: 'Real-time Chat', value: 'Instant', icon: ChatBubbleLeftRightIcon },
+    { label: 'Global Community', value: 'Growing', icon: GlobeAltIcon }
   ];
 
   const skillCategories = [
-    { name: 'Technology', count: 2847, icon: '💻', color: 'bg-teal-500' },
-    { name: 'Design', count: 1523, icon: '🎨', color: 'bg-emerald-500' },
-    { name: 'Marketing', count: 1289, icon: '📈', color: 'bg-cyan-500' },
-    { name: 'Business', count: 2156, icon: '💼', color: 'bg-teal-600' },
-    { name: 'Writing', count: 987, icon: '✍️', color: 'bg-emerald-600' },
-    { name: 'Finance', count: 1654, icon: '💰', color: 'bg-teal-400' }
+    { name: 'Technology', description: 'Learn coding, AI, and emerging tech skills.', icon: '💻', color: 'bg-teal-500' },
+    { name: 'Design', description: 'Explore UI/UX, graphics, illustration, and creative arts.', icon: '🎨', color: 'bg-emerald-500' },
+    { name: 'Marketing', description: 'Build digital marketing and branding expertise.', icon: '📈', color: 'bg-cyan-500' },
+    { name: 'Business', description: 'Improve entrepreneurship, leadership, and strategy.', icon: '💼', color: 'bg-teal-600' },
+    { name: 'Writing', description: 'Develop creative writing and communication skills.', icon: '✍️', color: 'bg-emerald-600' },
+    { name: 'Finance', description: 'Learn money management, investing, and financial literacy.', icon: '💰', color: 'bg-teal-400' }
   ];
 
   return (
-    <div className="min-h-screen bg-mint-100 dark:bg-charcoal-900 transition-colors duration-300">
+    <>
+      <Helmet>
+        <title>SkillSynergy - Connect, Collaborate, and Grow</title>
+        <meta name="description" content="Join the premier platform for professionals to share skills, collaborate on projects, and find mentors. Start your journey with SkillSynergy today." />
+      </Helmet>
+      <div className="min-h-screen bg-mint-100 dark:bg-charcoal-900 transition-colors duration-300">
       {/* Navigation */}
       <nav className="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl bg-mint-100/80 dark:bg-charcoal-900/90 border-b border-teal-200 dark:border-charcoal-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -138,7 +118,7 @@ const HomePage = () => {
             >
               <FireIcon className="h-5 w-5 text-orange-500" />
               <span className="text-sm font-semibold bg-gradient-emerald bg-clip-text text-transparent">
-                Join 10,000+ professionals building together
+                Join a growing community of professionals
               </span>
             </motion.div>
 
@@ -188,7 +168,7 @@ const HomePage = () => {
                   className="group p-6 rounded-2xl bg-white/60 dark:bg-charcoal-800/60 backdrop-blur-xl border border-teal-200/50 dark:border-charcoal-700/50 hover:bg-white dark:hover:bg-charcoal-800 hover:shadow-xl hover:scale-105 transition-all duration-300"
                 >
                   <stat.icon className="h-8 w-8 text-teal-600 dark:text-teal-400 mb-3 mx-auto group-hover:scale-110 transition-transform" />
-                  <div className="text-3xl font-black bg-gradient-emerald bg-clip-text text-transparent mb-1">
+                  <div className="text-xl sm:text-2xl font-black bg-gradient-emerald bg-clip-text text-transparent mb-1 whitespace-nowrap">
                     {stat.value}
                   </div>
                   <div className="text-sm text-charcoal-600 dark:text-mint-300 font-medium">
@@ -202,13 +182,13 @@ const HomePage = () => {
       </div>
 
       {/* Features Section */}
-      <div className="py-20 px-4 sm:px-6 lg:px-8 relative">
-        <div className="max-w-7xl mx-auto">
+      <div className="py-20 relative">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-center mb-16"
+            className="text-center mb-8"
           >
             <h2 className="text-4xl md:text-5xl font-black text-charcoal-900 dark:text-white mb-4">
               Why Choose <span className="bg-gradient-emerald bg-clip-text text-transparent">SkillSynergy?</span>
@@ -217,38 +197,8 @@ const HomePage = () => {
               Everything you need to find, connect, and collaborate with the right people
             </p>
           </motion.div>
-
-          <div className="grid md:grid-cols-2 gap-8">
-            {features.map((feature, index) => (
-              <motion.div
-                key={feature.title}
-                initial={{ opacity: 0, x: index % 2 === 0 ? -20 : 20 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.1 }}
-                className="group relative p-8 rounded-3xl bg-white/70 dark:bg-charcoal-800/70 backdrop-blur-2xl border border-teal-200/50 dark:border-charcoal-700/50 hover:bg-white dark:hover:bg-charcoal-800 hover:shadow-2xl hover:scale-105 transition-all duration-500 overflow-hidden"
-              >
-                {/* Gradient Overlay */}
-                <div className={`absolute inset-0 bg-gradient-to-br ${feature.color} opacity-0 group-hover:opacity-10 transition-opacity duration-500 rounded-3xl`} />
-                
-                <div className="relative z-10">
-                  <div className={`inline-flex p-4 rounded-2xl bg-gradient-to-br ${feature.color} mb-6 shadow-lg group-hover:scale-110 transition-transform duration-300`}>
-                    <feature.icon className="h-8 w-8 text-white" />
-                  </div>
-                  <h3 className="text-2xl font-bold text-charcoal-900 dark:text-white mb-3">
-                    {feature.title}
-                  </h3>
-                  <p className="text-charcoal-700 dark:text-mint-200 text-lg leading-relaxed">
-                    {feature.description}
-                  </p>
-                  <div className="mt-6 flex items-center text-teal-600 dark:text-teal-400 font-semibold group-hover:translate-x-2 transition-transform">
-                    Learn more <ArrowRightIcon className="h-5 w-5 ml-2" />
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
         </div>
+        <FeatureShowcase />
       </div>
 
       {/* Skills Categories */}
@@ -285,7 +235,7 @@ const HomePage = () => {
                   {category.name}
                 </h3>
                 <p className="text-sm text-charcoal-500 dark:text-mint-300">
-                  {category.count.toLocaleString()} experts
+                  {category.description}
                 </p>
               </motion.div>
             ))}
@@ -308,7 +258,7 @@ const HomePage = () => {
               Ready to <span className="bg-gradient-emerald bg-clip-text text-transparent">Collaborate?</span>
             </h2>
             <p className="text-xl text-charcoal-700 dark:text-mint-200 mb-8">
-              Join thousands of professionals already building amazing projects together
+              Join a global community building amazing projects together
             </p>
             <Link
               to="/login"
@@ -321,7 +271,44 @@ const HomePage = () => {
           </motion.div>
         </div>
       </div>
+      {/* Trust & Security Section */}
+      <div className="py-16 bg-mint-50 dark:bg-charcoal-950 border-t border-gray-200 dark:border-charcoal-800">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
+            <div className="flex flex-col items-center">
+              <div className="w-12 h-12 bg-emerald-100 dark:bg-emerald-900/30 rounded-full flex items-center justify-center mb-4">
+                <CheckBadgeIcon className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
+              </div>
+              <h3 className="font-bold text-gray-900 dark:text-white mb-2">Verified Professionals</h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Connect with trusted experts. All profiles are verified for authenticity.
+              </p>
+            </div>
+            <div className="flex flex-col items-center">
+              <div className="w-12 h-12 bg-emerald-100 dark:bg-emerald-900/30 rounded-full flex items-center justify-center mb-4">
+                <RocketLaunchIcon className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
+              </div>
+              <h3 className="font-bold text-gray-900 dark:text-white mb-2">Secure Payments</h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Transactions are 100% secure and processed via Razorpay.
+              </p>
+            </div>
+            <div className="flex flex-col items-center">
+              <div className="w-12 h-12 bg-emerald-100 dark:bg-emerald-900/30 rounded-full flex items-center justify-center mb-4">
+                <SparklesIcon className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
+              </div>
+              <h3 className="font-bold text-gray-900 dark:text-white mb-2">Data Privacy First</h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Your data is encrypted and protected. We prioritize your privacy.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <Footer />
     </div>
+    </>
   );
 };
 
