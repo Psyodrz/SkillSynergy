@@ -1,4 +1,3 @@
-
 import { Helmet } from 'react-helmet-async';
 import Footer from '../components/Footer';
 import { ScrollText, CheckCircle, AlertCircle } from 'lucide-react';
@@ -21,7 +20,7 @@ const TermsPage = () => {
             Please read these terms carefully before using SkillSynergy. By accessing or using our platform, you agree to be bound by these terms.
           </p>
           <p className="text-sm text-gray-500 dark:text-gray-500 mt-4">
-            Last Updated: November 24, 2025
+            Last Updated: November 25, 2025
           </p>
         </div>
       </div>
@@ -29,20 +28,16 @@ const TermsPage = () => {
       {/* Content */}
       <div className="flex-1 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="bg-white dark:bg-charcoal-900 rounded-2xl shadow-sm border border-gray-200 dark:border-charcoal-800 p-8 md:p-12 prose dark:prose-invert max-w-none">
-          
+          {/* 1. Introduction */}
           <section className="mb-8">
-            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-              1. Introduction
-            </h2>
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">1. Introduction</h2>
             <p className="text-gray-600 dark:text-gray-300 mb-4">
               Welcome to SkillSynergy ("we," "our," or "us"). We provide a digital platform for professionals to share skills, collaborate on projects, and find mentors. These Terms and Conditions govern your use of our website and services.
             </p>
           </section>
-
+          {/* 2. Nature of Services */}
           <section className="mb-8">
-            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-              2. Nature of Services
-            </h2>
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">2. Nature of Services</h2>
             <div className="bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-100 dark:border-emerald-900/30 rounded-lg p-4 mb-4">
               <div className="flex gap-3">
                 <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
@@ -54,9 +49,7 @@ const TermsPage = () => {
                 </div>
               </div>
             </div>
-            <p className="text-gray-600 dark:text-gray-300 mb-4">
-              Our services include:
-            </p>
+            <p className="text-gray-600 dark:text-gray-300 mb-4">Our services include:</p>
             <ul className="list-disc pl-5 space-y-2 text-gray-600 dark:text-gray-300 mb-4">
               <li>Access to a network of professionals and mentors.</li>
               <li>Project collaboration tools and workspaces.</li>
@@ -64,11 +57,9 @@ const TermsPage = () => {
               <li>Profile hosting and portfolio display.</li>
             </ul>
           </section>
-
+          {/* 3. User Accounts and Responsibilities */}
           <section className="mb-8">
-            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
-              3. User Accounts and Responsibilities
-            </h2>
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">3. User Accounts and Responsibilities</h2>
             <p className="text-gray-600 dark:text-gray-300 mb-4">
               To access certain features, you must register for an account. You agree to:
             </p>
@@ -79,11 +70,9 @@ const TermsPage = () => {
               <li>Not use the platform for any illegal or unauthorized purpose.</li>
             </ul>
           </section>
-
+          {/* 4. Payments and Subscriptions */}
           <section className="mb-8">
-            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
-              4. Payments and Subscriptions
-            </h2>
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">4. Payments and Subscriptions</h2>
             <p className="text-gray-600 dark:text-gray-300 mb-4">
               We offer Free, Pro Monthly, Pro Yearly, and Deluxe Yearly plans.
             </p>
@@ -93,11 +82,9 @@ const TermsPage = () => {
               <li><strong>Taxes:</strong> Prices may be exclusive of applicable taxes, which will be calculated at checkout.</li>
             </ul>
           </section>
-
+          {/* 5. Prohibited Activities */}
           <section className="mb-8">
-            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
-              5. Prohibited Activities
-            </h2>
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">5. Prohibited Activities</h2>
             <div className="bg-red-50 dark:bg-red-900/10 border border-red-100 dark:border-red-900/30 rounded-lg p-4 mb-4">
               <div className="flex gap-3">
                 <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
@@ -113,29 +100,23 @@ const TermsPage = () => {
               Users found engaging in these activities will have their accounts terminated immediately without refund.
             </p>
           </section>
-
+          {/* 6. Intellectual Property */}
           <section className="mb-8">
-            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
-              6. Intellectual Property
-            </h2>
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">6. Intellectual Property</h2>
             <p className="text-gray-600 dark:text-gray-300 mb-4">
               The content, organization, graphics, design, and other matters related to the Site are protected under applicable copyrights and other proprietary laws. You may not copy, redistribute, use or publish any part of the Site without our express permission.
             </p>
           </section>
-
+          {/* 7. Limitation of Liability */}
           <section className="mb-8">
-            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
-              7. Limitation of Liability
-            </h2>
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">7. Limitation of Liability</h2>
             <p className="text-gray-600 dark:text-gray-300 mb-4">
               SkillSynergy shall not be liable for any indirect, incidental, special, consequential or punitive damages, including without limitation, loss of profits, data, use, goodwill, or other intangible losses, resulting from your access to or use of or inability to access or use the service.
             </p>
           </section>
-
+          {/* 8. Contact Information */}
           <section className="mb-8">
-            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
-              8. Contact Information
-            </h2>
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">8. Contact Information</h2>
             <p className="text-gray-600 dark:text-gray-300 mb-4">
               For any questions regarding these Terms, please contact us at:
             </p>
@@ -145,7 +126,6 @@ const TermsPage = () => {
               <p className="text-gray-600 dark:text-gray-400">Address: Lucknow, Uttar Pradesh, India</p>
             </div>
           </section>
-
         </div>
       </div>
       <Footer />

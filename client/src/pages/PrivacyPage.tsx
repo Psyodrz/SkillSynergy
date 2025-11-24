@@ -3,7 +3,7 @@ import Footer from '../components/Footer';
 import { Shield, Lock, Eye, FileText, Server, Globe } from 'lucide-react';
 
 const PrivacyPage = () => {
-  const lastUpdated = "November 24, 2025";
+  const lastUpdated = "November 25, 2025";
 
   return (
     <div className="min-h-screen bg-mint-50 dark:bg-charcoal-950 flex flex-col">

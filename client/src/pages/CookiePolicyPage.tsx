@@ -21,7 +21,7 @@ const CookiePolicyPage = () => {
             This policy explains how SkillSynergy uses cookies and similar technologies to recognize you when you visit our website.
           </p>
           <p className="text-sm text-gray-500 dark:text-gray-500 mt-4">
-            Last Updated: November 24, 2025
+            Last Updated: November 25, 2025
           </p>
         </div>
       </div>
@@ -29,7 +29,7 @@ const CookiePolicyPage = () => {
       {/* Content */}
       <div className="flex-1 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="bg-white dark:bg-charcoal-900 rounded-2xl shadow-sm border border-gray-200 dark:border-charcoal-800 p-8 md:p-12 prose dark:prose-invert max-w-none">
-          
+          {/* 1. What are cookies? */}
           <section className="mb-10">
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
               <Info className="w-6 h-6 text-emerald-500" />
@@ -43,6 +43,7 @@ const CookiePolicyPage = () => {
             </p>
           </section>
 
+          {/* 2. Why do we use cookies? */}
           <section className="mb-10">
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
               2. Why do we use cookies?
@@ -50,7 +51,6 @@ const CookiePolicyPage = () => {
             <p className="text-gray-600 dark:text-gray-300 mb-4">
               We use first-party and third-party cookies for several reasons. Some cookies are required for technical reasons in order for our Website to operate, and we refer to these as "essential" or "strictly necessary" cookies. Other cookies also enable us to track and target the interests of our users to enhance the experience on our Online Properties.
             </p>
-            
             <div className="grid gap-6 mt-6">
               <div className="bg-gray-50 dark:bg-charcoal-800 p-6 rounded-xl">
                 <h3 className="font-bold text-gray-900 dark:text-white mb-2">Essential Cookies</h3>
@@ -58,16 +58,14 @@ const CookiePolicyPage = () => {
                   These cookies are strictly necessary to provide you with services available through our Website and to use some of its features, such as access to secure areas.
                 </p>
               </div>
-              
               <div className="bg-gray-50 dark:bg-charcoal-800 p-6 rounded-xl">
-                <h3 className="font-bold text-gray-900 dark:text-white mb-2">Performance & Functionality Cookies</h3>
+                <h3 className="font-bold text-gray-900 dark:text-white mb-2">Performance &amp; Functionality Cookies</h3>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
                   These cookies are used to enhance the performance and functionality of our Website but are non-essential to their use. However, without these cookies, certain functionality (like videos) may become unavailable.
                 </p>
               </div>
-
               <div className="bg-gray-50 dark:bg-charcoal-800 p-6 rounded-xl">
-                <h3 className="font-bold text-gray-900 dark:text-white mb-2">Analytics & Customization Cookies</h3>
+                <h3 className="font-bold text-gray-900 dark:text-white mb-2">Analytics &amp; Customization Cookies</h3>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
                   These cookies collect information that is used either in aggregate form to help us understand how our Website is being used or how effective our marketing campaigns are, or to help us customize our Website for you.
                 </p>
@@ -75,6 +73,7 @@ const CookiePolicyPage = () => {
             </div>
           </section>
 
+          {/* 3. How can I control cookies? */}
           <section className="mb-10">
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
               <Settings className="w-6 h-6 text-emerald-500" />
@@ -88,6 +87,7 @@ const CookiePolicyPage = () => {
             </p>
           </section>
 
+          {/* 4. Updates to this Policy */}
           <section className="mb-10">
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
               <ShieldCheck className="w-6 h-6 text-emerald-500" />
@@ -98,6 +98,7 @@ const CookiePolicyPage = () => {
             </p>
           </section>
 
+          {/* 5. Contact Us */}
           <section className="mb-10">
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
               5. Contact Us
@@ -106,7 +107,6 @@ const CookiePolicyPage = () => {
               If you have any questions about our use of cookies or other technologies, please email us at aditya.s70222@gmail.com.
             </p>
           </section>
-
         </div>
       </div>
       <Footer />
