@@ -3,6 +3,7 @@ const Razorpay = require('razorpay');
 const crypto = require('crypto');
 const { Pool } = require('pg');
 const cors = require('cors');
+const OpenAI = require('openai');
 require('dotenv').config();
 
 const app = express();
@@ -23,258 +24,284 @@ const razorpay = new Razorpay({
   key_secret: process.env.RAZORPAY_KEY_SECRET
 });
 
-// ===============================
-// API ENDPOINTS
-// ===============================
+// OpenAI instance
+const openai = new OpenAI({
+  apiKey: process.env.OPENROUTER_API_KEY,
+  baseURL: "https://openrouter.ai/api/v1",
+});
+
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok', endpoints: ['/api/smart-match', '/api/match/teachers'], timestamp: new Date().toISOString() });
+});
 
 /**
- * POST /api/payments/create-order
- * Creates a Razorpay order and saves it in database
+ * POST /api/smart-match
+ * AI-Assisted Discovery for Skills, Projects, and Mentors
  */
-app.post('/api/payments/create-order', async (req, res) => {
+app.post('/api/smart-match', async (req, res) => {
   try {
-    const { plan_id, user_id, customer_name, customer_email, customer_phone } = req.body;
+    const { user_id, query } = req.body;
 
-    console.log('Creating order for:', { plan_id, user_id, customer_name });
+    console.log('Smart Match request:', { user_id, query });
 
-    // Fetch plan from database
-    const planResult = await pool.query(
-      'SELECT id, name, price, currency, billing_cycle FROM plans WHERE id = $1',
-      [plan_id]
-    );
+    let queryEmbedding = null;
 
-    if (planResult.rows.length === 0) {
-      return res.status(404).json({ error: 'Plan not found' });
+    // 1. Generate Embedding
+    if (query) {
+      // If user provided a specific query, use that
+      const response = await openai.embeddings.create({
+        model: "openai/text-embedding-3-small",
+        input: query.replace(/\n/g, ' '),
+      });
+      queryEmbedding = response.data[0].embedding;
+    } else if (user_id) {
+      // Fallback: Use user's profile embedding if it exists
+      const profileResult = await pool.query('SELECT interests_embedding FROM profiles WHERE id = $1', [user_id]);
+      if (profileResult.rows.length > 0 && profileResult.rows[0].interests_embedding) {
+        queryEmbedding = JSON.parse(profileResult.rows[0].interests_embedding);
+      }
     }
 
-    const plan = planResult.rows[0];
-    const amountInPaise = Math.round(plan.price * 100); // Convert to paise
+    if (!queryEmbedding) {
+      return res.status(400).json({ error: 'Could not generate search context. Please provide a query or update your profile.' });
+    }
 
-    // Create Razorpay order
-    const razorpayOrder = await razorpay.orders.create({
-      amount: amountInPaise,
-      currency: plan.currency || 'INR',
-      receipt: `receipt_${Date.now()}`,
-      notes: {
-        plan_id,
-        user_id,
-        plan_name: plan.name,
-        billing_cycle: plan.billing_cycle
-      }
-    });
+    // 2. Run Vector Searches
+    // Note: We use <=> for cosine distance (requires vector extension)
+    // We cast the parameter to vector explicitly: $1::vector
 
-    console.log('Razorpay order created:', razorpayOrder.id);
+    const vectorStr = JSON.stringify(queryEmbedding);
 
-    // Save order in database
-    const paymentResult = await pool.query(
-      `INSERT INTO payments 
-        (user_id, plan_id, razorpay_order_id, amount, currency, status, customer_name, customer_email, customer_phone, receipt, notes)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
-      RETURNING id`,
-      [
-        user_id,
-        plan_id,
-        razorpayOrder.id,
-        plan.price,
-        plan.currency || 'INR',
-        'created',
-        customer_name,
-        customer_email,
-        customer_phone,
-        razorpayOrder.receipt,
-        JSON.stringify(razorpayOrder.notes)
-      ]
-    );
+    // A. Recommended Skills
+    const skillsQuery = `
+      SELECT id, name, category, description, 
+             1 - (embedding <=> $1::vector) as similarity
+      FROM skills
+      WHERE embedding IS NOT NULL
+      ORDER BY embedding <=> $1::vector
+      LIMIT 6
+    `;
 
-    console.log('Payment record created:', paymentResult.rows[0].id);
+    // B. Suggested Projects
+    const projectsQuery = `
+      SELECT id, title, description, category, status,
+             1 - (embedding <=> $1::vector) as similarity
+      FROM projects
+      WHERE embedding IS NOT NULL AND status = 'active'
+      ORDER BY embedding <=> $1::vector
+      LIMIT 6
+    `;
+
+    // C. Mentors / Experts (Profiles)
+    // Exclude current user
+    const mentorsQuery = `
+      SELECT id, full_name, role, avatar_url, bio,
+             1 - (interests_embedding <=> $1::vector) as similarity
+      FROM profiles
+      WHERE interests_embedding IS NOT NULL 
+        AND id != $2
+        AND (role ILIKE '%mentor%' OR role ILIKE '%teacher%' OR role ILIKE '%expert%' OR role IS NOT NULL)
+      ORDER BY interests_embedding <=> $1::vector
+      LIMIT 6
+    `;
+
+    const [skillsResult, projectsResult, mentorsResult] = await Promise.all([
+      pool.query(skillsQuery, [vectorStr]),
+      pool.query(projectsQuery, [vectorStr]),
+      pool.query(mentorsQuery, [vectorStr, user_id || '00000000-0000-0000-0000-000000000000'])
+    ]);
 
     res.json({
-      order_id: razorpayOrder.id,
-      amount: amountInPaise,
-      currency: plan.currency || 'INR',
-      key_id: process.env.RAZORPAY_KEY_ID
+      skills: skillsResult.rows,
+      projects: projectsResult.rows,
+      mentors: mentorsResult.rows
     });
 
   } catch (error) {
-    console.error('Error creating order:', error);
+    console.error('Smart Match Error:', error);
     res.status(500).json({ error: error.message });
   }
 });
 
 /**
- * POST /api/payments/verify
- * Verifies payment signature and activates subscription
+ * POST /api/match/teachers
+ * AI-Assisted Teacher Matching
+ * Finds the best teachers for a given learner and/or skills
  */
-app.post('/api/payments/verify', async (req, res) => {
+app.post('/api/match/teachers', async (req, res) => {
   try {
-    const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
+    const { userId, skillIds, limit = 10 } = req.body;
 
-    console.log('Verifying payment:', { razorpay_order_id, razorpay_payment_id });
+    console.log('Teacher Match request:', { userId, skillIds, limit });
 
-    // Verify signature
-    const body = razorpay_order_id + "|" + razorpay_payment_id;
-    const expectedSignature = crypto
-      .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
-      .update(body.toString())
-      .digest("hex");
-
-    const isValid = expectedSignature === razorpay_signature;
-
-    if (!isValid) {
-      return res.status(400).json({ error: 'Invalid payment signature' });
-    }
-
-    console.log('Signature verified successfully');
-
-    // Fetch payment details from Razorpay
-    const razorpayPayment = await razorpay.payments.fetch(razorpay_payment_id);
-
-    console.log('Payment details fetched:', razorpayPayment.status);
-
-    // Get payment record from database
-    const paymentResult = await pool.query(
-      'SELECT * FROM payments WHERE razorpay_order_id = $1',
-      [razorpay_order_id]
-    );
-
-    if (paymentResult.rows.length === 0) {
-      return res.status(404).json({ error: 'Payment not found' });
-    }
-
-    const payment = paymentResult.rows[0];
-
-    // Get plan details
-    const planResult = await pool.query(
-      'SELECT billing_cycle FROM plans WHERE id = $1',
-      [payment.plan_id]
-    );
-
-    const plan = planResult.rows[0];
-
-    // Calculate subscription period
-    let endDate;
-    if (plan.billing_cycle === 'monthly') {
-      endDate = new Date();
-      endDate.setMonth(endDate.getMonth() + 1);
-    } else if (plan.billing_cycle === 'yearly') {
-      endDate = new Date();
-      endDate.setFullYear(endDate.getFullYear() + 1);
-    } else {
-      endDate = null; // Lifetime
-    }
-
-    // Start transaction
-    const client = await pool.connect();
-    try {
-      await client.query('BEGIN');
-
-      // Update payment record
-      await client.query(
-        `UPDATE payments 
-         SET razorpay_payment_id = $1, 
-             razorpay_signature = $2, 
-             status = $3, 
-             payment_method = $4,
-             paid_at = $5
-         WHERE razorpay_order_id = $6`,
-        [
-          razorpay_payment_id,
-          razorpay_signature,
-          'success',
-          razorpayPayment.method,
-          new Date(razorpayPayment.created_at * 1000),
-          razorpay_order_id
-        ]
-      );
-
-      // Cancel existing active subscriptions
-      await client.query(
-        `UPDATE user_subscriptions 
-         SET status = 'canceled', cancel_at = now() 
-         WHERE user_id = $1 AND status IN ('active', 'trialing')`,
-        [payment.user_id]
-      );
-
-      // Create new subscription
-      const subscriptionResult = await client.query(
-        `INSERT INTO user_subscriptions 
-          (user_id, plan_id, status, started_at, current_period_start, current_period_end, next_billing_date, auto_renew)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-         RETURNING id`,
-        [
-          payment.user_id,
-          payment.plan_id,
-          'active',
-          new Date(),
-          new Date(),
-          endDate,
-          endDate,
-          true
-        ]
-      );
-
-      const subscriptionId = subscriptionResult.rows[0].id;
-
-      // Link payment to subscription
-      await client.query(
-        'UPDATE payments SET subscription_id = $1 WHERE id = $2',
-        [subscriptionId, payment.id]
-      );
-
-      await client.query('COMMIT');
-
-      console.log('Subscription activated:', subscriptionId);
-
-      res.json({
-        success: true,
-        subscription_id: subscriptionId,
-        payment_id: payment.id
+    // Validate input
+    if (!userId && (!skillIds || skillIds.length === 0)) {
+      return res.status(400).json({ 
+        error: 'Either userId or skillIds must be provided' 
       });
-
-    } catch (error) {
-      await client.query('ROLLBACK');
-      throw error;
-    } finally {
-      client.release();
     }
 
+    let queryEmbedding = null;
+    let skillEmbeddings = [];
+
+    // 1. Get skill embeddings
+    if (skillIds && skillIds.length > 0) {
+      // Fetch embeddings for the requested skills
+      const skillsQuery = `
+        SELECT id, embedding
+        FROM skills
+        WHERE id = ANY($1::uuid[]) AND embedding IS NOT NULL
+      `;
+      
+      const skillsResult = await pool.query(skillsQuery, [skillIds]);
+      
+      if (skillsResult.rows.length === 0) {
+        return res.status(400).json({ 
+          error: 'No valid skill embeddings found for provided skillIds' 
+        });
+      }
+
+      skillEmbeddings = skillsResult.rows.map(row => JSON.parse(row.embedding));
+    } else if (userId) {
+      // Get user's learning skills if no skillIds provided
+      const userSkillsQuery = `
+        SELECT s.embedding
+        FROM user_skills us
+        JOIN skills s ON us.skill_id = s.id
+        WHERE us.user_id = $1 AND s.embedding IS NOT NULL
+        LIMIT 5
+      `;
+      
+      const userSkillsResult = await pool.query(userSkillsQuery, [userId]);
+      
+      if (userSkillsResult.rows.length === 0) {
+        return res.status(400).json({ 
+          error: 'User has no skills with embeddings. Please add skills first.' 
+        });
+      }
+
+      skillEmbeddings = userSkillsResult.rows.map(row => JSON.parse(row.embedding));
+    }
+
+    // 2. Calculate average embedding as query vector
+    if (skillEmbeddings.length > 0) {
+      const dimension = skillEmbeddings[0].length;
+      const avgEmbedding = new Array(dimension).fill(0);
+      
+      for (const emb of skillEmbeddings) {
+        for (let i = 0; i < dimension; i++) {
+          avgEmbedding[i] += emb[i];
+        }
+      }
+      
+      for (let i = 0; i < dimension; i++) {
+        avgEmbedding[i] /= skillEmbeddings.length;
+      }
+      
+      queryEmbedding = avgEmbedding;
+    }
+
+    if (!queryEmbedding) {
+      return res.status(400).json({ error: 'Could not generate query embedding' });
+    }
+
+    const vectorStr = JSON.stringify(queryEmbedding);
+
+    // 3. Find matching teachers using vector similarity
+    const teachersQuery = `
+      WITH teacher_candidates AS (
+        SELECT DISTINCT
+          p.id,
+          p.full_name,
+          p.avatar_url,
+          p.headline,
+          p.bio,
+          p.languages,
+          p.experience_years,
+          p.qualification,
+          p.teaching_modes,
+          p.interests_embedding,
+          CASE 
+            WHEN p.interests_embedding IS NOT NULL THEN
+              1 - (p.interests_embedding <=> $1::vector)
+            ELSE 0.3
+          END as similarity
+        FROM profiles p
+        WHERE p.role IN ('teacher', 'both')
+          AND p.onboarding_completed = true
+          ${userId ? 'AND p.id != $3' : ''}
+      ),
+      teacher_skills AS (
+        SELECT 
+          us.user_id,
+          jsonb_agg(
+            jsonb_build_object(
+              'id', s.id,
+              'name', s.name,
+              'category', s.category,
+              'level', COALESCE(us.skill_level, 'intermediate')
+            )
+            ORDER BY s.name
+          ) FILTER (WHERE s.id IS NOT NULL) as skills
+        FROM user_skills us
+        JOIN skills s ON us.skill_id = s.id
+        ${skillIds && skillIds.length > 0 ? 'WHERE s.id = ANY($2::uuid[])' : ''}
+        GROUP BY us.user_id
+      )
+      SELECT 
+        tc.id,
+        tc.full_name,
+        tc.avatar_url,
+        tc.headline,
+        tc.bio,
+        tc.languages,
+        tc.experience_years,
+        tc.qualification,
+        tc.teaching_modes,
+        tc.similarity,
+        COALESCE(ts.skills, '[]'::jsonb) as matching_skills
+      FROM teacher_candidates tc
+      LEFT JOIN teacher_skills ts ON tc.id = ts.user_id
+      WHERE tc.similarity > 0.2
+      ORDER BY tc.similarity DESC
+      LIMIT $${userId ? '4' : '2'}
+    `;
+
+    const queryParams = [vectorStr];
+    if (skillIds && skillIds.length > 0) {
+      queryParams.push(skillIds);
+    }
+    if (userId) {
+      queryParams.push(userId);
+    }
+    queryParams.push(limit);
+
+    const teachersResult = await pool.query(teachersQuery, queryParams);
+
+    // Format response
+    const teachers = teachersResult.rows.map(row => ({
+      id: row.id,
+      full_name: row.full_name,
+      avatar_url: row.avatar_url,
+      headline: row.headline,
+      bio: row.bio,
+      languages: row.languages || [],
+      experience_years: row.experience_years,
+      qualification: row.qualification,
+      teaching_modes: row.teaching_modes || [],
+      similarity: parseFloat((row.similarity * 100).toFixed(1)),
+      skills: row.matching_skills || []
+    }));
+
+    console.log(`Found ${teachers.length} matching teachers`);
+
+    res.json({ teachers });
+
   } catch (error) {
-    console.error('Error verifying payment:', error);
+    console.error('Teacher Match Error:', error);
     res.status(500).json({ error: error.message });
   }
-});
-
-/**
- * GET /api/payments/user/:user_id
- * Fetch payment history with plan details
- */
-app.get('/api/payments/user/:user_id', async (req, res) => {
-  try {
-    const { user_id } = req.params;
-
-    const result = await pool.query(
-      `SELECT 
-        p.*,
-        pl.name as plan_name,
-        pl.billing_cycle
-      FROM payments p
-      JOIN plans pl ON p.plan_id = pl.id
-      WHERE p.user_id = $1
-      ORDER BY p.created_at DESC`,
-      [user_id]
-    );
-
-    res.json(result.rows);
-
-  } catch (error) {
-    console.error('Error fetching payments:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Health check
-app.get('/health', (req, res) => {
-  res.json({ status: 'ok' });
 });
 
 // Start server
