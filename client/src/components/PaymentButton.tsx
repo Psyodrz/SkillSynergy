@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { config } from '../config';
 
 interface PaymentButtonProps {
   plan: {
@@ -51,7 +52,7 @@ export const PaymentButton: React.FC<PaymentButtonProps> = ({ plan, user }) => {
 
     try {
       // 1. Create order
-      const orderResponse = await fetch('http://localhost:5000/api/payments/create-order', {
+      const orderResponse = await fetch(`${config.API_URL}/api/payments/create-order`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -87,7 +88,7 @@ export const PaymentButton: React.FC<PaymentButtonProps> = ({ plan, user }) => {
         handler: async (response: any) => {
           try {
             // 3. Verify payment
-            const verifyResponse = await fetch('http://localhost:5000/api/payments/verify', {
+            const verifyResponse = await fetch(`${config.API_URL}/api/payments/verify`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({

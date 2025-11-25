@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { config } from '../config';
 import { useAuth } from '../context/AuthContext';
 import { SparklesIcon, RocketLaunchIcon, UserIcon, CheckBadgeIcon } from '@heroicons/react/24/outline';
 import { motion } from 'framer-motion';
@@ -47,8 +48,8 @@ export default function SmartMatch() {
     setResults(null);
 
     try {
-      // Assuming backend is running on port 5000
-      const response = await fetch('http://localhost:5000/api/smart-match', {
+      // Use configured API URL
+      const response = await fetch(`${config.API_URL}/api/smart-match`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -1,7 +1,8 @@
 import { useState } from 'react';
+import { config } from '../config';
 import type { TeacherProfile, TeacherMatchRequest } from '../types';
 
-const API_BASE_URL = 'http://localhost:5000';
+const API_BASE_URL = config.API_URL;
 
 export function useTeacherMatch() {
   const [teachers, setTeachers] = useState<TeacherProfile[]>([]);

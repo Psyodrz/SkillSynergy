@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { config } from '../config';
 import { useAuth } from '../context/AuthContext';
 
 interface Payment {
@@ -24,7 +25,7 @@ export const PaymentHistory = () => {
       if (!user?.id) return;
 
       try {
-        const response = await fetch(`http://localhost:5000/api/payments/user/${user.id}`);
+        const response = await fetch(`${config.API_URL}/api/payments/user/${user.id}`);
         if (!response.ok) throw new Error('Failed to fetch payments');
 
         const data = await response.json();
