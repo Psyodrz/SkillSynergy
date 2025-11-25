@@ -59,16 +59,16 @@ const HomePage = () => {
                 SkillSynergy
               </h1>
             </Link>
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2 sm:space-x-4 flex-shrink-0">
               <Link
                 to="/login"
-                className="text-teal-600 dark:text-mint-400 hover:text-teal-800 dark:hover:text-white font-medium transition-colors"
+                className="hidden sm:block text-teal-600 dark:text-mint-400 hover:text-teal-800 dark:hover:text-white font-medium transition-colors whitespace-nowrap"
               >
                 Sign In
               </Link>
               <Link
                 to="/login"
-                className="px-6 py-2.5 bg-gradient-emerald hover:opacity-90 text-white font-semibold rounded-xl shadow-emerald-glow hover:shadow-premium-emerald transition-all duration-300 transform hover:scale-105"
+                className="px-4 py-2 sm:px-6 sm:py-2.5 bg-gradient-emerald hover:opacity-90 text-white font-semibold rounded-xl shadow-emerald-glow hover:shadow-premium-emerald transition-all duration-300 transform hover:scale-105 whitespace-nowrap text-sm sm:text-base"
               >
                 Get Started
               </Link>

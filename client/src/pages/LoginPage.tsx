@@ -190,6 +190,8 @@ const LoginPage = () => {
                       <motion.input
                         whileFocus={{ scale: 1.01 }}
                         type="text"
+                        name="name"
+                        autoComplete="name"
                         value={fullName}
                         onChange={e => setFullName(e.target.value)}
                         required={!isLogin}
@@ -221,6 +223,8 @@ const LoginPage = () => {
                   <motion.input
                     whileFocus={{ scale: 1.01 }}
                     type="email"
+                    name="email"
+                    autoComplete="email"
                     value={email}
                     onChange={e => setEmail(e.target.value)}
                     required
@@ -250,6 +254,8 @@ const LoginPage = () => {
                   <motion.input
                     whileFocus={{ scale: 1.01 }}
                     type={showPassword ? 'text' : 'password'}
+                    name="password"
+                    autoComplete="current-password"
                     value={password}
                     onChange={e => setPassword(e.target.value)}
                     required
@@ -292,6 +298,8 @@ const LoginPage = () => {
                       <motion.input
                         whileFocus={{ scale: 1.01 }}
                         type={showPassword ? 'text' : 'password'}
+                        name="confirmPassword"
+                        autoComplete="new-password"
                         value={confirmPassword}
                         onChange={e => setConfirmPassword(e.target.value)}
                         required={!isLogin}
