@@ -138,7 +138,7 @@ const LoginPage = () => {
               <p className="text-charcoal-600 dark:text-mint-200">
                 {isLogin
                   ? 'Sign in to continue your journey'
-                  : 'Create your account and start collaborating'}
+                  : 'Create your account and start learning'}
               </p>
             </div>
 

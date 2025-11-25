@@ -137,6 +137,23 @@ export function useDirectMessages(
         });
 
         if (sendError) throw sendError;
+
+        // 3. Create Notification for the receiver
+        // We don't await this to avoid blocking the UI, but we log errors
+        supabase
+          .from('notifications')
+          .insert({
+            user_id: otherUserId,
+            type: 'info',
+            title: 'New Message',
+            message: 'You have a new message',
+            read: false,
+            link: `/messages/${currentUserId}`
+          })
+          .then(({ error }) => {
+            if (error) console.error('Error creating notification:', error);
+          });
+
       } catch (err: any) {
         console.error('Error sending message:', err);
         setError(err.message);

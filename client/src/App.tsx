@@ -65,7 +65,7 @@ function App() {
             <Navbar onToggleSidebar={() => setIsSidebarOpen(true)} />
           )}
           
-          <div className="flex-1 px-6 py-6">
+          <div className="flex-1">
             <Routes>
               {/* Public Routes */}
               <Route path="/" element={<HomePage />} />

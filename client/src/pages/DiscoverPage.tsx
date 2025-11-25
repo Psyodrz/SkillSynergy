@@ -318,10 +318,10 @@ const DiscoverPage = () => {
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 sm:gap-4">
           <div className="mb-2 sm:mb-0">
             <h1 className="text-xl sm:text-2xl font-bold text-charcoal-900 dark:text-white">
-              Discover Skills & People
+              Discover Skills & Modules
             </h1>
             <p className="text-sm sm:text-base text-charcoal-600 dark:text-mint-200">
-              Explore diverse skills and connect with professionals worldwide
+              Explore diverse skills and start learning modules
             </p>
           </div>
           
@@ -333,7 +333,7 @@ const DiscoverPage = () => {
               </div>
               <input
                 type="text"
-                placeholder="Search skills, people..."
+                placeholder="Search skills, modules..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="block w-full pl-9 sm:pl-10 pr-3 py-2 sm:py-2.5 text-sm sm:text-base border border-teal-200 dark:border-charcoal-700 rounded-lg bg-white dark:bg-charcoal-800 text-charcoal-900 dark:text-mint-100 placeholder-teal-500 dark:placeholder-teal-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
@@ -456,7 +456,7 @@ const DiscoverPage = () => {
             <div className="flex items-center space-x-2 mb-4">
               <AcademicCapIcon className="h-6 w-6 text-emerald-600" />
               <h2 className="text-xl font-bold text-navy-900 dark:text-white">
-                Teachers
+                Instructors
               </h2>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
@@ -477,7 +477,7 @@ const DiscoverPage = () => {
             <div className="flex items-center space-x-2 mb-4">
               <UserGroupIcon className="h-6 w-6 text-green-600" />
               <h2 className="text-xl font-bold text-navy-900 dark:text-white">
-                Learners
+                Students
               </h2>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
@@ -497,7 +497,7 @@ const DiscoverPage = () => {
         {!loadingUsers && filteredUsers.length === 0 && (
           <div className="text-center py-12 bg-white dark:bg-navy-800 rounded-xl shadow-premium border border-warm-200 dark:border-navy-700">
             <UserGroupIcon className="h-12 w-12 mx-auto text-emerald-400 mb-3" />
-            <h3 className="text-lg font-medium text-navy-900 dark:text-white">No professionals found</h3>
+            <h3 className="text-lg font-medium text-navy-900 dark:text-white">No instructors found</h3>
             <p className="text-navy-500 dark:text-warm-400">Try adjusting your search query</p>
           </div>
         )}
@@ -612,7 +612,7 @@ const DiscoverPage = () => {
       <Modal
         isOpen={isSkillModalOpen}
         onClose={() => setIsSkillModalOpen(false)}
-        title={`Connect to ${selectedSkill?.name}`}
+        title={`Start Learning ${selectedSkill?.name}`}
         size="md"
       >
         {selectedSkill && (
@@ -663,14 +663,14 @@ const DiscoverPage = () => {
                       Adding...
                     </>
                   ) : (
-                    'Add to My Skills'
+                    'Add to My Learning Path'
                   )}
                 </Button>
                 <Button variant="outline" className="w-full" onClick={handleFindProfessionals}>
-                  Find Professionals
+                  Start Learning
                 </Button>
                 <Button variant="outline" className="w-full" onClick={handleStartProject}>
-                  Start a Project
+                  Join a Practice Challenge
                 </Button>
               </div>
             </div>

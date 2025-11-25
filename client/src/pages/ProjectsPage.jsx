@@ -91,7 +91,7 @@ const ProjectsPage = () => {
     const collaborators = project.collaborators || [];
 
     if (collaborators.includes(userId))
-      return alert('Already collaborating');
+      return alert('Already participating');
 
     try {
       await supabase
@@ -102,11 +102,11 @@ const ProjectsPage = () => {
         })
         .eq('id', projectId);
 
-      alert('Joined project!');
+      alert('Joined challenge!');
       fetchProjects();
       setIsProjectModalOpen(false);
     } catch (error) {
-      alert('Error joining project');
+      alert('Error joining challenge');
     }
   };
 
@@ -148,9 +148,9 @@ const ProjectsPage = () => {
       >
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-charcoal-900 dark:text-white">Projects</h1>
+            <h1 className="text-2xl font-bold text-charcoal-900 dark:text-white">Learning Challenges</h1>
             <p className="text-sm text-charcoal-600 dark:text-mint-300">
-              Discover and join high-quality collaborations
+              Discover and join high-quality learning challenges
             </p>
           </div>
 
@@ -162,7 +162,7 @@ const ProjectsPage = () => {
               <input
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search projects…"
+                placeholder="Search challenges…"
                 className="w-full pl-10 pr-3 py-2.5 rounded-lg bg-white dark:bg-charcoal-800 border border-mint-300 dark:border-charcoal-700 text-charcoal-900 dark:text-white placeholder-charcoal-400 dark:placeholder-mint-500 focus:ring-2 focus:ring-emerald-500"
               />
             </div>
@@ -245,7 +245,7 @@ const ProjectsPage = () => {
                 <div className="flex justify-between mt-4 text-sm text-charcoal-500 dark:text-mint-400">
                   <span className="flex items-center gap-1">
                     <UserGroupIcon className="h-4 w-4" />
-                    {project.collaborators?.length || 0} people
+                    {project.collaborators?.length || 0} learners
                   </span>
                   <span className="flex items-center gap-1">
                     <ClockIcon className="h-4 w-4" />
@@ -293,7 +293,7 @@ const ProjectsPage = () => {
               onClick={() => handleJoinProject(selectedProject.id)}
               className="w-full bg-gradient-to-r from-emerald-500 to-teal-500 text-white"
             >
-              Join Project
+              Join Challenge
             </Button>
           </div>
         )}

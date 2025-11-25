@@ -7,13 +7,13 @@ import { Check, Star, Zap, Crown } from 'lucide-react';
 const PricingPage = () => {
   const plans = [
     {
-      name: 'Free',
+      name: 'Starter Learning Plan',
       price: '₹0',
       period: '/month',
-      description: 'Perfect for getting started and exploring the community.',
+      description: 'Perfect for getting started and exploring the learning modules.',
       features: [
         'Basic Profile',
-        'Join up to 3 Projects',
+        'Join up to 3 Challenges',
         'Community Access',
         'Read-only Message Access'
       ],
@@ -22,45 +22,45 @@ const PricingPage = () => {
       icon: Star
     },
     {
-      name: 'Pro Monthly',
+      name: 'Pro Learning Monthly',
       price: '₹499',
       period: '/month',
-      description: 'For active professionals who want to collaborate.',
+      description: 'For active learners who want to practice.',
       features: [
         'Enhanced Profile',
-        'Unlimited Projects',
-        'Direct Messaging',
+        'Unlimited Challenges',
+        'Direct Doubt Support',
         'Priority Support',
-        'Skill Badges'
+        'Skill Certificates'
       ],
       cta: 'Upgrade Now',
       highlight: true,
       icon: Zap
     },
     {
-      name: 'Pro Yearly',
+      name: 'Pro Learning Yearly',
       price: '₹4999',
       period: '/year',
       description: 'Best value for long-term growth and commitment.',
       features: [
         'All Pro Features',
         '2 Months Free',
-        'Verified Badge',
-        'Featured Profile',
-        'Early Access to Features'
+        'Verified Learner Badge',
+        'Featured Portfolio',
+        'Early Access to New Modules'
       ],
       cta: 'Upgrade Now',
       highlight: false,
       icon: Zap
     },
     {
-      name: 'Deluxe Yearly',
+      name: 'Premium Learning Bundle',
       price: '₹9999',
       period: '/year',
-      description: 'The ultimate toolkit for serious mentors and leaders.',
+      description: 'The ultimate toolkit for serious instructors and contributors.',
       features: [
-        'All Pro Yearly Features',
-        'Mentorship Tools',
+        'All Pro Learning Features',
+        'Instructor Tools',
         'Analytics Dashboard',
         'Custom Domain Support',
         'Dedicated Success Manager'
@@ -74,8 +74,8 @@ const PricingPage = () => {
   return (
     <div className="min-h-screen bg-mint-50 dark:bg-charcoal-950 flex flex-col">
       <Helmet>
-        <title>Pricing Plans - SkillSynergy</title>
-        <meta name="description" content="Choose the right plan for your professional growth. Transparent pricing for mentorship, collaboration, and skill-sharing." />
+        <title>Learning Plans - SkillSynergy</title>
+        <meta name="description" content="Choose the right plan for your learning growth. Transparent pricing for guided paths, practice, and skill-sharing." />
       </Helmet>
       {/* Header */}
       <div className="bg-white dark:bg-charcoal-900 border-b border-gray-200 dark:border-charcoal-800 py-20">
@@ -84,7 +84,7 @@ const PricingPage = () => {
             Simple, Transparent Pricing
           </h1>
           <p className="text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-            Choose the plan that fits your career goals. No hidden fees. Cancel anytime.
+            Choose the plan that fits your learning goals. No hidden fees. Cancel anytime.
           </p>
         </div>
       </div>

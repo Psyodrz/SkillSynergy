@@ -13,15 +13,16 @@ import {
 } from '@heroicons/react/24/outline';
 
 import { Helmet } from 'react-helmet-async';
+import { useAuth } from '../context/AuthContext';
 
 const HomePage = () => {
-
+  const { isAuthenticated } = useAuth();
 
   const stats = [
-    { label: 'AI-Assisted Discovery', value: 'Smart Match', icon: SparklesIcon },
-    { label: 'Curated Skills', value: '200+', icon: CheckBadgeIcon },
-    { label: 'Real-time Chat', value: 'Instant', icon: ChatBubbleLeftRightIcon },
-    { label: 'Global Community', value: 'Growing', icon: GlobeAltIcon }
+    { label: 'AI-Assisted Learning', value: 'Smart Learning', icon: SparklesIcon },
+    { label: 'Curated Modules', value: '200+', icon: CheckBadgeIcon },
+    { label: 'Doubt Support', value: 'Instant', icon: ChatBubbleLeftRightIcon },
+    { label: 'Global Learners', value: 'Growing', icon: GlobeAltIcon }
   ];
 
   const skillCategories = [
@@ -36,15 +37,19 @@ const HomePage = () => {
   return (
     <>
       <Helmet>
-        <title>SkillSynergy - Connect, Collaborate, and Grow</title>
-        <meta name="description" content="Join the premier platform for professionals to share skills, collaborate on projects, and find mentors. Start your journey with SkillSynergy today." />
+        <title>SkillSynergy - Learn, Practice, and Grow</title>
+        <meta name="description" content="Join the premier platform for learners to master skills, practice on challenges, and follow guided paths. Start your journey with SkillSynergy today." />
       </Helmet>
       <div className="min-h-screen bg-mint-100 dark:bg-charcoal-900 transition-colors duration-300">
       {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl bg-mint-100/80 dark:bg-charcoal-900/90 border-b border-teal-200 dark:border-charcoal-700">
+      <nav className="sticky top-0 left-0 right-0 z-50 backdrop-blur-xl bg-mint-100/80 dark:bg-charcoal-900/90 border-b border-teal-200 dark:border-charcoal-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            <div className="flex items-center space-x-3">
+            <Link 
+              to={isAuthenticated ? "/dashboard" : "/"} 
+              onClick={() => !isAuthenticated && window.scrollTo({ top: 0, behavior: 'smooth' })}
+              className="flex items-center space-x-3 cursor-pointer"
+            >
               <img 
                 src="/logo.png" 
                 alt="SkillSynergy Logo" 
@@ -53,7 +58,7 @@ const HomePage = () => {
               <h1 className="text-2xl font-bold bg-gradient-emerald bg-clip-text text-transparent">
                 SkillSynergy
               </h1>
-            </div>
+            </Link>
             <div className="flex items-center space-x-4">
               <Link
                 to="/login"
@@ -73,7 +78,7 @@ const HomePage = () => {
       </nav>
 
       {/* Hero Section */}
-      <div className="relative pt-32 pb-20 px-4 sm:px-6 lg:px-8 overflow-hidden">
+      <div className="relative pt-20 pb-20 px-4 sm:px-6 lg:px-8 overflow-hidden">
         {/* Animated Background Elements */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <motion.div
@@ -118,23 +123,23 @@ const HomePage = () => {
             >
               <FireIcon className="h-5 w-5 text-orange-500" />
               <span className="text-sm font-semibold bg-gradient-emerald bg-clip-text text-transparent">
-                Join a growing community of professionals
+                Join a growing platform of learners
               </span>
             </motion.div>
 
             {/* Hero Title */}
             <h1 className="text-5xl md:text-7xl font-black mb-6">
-              <span className="block text-charcoal-900 dark:text-white">Connect Through</span>
+              <span className="block text-charcoal-900 dark:text-white">Master New</span>
               <span className="block bg-gradient-emerald bg-clip-text text-transparent">
-                Skills & Passion
+                Skills & Passions
               </span>
             </h1>
 
             {/* Hero Description */}
             <p className="text-xl md:text-2xl text-charcoal-700 dark:text-mint-200 max-w-3xl mx-auto mb-10 leading-relaxed">
-              SkillSynergy intelligently connects professionals based on their skills, goals,
-              and collaboration interests. Build meaningful partnerships and create amazing
-              projects together.
+              SkillSynergy intelligently guides learners based on their skills, goals,
+              and learning interests. Follow structured paths and master amazing
+              skills together.
             </p>
 
             {/* CTA Buttons */}
@@ -144,12 +149,15 @@ const HomePage = () => {
                 className="group w-full sm:w-auto px-8 py-4 bg-gradient-emerald hover:opacity-90 text-white font-bold rounded-2xl shadow-emerald-glow hover:shadow-premium-emerald transition-all duration-300 transform hover:scale-105 flex items-center justify-center space-x-2"
               >
                 <RocketLaunchIcon className="h-6 w-6" />
-                <span>Start Collaborating</span>
+                <span>Start Learning</span>
                 <ArrowRightIcon className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
               </Link>
-              <button className="w-full sm:w-auto px-8 py-4 bg-white/80 dark:bg-charcoal-800/80 hover:bg-white dark:hover:bg-charcoal-800 backdrop-blur-xl border border-teal-200/50 dark:border-charcoal-700/50 text-charcoal-900 dark:text-white font-bold rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
+              <Link 
+                to="/demo"
+                className="w-full sm:w-auto px-8 py-4 bg-white/80 dark:bg-charcoal-800/80 hover:bg-white dark:hover:bg-charcoal-800 backdrop-blur-xl border border-teal-200/50 dark:border-charcoal-700/50 text-charcoal-900 dark:text-white font-bold rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 flex items-center justify-center"
+              >
                 Watch Demo
-              </button>
+              </Link>
             </div>
 
             {/* Stats Grid */}
@@ -168,7 +176,7 @@ const HomePage = () => {
                   className="group p-6 rounded-2xl bg-white/60 dark:bg-charcoal-800/60 backdrop-blur-xl border border-teal-200/50 dark:border-charcoal-700/50 hover:bg-white dark:hover:bg-charcoal-800 hover:shadow-xl hover:scale-105 transition-all duration-300"
                 >
                   <stat.icon className="h-8 w-8 text-teal-600 dark:text-teal-400 mb-3 mx-auto group-hover:scale-110 transition-transform" />
-                  <div className="text-xl sm:text-2xl font-black bg-gradient-emerald bg-clip-text text-transparent mb-1 whitespace-nowrap">
+                  <div className="text-lg sm:text-2xl font-black bg-gradient-emerald bg-clip-text text-transparent mb-1 leading-tight">
                     {stat.value}
                   </div>
                   <div className="text-sm text-charcoal-600 dark:text-mint-300 font-medium">
@@ -194,7 +202,7 @@ const HomePage = () => {
               Why Choose <span className="bg-gradient-emerald bg-clip-text text-transparent">SkillSynergy?</span>
             </h2>
             <p className="text-xl text-charcoal-700 dark:text-mint-200 max-w-2xl mx-auto">
-              Everything you need to find, connect, and collaborate with the right people
+              Everything you need to learn, practice, and master the right skills
             </p>
           </motion.div>
         </div>
@@ -214,7 +222,7 @@ const HomePage = () => {
               Explore <span className="bg-gradient-emerald bg-clip-text text-transparent">Popular Skills</span>
             </h2>
             <p className="text-xl text-charcoal-700 dark:text-mint-200">
-              Discover professionals across diverse skill categories
+              Discover learning modules across diverse skill categories
             </p>
           </motion.div>
 
@@ -255,10 +263,10 @@ const HomePage = () => {
           >
             <CheckBadgeIcon className="h-16 w-16 text-teal-600 dark:text-teal-400 mx-auto mb-6" />
             <h2 className="text-4xl md:text-5xl font-black text-charcoal-900 dark:text-white mb-4">
-              Ready to <span className="bg-gradient-emerald bg-clip-text text-transparent">Collaborate?</span>
+              Ready to <span className="bg-gradient-emerald bg-clip-text text-transparent">Learn?</span>
             </h2>
             <p className="text-xl text-charcoal-700 dark:text-mint-200 mb-8">
-              Join a global community building amazing projects together
+              Join a global learning platform mastering new skills together
             </p>
             <Link
               to="/login"
@@ -279,9 +287,9 @@ const HomePage = () => {
               <div className="w-12 h-12 bg-emerald-100 dark:bg-emerald-900/30 rounded-full flex items-center justify-center mb-4">
                 <CheckBadgeIcon className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
               </div>
-              <h3 className="font-bold text-gray-900 dark:text-white mb-2">Verified Professionals</h3>
+              <h3 className="font-bold text-gray-900 dark:text-white mb-2">Verified Instructors</h3>
               <p className="text-sm text-gray-600 dark:text-gray-400">
-                Connect with trusted experts. All profiles are verified for authenticity.
+                Learn from trusted content. All profiles are verified for authenticity.
               </p>
             </div>
             <div className="flex flex-col items-center">

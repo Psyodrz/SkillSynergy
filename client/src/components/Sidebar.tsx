@@ -21,12 +21,12 @@ const Sidebar = ({ isOpen, onClose }: { isOpen?: boolean; onClose?: () => void }
 
   const navigation = [
     { name: 'Dashboard', href: '/dashboard', icon: HomeIcon },
-    { name: 'Discover People & Skills', href: '/discover', icon: SparklesIcon },
-    { name: 'Discover Projects', href: '/app/discover-projects', icon: BriefcaseIcon },
-    { name: 'Messages', href: '/messages', icon: ChatBubbleLeftRightIcon },
-    { name: 'My Projects', href: '/app/my-projects', icon: FolderIcon },
+    { name: 'Discover Skills & Modules', href: '/discover', icon: SparklesIcon },
+    { name: 'Discover Challenges', href: '/app/discover-projects', icon: BriefcaseIcon },
+    { name: 'Discussions', href: '/messages', icon: ChatBubbleLeftRightIcon },
+    { name: 'My Challenges', href: '/app/my-projects', icon: FolderIcon },
     { name: 'My Skills', href: '/app/my-skills', icon: SparklesIcon },
-    { name: 'Requests', href: '/requests', icon: UserGroupIcon },
+    { name: 'Study Group Requests', href: '/requests', icon: UserGroupIcon },
     { name: 'Plans', href: '/plans', icon: BanknotesIcon },
     { name: 'Profile', href: '/profile', icon: UserCircleIcon },
     { name: 'Settings', href: '/settings', icon: Cog6ToothIcon }
@@ -48,16 +48,16 @@ const Sidebar = ({ isOpen, onClose }: { isOpen?: boolean; onClose?: () => void }
       <div
         className={`fixed inset-y-0 left-0 z-50 w-64 transform transition-transform duration-300 ease-in-out ${
           isOpen ? 'translate-x-0' : '-translate-x-full'
-        } md:translate-x-0 md:static md:flex md:flex-col bg-mint-100/80 dark:bg-charcoal-900/90 backdrop-blur-xl border-r border-teal-200 dark:border-charcoal-700`}
+        } md:translate-x-0 md:sticky md:top-0 md:h-screen bg-mint-100/80 dark:bg-charcoal-900/90 backdrop-blur-xl border-r border-teal-200 dark:border-charcoal-700`}
       >
         <div className="flex flex-col flex-grow pt-5 pb-4 overflow-y-auto">
           <div className="flex items-center justify-between flex-shrink-0 px-4 mb-8">
-            <div className="flex items-center">
+            <Link to="/dashboard" className="flex items-center">
               <img className="h-8 w-auto" src="/logo.png" alt="SkillSynergy" />
               <span className="ml-2 text-xl font-bold bg-gradient-emerald bg-clip-text text-transparent">
                 SkillSynergy
               </span>
-            </div>
+            </Link>
             {/* Mobile Close Button */}
             <button
               onClick={onClose}
@@ -73,7 +73,7 @@ const Sidebar = ({ isOpen, onClose }: { isOpen?: boolean; onClose?: () => void }
               className="flex items-center justify-center w-full px-4 py-2 text-sm font-medium text-white transition-all duration-200 transform bg-gradient-emerald rounded-xl hover:scale-105 hover:shadow-lg hover:shadow-primary-500/30 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
             >
               <PlusCircleIcon className="w-5 h-5 mr-2" />
-              New Project
+              New Challenge
             </Link>
           </div>
 

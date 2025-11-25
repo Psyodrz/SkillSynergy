@@ -25,7 +25,7 @@ const Footer = () => {
               </span>
             </Link>
             <p className="text-gray-600 dark:text-gray-400 text-sm leading-relaxed mb-6 max-w-sm">
-              The premier platform for professional collaboration. Connect with experts, build real-world projects, and accelerate your career growth through shared learning.
+              The premier platform for skill mastery. Access structured modules, practice on challenges, and accelerate your learning through guided paths.
             </p>
             <div className="flex gap-4">
               {socialLinks.map(({ Icon, href }, i) => (
@@ -46,11 +46,11 @@ const Footer = () => {
           <div>
             <h3 className="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider mb-6">Product</h3>
             <ul className="space-y-4">
-              <li><Link to="/connect" className="text-gray-600 dark:text-gray-400 hover:text-emerald-500 dark:hover:text-emerald-400 text-sm transition-colors">Connect</Link></li>
+              <li><Link to="/connect" className="text-gray-600 dark:text-gray-400 hover:text-emerald-500 dark:hover:text-emerald-400 text-sm transition-colors">Study</Link></li>
               <li><Link to="/learn" className="text-gray-600 dark:text-gray-400 hover:text-emerald-500 dark:hover:text-emerald-400 text-sm transition-colors">Learn</Link></li>
-              <li><Link to="/projects" className="text-gray-600 dark:text-gray-400 hover:text-emerald-500 dark:hover:text-emerald-400 text-sm transition-colors">Projects</Link></li>
-              <li><Link to="/chat" className="text-gray-600 dark:text-gray-400 hover:text-emerald-500 dark:hover:text-emerald-400 text-sm transition-colors">Chat</Link></li>
-              <li><Link to="/demo" className="text-gray-600 dark:text-gray-400 hover:text-emerald-500 dark:hover:text-emerald-400 text-sm transition-colors">Watch Demo</Link></li>
+              <li><Link to="/projects" className="text-gray-600 dark:text-gray-400 hover:text-emerald-500 dark:hover:text-emerald-400 text-sm transition-colors">Challenges</Link></li>
+              <li><Link to="/chat" className="text-gray-600 dark:text-gray-400 hover:text-emerald-500 dark:hover:text-emerald-400 text-sm transition-colors">Discussions</Link></li>
+              <li><Link id="watch-demo-footer-link" to="/demo" className="text-gray-600 dark:text-gray-400 hover:text-emerald-500 dark:hover:text-emerald-400 text-sm transition-colors">Watch Demo</Link></li>
               <li><Link to="/pricing" className="text-gray-600 dark:text-gray-400 hover:text-emerald-500 dark:hover:text-emerald-400 text-sm transition-colors">Pricing</Link></li>
             </ul>
           </div>
@@ -103,7 +103,7 @@ const Footer = () => {
           
           <div className="mt-8 text-xs text-gray-400 dark:text-gray-600 text-center max-w-4xl mx-auto leading-relaxed">
             <p className="mb-2">
-              SkillSynergy is a professional networking platform. We do not provide financial advice, investment services, or facilitate gambling. 
+              SkillSynergy is an educational learning platform focused on skills, study materials, and learning activities. It does not provide networking, matchmaking, hiring, or job-related services. 
               All transactions are for digital services only.
             </p>
             <p>

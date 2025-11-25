@@ -9,11 +9,13 @@ import {
 import { useAuth } from '../context/AuthContext';
 import { useDirectMessages } from '../hooks/useDirectMessages';
 import { useFriends } from '../hooks/useFriends';
+import { usePresence } from '../hooks/usePresence';
+import { useTyping } from '../hooks/useTyping';
 import { supabase } from '../lib/supabaseClient';
 
 const MessagesPage = () => {
   const { id } = useParams();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const navigate = useNavigate();
   const [conversations, setConversations] = useState([]);
   const [loadingConversations, setLoadingConversations] = useState(true);
@@ -28,10 +30,23 @@ const MessagesPage = () => {
   const { getFriendStatus } = useFriends(user?.id || null);
   const [friendStatus, setFriendStatus] = useState('checking');
 
+  // Presence Logic
+  const { isOnline } = usePresence(user?.id, {
+    full_name: profile?.full_name,
+    avatar_url: profile?.avatar_url
+  });
+
+  // Typing Logic
+  const typingChannelName = user?.id && targetUserId 
+    ? `typing:${[user.id, targetUserId].sort().join(':')}` 
+    : '';
+  const { typingUsers, sendTyping } = useTyping(typingChannelName, user?.id);
+  const isTargetTyping = targetUserId && typingUsers.has(targetUserId);
+
   // Scroll to bottom of messages
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+  }, [messages, isTargetTyping]);
 
   // Check friend status and fetch target profile
   useEffect(() => {
@@ -106,6 +121,11 @@ const MessagesPage = () => {
     }
   };
 
+  const handleInputChange = (e) => {
+    setNewMessage(e.target.value);
+    sendTyping();
+  };
+
   return (
     <div className="flex h-[calc(100vh-64px)]">
       {/* Sidebar / Conversations List */}
@@ -134,13 +154,18 @@ const MessagesPage = () => {
                 }`}
               >
                 <div className="flex items-center space-x-3">
-                  {conv.avatar_url ? (
-                    <img src={conv.avatar_url} alt={conv.full_name} className="w-10 h-10 rounded-full object-cover" />
-                  ) : (
-                    <div className="w-10 h-10 bg-emerald-500 rounded-full flex items-center justify-center text-white font-bold">
-                      {conv.full_name?.[0]}
-                    </div>
-                  )}
+                  <div className="relative">
+                    {conv.avatar_url ? (
+                      <img src={conv.avatar_url} alt={conv.full_name} className="w-10 h-10 rounded-full object-cover" />
+                    ) : (
+                      <div className="w-10 h-10 bg-emerald-500 rounded-full flex items-center justify-center text-white font-bold">
+                        {conv.full_name?.[0]}
+                      </div>
+                    )}
+                    {isOnline(conv.id) && (
+                      <span className="absolute bottom-0 right-0 block h-2.5 w-2.5 rounded-full bg-green-500 ring-2 ring-white dark:ring-charcoal-900" />
+                    )}
+                  </div>
                   <div>
                     <h3 className="font-semibold text-charcoal-900 dark:text-white">{conv.full_name}</h3>
                     <p className="text-xs text-charcoal-500 dark:text-mint-300">{conv.role}</p>
@@ -167,16 +192,23 @@ const MessagesPage = () => {
                 </button>
                 {targetProfile && (
                   <>
-                    {targetProfile.avatar_url ? (
-                      <img src={targetProfile.avatar_url} alt={targetProfile.full_name} className="w-10 h-10 rounded-full object-cover" />
-                    ) : (
-                      <div className="w-10 h-10 bg-emerald-500 rounded-full flex items-center justify-center text-white font-bold">
-                        {targetProfile.full_name?.[0]}
-                      </div>
-                    )}
+                    <div className="relative">
+                      {targetProfile.avatar_url ? (
+                        <img src={targetProfile.avatar_url} alt={targetProfile.full_name} className="w-10 h-10 rounded-full object-cover" />
+                      ) : (
+                        <div className="w-10 h-10 bg-emerald-500 rounded-full flex items-center justify-center text-white font-bold">
+                          {targetProfile.full_name?.[0]}
+                        </div>
+                      )}
+                      {isOnline(targetProfile.id) && (
+                        <span className="absolute bottom-0 right-0 block h-2.5 w-2.5 rounded-full bg-green-500 ring-2 ring-white dark:ring-charcoal-900" />
+                      )}
+                    </div>
                     <div>
                       <h3 className="font-bold text-charcoal-900 dark:text-white">{targetProfile.full_name}</h3>
-                      <p className="text-xs text-charcoal-500 dark:text-mint-300">{targetProfile.role}</p>
+                      <p className="text-xs text-charcoal-500 dark:text-mint-300">
+                        {isOnline(targetProfile.id) ? 'Online' : targetProfile.role}
+                      </p>
                     </div>
                   </>
                 )}
@@ -222,6 +254,36 @@ const MessagesPage = () => {
                       </div>
                     </motion.div>
                   ))}
+                  
+                  {/* Typing Indicator */}
+                  {isTargetTyping && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="flex justify-start"
+                    >
+                      <div className="bg-white dark:bg-charcoal-800 px-4 py-3 rounded-2xl rounded-tl-none shadow-sm border border-mint-100 dark:border-charcoal-700">
+                        <div className="flex space-x-1.5 items-center h-4">
+                          {[0, 1, 2].map((dot) => (
+                            <motion.div
+                              key={dot}
+                              className="w-2 h-2 bg-gray-500 dark:bg-gray-400 rounded-full"
+                              initial={{ y: 0 }}
+                              animate={{ y: -6 }}
+                              transition={{
+                                duration: 0.6,
+                                repeat: Infinity,
+                                repeatType: "reverse",
+                                ease: "easeInOut",
+                                delay: dot * 0.2
+                              }}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                  
                   <div ref={messagesEndRef} />
                 </>
               )}
@@ -234,7 +296,7 @@ const MessagesPage = () => {
                   <input
                     type="text"
                     value={newMessage}
-                    onChange={(e) => setNewMessage(e.target.value)}
+                    onChange={handleInputChange}
                     placeholder="Type a message..."
                     className="flex-1 p-2 border border-teal-200 dark:border-charcoal-700 rounded-lg bg-white dark:bg-charcoal-800 text-charcoal-900 dark:text-mint-100 focus:outline-none focus:ring-2 focus:ring-emerald-500"
                   />

@@ -40,7 +40,7 @@ const ExperienceModal = ({ isOpen, onClose, onSave }) => {
         className="bg-white dark:bg-charcoal-800 rounded-xl shadow-xl w-full max-w-md overflow-hidden"
       >
         <div className="p-6 border-b border-mint-200 dark:border-charcoal-700 flex justify-between items-center">
-          <h3 className="text-lg font-semibold text-charcoal-900 dark:text-white">Add Experience</h3>
+          <h3 className="text-lg font-semibold text-charcoal-900 dark:text-white">Add Teaching Experience</h3>
           <button onClick={onClose} className="text-charcoal-500 hover:text-charcoal-700 dark:text-mint-300 dark:hover:text-white">
             <XMarkIcon className="w-5 h-5" />
           </button>
@@ -91,7 +91,7 @@ const ExperienceModal = ({ isOpen, onClose, onSave }) => {
               Cancel
             </button>
             <button type="submit" className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 rounded-lg shadow-emerald-glow">
-              Add Experience
+              Add Teaching Experience
             </button>
           </div>
         </form>
@@ -420,12 +420,12 @@ const ProfilePage = () => {
                   </label>
                   <select
                     name="role"
-                    value={formData.role || 'Learner'}
+                    value={formData.role || 'Student'}
                     onChange={handleInputChange}
                     className="text-lg text-charcoal-700 dark:text-mint-200 w-full bg-transparent border-b border-mint-200 dark:border-charcoal-600 focus:border-emerald-500 focus:outline-none px-0 py-1 cursor-pointer"
                   >
-                    <option value="Learner">Learner</option>
-                    <option value="Teacher">Teacher</option>
+                    <option value="Student">Student</option>
+                    <option value="Instructor">Instructor (Content Contributor)</option>
                   </select>
                 </div>
                 <div className="flex items-center gap-2 text-charcoal-500 dark:text-mint-300">
@@ -497,7 +497,7 @@ const ProfilePage = () => {
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-xl font-bold text-charcoal-900 dark:text-white flex items-center gap-2">
                   <BriefcaseIcon className="w-6 h-6 text-emerald-500" />
-                  Experience
+                  Teaching Experience
                 </h2>
                 {isEditing && (
                   <button 
@@ -505,7 +505,7 @@ const ProfilePage = () => {
                     className="text-sm text-emerald-600 hover:text-emerald-700 font-medium flex items-center gap-1"
                   >
                     <PlusIcon className="w-4 h-4" />
-                    Add Experience
+                    Add Teaching Experience
                   </button>
                 )}
               </div>
@@ -552,7 +552,7 @@ const ProfilePage = () => {
             >
               <h2 className="text-xl font-bold text-charcoal-900 dark:text-white mb-4 flex items-center gap-2">
                 <AcademicCapIcon className="w-6 h-6 text-emerald-500" />
-                Skills
+                Skills I'm Learning
               </h2>
               
               <div className="flex flex-wrap gap-2 mb-4">

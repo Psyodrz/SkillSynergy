@@ -109,6 +109,7 @@ const Navbar = ({ onSearch = null, className = '', onToggleSidebar }) => {
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         className={`
+          sticky top-0 z-40
           bg-mint-100/80 dark:bg-charcoal-900/90 backdrop-blur-xl shadow-sm border-b border-teal-200 dark:border-charcoal-700
           px-4 sm:px-6 py-4 flex items-center justify-between
           ${className}
@@ -130,20 +131,22 @@ const Navbar = ({ onSearch = null, className = '', onToggleSidebar }) => {
 
         {/* Logo - Mobile */}
         <div className="md:hidden flex-1">
-          <h1 className="text-lg sm:text-xl font-bold text-primary-600 dark:text-primary-400">
-            SkillSynergy
-          </h1>
+          <Link to="/dashboard">
+            <h1 className="text-lg sm:text-xl font-bold text-primary-600 dark:text-primary-400">
+              SkillSynergy
+            </h1>
+          </Link>
         </div>
 
         {/* Search Bar - Desktop */}
-        <div className="hidden md:flex flex-1 max-w-lg mx-4">
+        <div className="hidden md:flex flex-1 max-w-lg mx-auto px-4">
           <div className="relative w-full">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
               <MagnifyingGlassIcon className="h-5 w-5 text-navy-400" />
             </div>
             <input
               type="text"
-              placeholder="Search skills, users, or projects..."
+              placeholder="Search skills, modules, or challenges..."
               onChange={(e) => onSearch && onSearch(e.target.value)}
               onFocus={() => setIsSearchFocused(true)}
               onBlur={() => setIsSearchFocused(false)}
@@ -306,7 +309,7 @@ const Navbar = ({ onSearch = null, className = '', onToggleSidebar }) => {
               </p>
               <p className="text-xs text-teal-700 dark:text-mint-300">
                 {/* UPDATED: Display profile.role from the database */}
-                {profile?.role || 'Professional'}
+                {profile?.role || 'Student'}
               </p>
             </div>
             <ChevronDownIcon className="hidden sm:block h-4 w-4 text-teal-600 dark:text-mint-400" />
