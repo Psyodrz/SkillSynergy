@@ -9,7 +9,17 @@ require('dotenv').config();
 const app = express();
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: [
+    'http://localhost:5173',
+    'http://localhost:5174',
+    'http://localhost:3000',
+    'https://skillsynergy.online',
+    'https://www.skillsynergy.online',
+    /\.vercel\.app$/
+  ],
+  credentials: true
+}));
 app.use(express.json());
 
 // Database connection
@@ -38,7 +48,9 @@ app.get('/api/health', (req, res) => {
 /**
  * POST /api/smart-match
  * AI-Assisted Discovery for Skills, Projects, and Mentors
+ * TEMPORARILY DISABLED - Database connection needs configuration
  */
+/* 
 app.post('/api/smart-match', async (req, res) => {
   try {
     const { user_id, query } = req.body;
@@ -123,6 +135,7 @@ app.post('/api/smart-match', async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+*/
 
 /**
  * POST /api/match/teachers
@@ -304,9 +317,227 @@ app.post('/api/match/teachers', async (req, res) => {
   }
 });
 
-// Start server
+/**
+ * POST /api/user-skills
+ * Add a skill to the user's profile
+ */
+app.post('/api/user-skills', async (req, res) => {
+  try {
+    const { user_id, skill_id } = req.body;
+    
+    if (!user_id || !skill_id) {
+      return res.status(400).json({ success: false, error: 'Missing user_id or skill_id' });
+    }
+
+    const query = `
+      INSERT INTO user_skills (user_id, skill_id, level, created_at)
+      VALUES ($1, $2, 'Beginner', NOW())
+      ON CONFLICT (user_id, skill_id) DO NOTHING
+      RETURNING id;
+    `;
+    
+    const result = await pool.query(query, [user_id, skill_id]);
+    
+    res.json({ success: true, data: result.rows[0] });
+  } catch (error) {
+    console.error('Error adding user skill:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * GET /api/instructors
+ * Find instructors for a specific skill
+ */
+app.get('/api/instructors', async (req, res) => {
+  try {
+    const { skill_id, page = 1, page_size = 12 } = req.query;
+    const offset = (page - 1) * page_size;
+
+    if (!skill_id) {
+      return res.status(400).json({ success: false, error: 'Missing skill_id' });
+    }
+
+    const query = `
+      SELECT p.id, p.full_name, p.avatar_url, p.bio, p.qualification, p.languages, 
+             array_agg(s.name) as skills, p.role
+      FROM profiles p
+      JOIN user_skills us ON us.user_id = p.id
+      JOIN skills s ON s.id = us.skill_id
+      WHERE s.id = $1 AND p.role IN ('Teacher', 'Both', 'instructor', 'both')
+      GROUP BY p.id
+      ORDER BY p.rating DESC NULLS LAST
+      LIMIT $2 OFFSET $3;
+    `;
+
+    const result = await pool.query(query, [skill_id, page_size, offset]);
+    
+    res.json({ success: true, data: result.rows });
+  } catch (error) {
+    console.error('Error fetching instructors:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * POST /api/mentorship-requests
+ * Create a mentorship request
+ */
+app.post('/api/mentorship-requests', async (req, res) => {
+  try {
+    const { skill_id, learner_id, instructor_id, message } = req.body;
+
+    if (!skill_id || !learner_id) {
+      return res.status(400).json({ success: false, error: 'Missing required fields' });
+    }
+
+    const query = `
+      INSERT INTO mentorship_requests (skill_id, learner_id, instructor_id, message, status, created_at)
+      VALUES ($1, $2, $3, $4, 'pending', NOW())
+      RETURNING id;
+    `;
+
+    const result = await pool.query(query, [skill_id, learner_id, instructor_id, message]);
+    
+    res.json({ success: true, data: result.rows[0] });
+  } catch (error) {
+    console.error('Error creating mentorship request:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * POST /api/projects
+ * Create a new learning challenge (project)
+ */
+app.post('/api/projects', async (req, res) => {
+  try {
+    const { title, description, tags, visibility, capacity, owner_id } = req.body;
+
+    if (!title || !owner_id) {
+      return res.status(400).json({ success: false, error: 'Missing required fields' });
+    }
+
+    const client = await pool.connect();
+    
+    try {
+      await client.query('BEGIN');
+
+      // Create project
+      const projectQuery = `
+        INSERT INTO projects (title, owner_id, visibility, status, description, tags, max_members, created_at)
+        VALUES ($1, $2, $3, 'active', $4, $5, $6, NOW())
+        RETURNING id;
+      `;
+      
+      const projectResult = await client.query(projectQuery, [
+        title, 
+        owner_id, 
+        visibility || 'public', 
+        description, 
+        tags || [], 
+        capacity || 10
+      ]);
+      
+      const projectId = projectResult.rows[0].id;
+
+      // Add owner as member
+      const memberQuery = `
+        INSERT INTO project_members (project_id, user_id, role, joined_at)
+        VALUES ($1, $2, 'owner', NOW());
+      `;
+      
+      await client.query(memberQuery, [projectId, owner_id]);
+
+      await client.query('COMMIT');
+      
+      res.json({ success: true, data: { id: projectId } });
+    } catch (e) {
+      await client.query('ROLLBACK');
+      throw e;
+    } finally {
+      client.release();
+    }
+  } catch (error) {
+    console.error('Error creating project:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * POST /api/project_members
+ * Join a project
+ */
+app.post('/api/project_members', async (req, res) => {
+  try {
+    const { project_id, user_id } = req.body;
+
+    if (!project_id || !user_id) {
+      return res.status(400).json({ success: false, error: 'Missing required fields' });
+    }
+
+    // Check capacity first (optional, but good practice)
+    // For now, we'll trust the database constraints or add a check if needed
+    
+    const query = `
+      INSERT INTO project_members (project_id, user_id, role, joined_at)
+      SELECT $1, $2, 'member', NOW()
+      WHERE NOT EXISTS (
+        SELECT 1 FROM project_members WHERE project_id = $1 AND user_id = $2
+      )
+      RETURNING id;
+    `;
+
+    const result = await pool.query(query, [project_id, user_id]);
+    
+    if (result.rowCount === 0) {
+      // Either already a member or project doesn't exist (or capacity full if we checked)
+      // We'll assume already member for now
+      return res.json({ success: false, error: 'Already a member or join failed' });
+    }
+
+    res.json({ success: true, data: result.rows[0] });
+  } catch (error) {
+    console.error('Error joining project:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * DELETE /api/project_members
+ * Leave a project
+ */
+app.delete('/api/project_members', async (req, res) => {
+  try {
+    const { project_id, user_id } = req.body;
+
+    if (!project_id || !user_id) {
+      return res.status(400).json({ success: false, error: 'Missing required fields' });
+    }
+
+    const query = `
+      DELETE FROM project_members 
+      WHERE project_id = $1 AND user_id = $2
+      RETURNING id;
+    `;
+
+    const result = await pool.query(query, [project_id, user_id]);
+    
+    if (result.rowCount === 0) {
+      return res.status(404).json({ success: false, error: 'Membership not found' });
+    }
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error leaving project:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`✅ Payment server running on port ${PORT}`);
   console.log(`📘 Razorpay Key ID: ${process.env.RAZORPAY_KEY_ID}`);
 });
+
+module.exports = app;
