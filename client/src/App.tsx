@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Routes, Route, useLocation, Navigate, useNavigate } from 'react-router-dom';
+import { useState } from 'react';
+import { Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import HomePage from './components/HomePage';
 import ProtectedRoute from './components/ProtectedRoute';
 import ProtectedAdminRoute from './components/ProtectedAdminRoute';
@@ -40,8 +40,7 @@ import { useAuth } from './context/AuthContext';
 
 function App() {
   const location = useLocation();
-  const navigate = useNavigate();
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated } = useAuth();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   
   // Check if current route is a public route

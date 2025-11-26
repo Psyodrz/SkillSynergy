@@ -30,7 +30,7 @@ const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [role, setRole] = useState<'Teacher' | 'Learner'>('Learner');
+  const [role] = useState<'Teacher' | 'Learner'>('Learner');
 
   // UI State
   const [showPassword, setShowPassword] = useState(false);

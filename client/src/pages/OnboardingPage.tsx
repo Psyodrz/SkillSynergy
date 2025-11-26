@@ -1,13 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  UserIcon, 
   AcademicCapIcon, 
   BriefcaseIcon, 
   CheckCircleIcon,
   ArrowRightIcon,
-  ArrowLeftIcon,
   PlusIcon,
   XMarkIcon
 } from '@heroicons/react/24/outline';
