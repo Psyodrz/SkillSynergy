@@ -1,5 +1,6 @@
-import { SparklesIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { SparklesIcon, XMarkIcon, UserGroupIcon } from '@heroicons/react/24/outline';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import type { TeacherProfile } from '../types';
 import TeacherCard from './TeacherCard';
 
@@ -18,6 +19,8 @@ export default function TeacherMatchList({
   onClose,
   skillName
 }: TeacherMatchListProps) {
+  const navigate = useNavigate();
+
   return (
     <AnimatePresence>
       <motion.div
@@ -80,11 +83,21 @@ export default function TeacherMatchList({
                   <SparklesIcon className="w-10 h-10 text-gray-400" />
                 </div>
                 <h3 className="text-lg font-semibold text-charcoal-900 dark:text-white mb-2">
-                  No teachers found
+                  No specific matches found
                 </h3>
-                <p className="text-charcoal-600 dark:text-gray-400">
-                  Try adding more skills to your profile or check back later.
+                <p className="text-charcoal-600 dark:text-gray-400 mb-6">
+                  We couldn't find a teacher specifically for this skill yet.
                 </p>
+                <button
+                  onClick={() => {
+                    onClose();
+                    navigate('/discover#instructors');
+                  }}
+                  className="inline-flex items-center px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors font-medium"
+                >
+                  <UserGroupIcon className="w-5 h-5 mr-2" />
+                  Browse All Teachers
+                </button>
               </div>
             )}
 

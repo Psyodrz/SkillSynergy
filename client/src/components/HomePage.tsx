@@ -294,11 +294,11 @@ const HomePage = () => {
             </div>
             <div className="flex flex-col items-center">
               <div className="w-12 h-12 bg-emerald-100 dark:bg-emerald-900/30 rounded-full flex items-center justify-center mb-4">
-                <RocketLaunchIcon className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
+                <ChatBubbleLeftRightIcon className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
               </div>
-              <h3 className="font-bold text-gray-900 dark:text-white mb-2">Secure Payments</h3>
+              <h3 className="font-bold text-gray-900 dark:text-white mb-2">Community Support</h3>
               <p className="text-sm text-gray-600 dark:text-gray-400">
-                Transactions are 100% secure and processed via Razorpay.
+                Connect with learners worldwide and get help when you need it.
               </p>
             </div>
             <div className="flex flex-col items-center">

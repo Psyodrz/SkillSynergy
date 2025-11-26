@@ -2,7 +2,6 @@ import { Helmet } from 'react-helmet-async';
 import Footer from '../components/Footer';
 import { Users, Search, Zap, Globe, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import SmartMatch from '../components/SmartMatch';
 
 const ConnectPage = () => {
   return (
@@ -38,9 +37,6 @@ const ConnectPage = () => {
           </div>
         </div>
       </div>
-
-      {/* Smart Match Section */}
-      <SmartMatch />
 
       {/* Features Grid */}
       <div className="py-24 px-4 sm:px-6 lg:px-8">

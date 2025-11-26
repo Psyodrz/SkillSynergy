@@ -15,7 +15,7 @@ const FAQPage = () => {
         },
         {
           q: "Is SkillSynergy free to use?",
-          a: "Yes! We offer a robust Free plan that allows you to create a profile, list your skills, and connect with other users. We also offer Premium plans (Pro and Deluxe) for users who want enhanced visibility, unlimited messaging, and advanced project tools."
+          a: "Yes! SkillSynergy is completely free. You can create a profile, list your skills, connect with other users, join unlimited projects, and access all learning resources at no cost."
         },
         {
           q: "How does the matching algorithm work?",
@@ -27,8 +27,8 @@ const FAQPage = () => {
       category: "Account & Profile",
       questions: [
         {
-          q: "How do I verify my profile?",
-          a: "Profile verification is available for Pro and Deluxe members. You can submit professional certifications or link your LinkedIn profile in the Settings page to get the 'Verified' badge."
+          q: "How do I create an account?",
+          a: "Simply click on 'Get Started' or 'Sign In' and create your account using your email. After registration, complete your profile by adding your skills, interests, and learning goals."
         },
         {
           q: "Can I have multiple roles (e.g., Mentor and Learner)?",
@@ -49,28 +49,28 @@ const FAQPage = () => {
         },
         {
           q: "Is there a limit to how many projects I can join?",
-          a: "Free users can join up to 3 active projects at a time. Pro and Deluxe users have unlimited project participation limits."
+          a: "No! All users have unlimited access to create and join projects. There are no restrictions on collaboration features."
         },
         {
           q: "How does the chat system work?",
-          a: "Once you connect with another user, you can message them instantly via our secure chat system. We support text, file sharing, and for premium users, integrated video calls."
+          a: "Once you connect with another user, you can message them instantly via our secure chat system. We support text and file sharing for all users."
         }
       ]
     },
     {
-      category: "Subscriptions & Payments",
+      category: "Platform Features",
       questions: [
         {
-          q: "What payment methods do you accept?",
-          a: "We accept all major credit/debit cards, UPI, and Net Banking via our secure payment partner, Razorpay."
+          q: "What features does SkillSynergy offer?",
+          a: "SkillSynergy provides comprehensive free access to skill modules, community discussions, collaborative project tools, AI-assisted learning recommendations, profile hosting, and instant messaging—all at no cost."
         },
         {
-          q: "Can I cancel my subscription anytime?",
-          a: "Yes, you can cancel your subscription at any time from your billing settings. You will retain access to premium features until the end of your current billing cycle."
+          q: "Are there any limits on free features?",
+          a: "No! All core features including unlimited messaging, project participation, skill modules, and learning resources are completely free and unrestricted for all registered users."
         },
         {
-          q: "Do you offer refunds?",
-          a: "We offer a 7-day money-back guarantee for yearly subscriptions. Monthly subscriptions are non-refundable. Please check our Refund Policy page for full details."
+          q: "Do I need to provide payment information?",
+          a: "No payment information is required at any point. SkillSynergy is entirely free to use with no hidden costs or premium tiers."
         }
       ]
     },
@@ -93,7 +93,7 @@ const FAQPage = () => {
     <div className="min-h-screen bg-mint-50 dark:bg-charcoal-950 flex flex-col">
       <Helmet>
         <title>Frequently Asked Questions - SkillSynergy</title>
-        <meta name="description" content="Find answers to common questions about SkillSynergy, including account management, subscriptions, and platform features." />
+        <meta name="description" content="Find answers to common questions about SkillSynergy, including account management and platform features." />
       </Helmet>
 
       {/* Header */}

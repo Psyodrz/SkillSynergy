@@ -107,7 +107,7 @@ const DiscoverProjects = () => {
 
   const handleLeave = async (projectId: string) => {
     if (!user) return;
-    if (!confirm('Are you sure you want to leave this project?')) return;
+    if (!confirm('Are you sure you want to leave this challenge?')) return;
     
     setActionLoading(projectId);
     try {
@@ -132,7 +132,7 @@ const DiscoverProjects = () => {
   };
 
   const handleDeleteProject = async (projectId: string) => {
-    if (!confirm('Are you sure you want to delete this project? This action cannot be undone.')) return;
+    if (!confirm('Are you sure you want to delete this challenge? This action cannot be undone.')) return;
     
     try {
       const { error } = await supabase
@@ -154,7 +154,7 @@ const DiscoverProjects = () => {
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <h2 className="text-2xl font-bold text-charcoal-900 dark:text-white">Discover Projects</h2>
+        <h2 className="text-2xl font-bold text-charcoal-900 dark:text-white">Discover Learning Challenges</h2>
         
         <div className="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0">
           <FunnelIcon className="w-5 h-5 text-gray-500" />
@@ -174,7 +174,7 @@ const DiscoverProjects = () => {
         <div className="p-8 text-center">Loading projects...</div>
       ) : projects.length === 0 ? (
         <div className="text-center py-12 bg-gray-50 dark:bg-charcoal-900/50 rounded-xl border border-dashed border-gray-300 dark:border-charcoal-600">
-          <p className="text-gray-500 dark:text-gray-400">No public projects found in this category.</p>
+          <p className="text-gray-500 dark:text-gray-400">No public learning challenges found in this category.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -225,7 +225,7 @@ const DiscoverProjects = () => {
                       onClick={() => handleDeleteProject(project.id)}
                       className="w-full py-2.5 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-xl hover:bg-red-100 dark:hover:bg-red-900/30 font-medium transition-colors flex items-center justify-center"
                     >
-                      <TrashIcon className="w-5 h-5 mr-2" /> Delete Project
+                      <TrashIcon className="w-5 h-5 mr-2" /> Delete Challenge
                     </button>
                   ) : isMember ? (
                     <button
@@ -233,7 +233,7 @@ const DiscoverProjects = () => {
                       disabled={actionLoading === project.id}
                       className="w-full py-2.5 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-xl hover:bg-red-100 dark:hover:bg-red-900/30 font-medium transition-colors flex items-center justify-center"
                     >
-                      {actionLoading === project.id ? 'Leaving...' : <><ArrowRightOnRectangleIcon className="w-5 h-5 mr-2" /> Leave Project</>}
+                      {actionLoading === project.id ? 'Leaving...' : <><ArrowRightOnRectangleIcon className="w-5 h-5 mr-2" /> Leave Challenge</>}
                     </button>
                   ) : (
                     <button
@@ -241,7 +241,7 @@ const DiscoverProjects = () => {
                       disabled={actionLoading === project.id}
                       className={`w-full py-2.5 rounded-xl font-medium transition-colors flex items-center justify-center bg-emerald-600 text-white hover:bg-emerald-700 shadow-lg shadow-emerald-500/20`}
                     >
-                      {actionLoading === project.id ? 'Joining...' : <><UserPlusIcon className="w-5 h-5 mr-2" /> Join Project</>}
+                      {actionLoading === project.id ? 'Joining...' : <><UserPlusIcon className="w-5 h-5 mr-2" /> Join Challenge</>}
                     </button>
                   )}
                 </div>

@@ -118,7 +118,7 @@ const MyProjectsSection = () => {
   };
 
   const handleDeleteProject = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this project? This cannot be undone.')) return;
+    if (!confirm('Are you sure you want to delete this challenge? This cannot be undone.')) return;
     try {
       const { error } = await supabase.from('projects').delete().eq('id', id);
       if (error) throw error;
@@ -135,30 +135,30 @@ const MyProjectsSection = () => {
     setVisibility('public');
   };
 
-  if (loading) return <div className="p-8 text-center">Loading projects...</div>;
+  if (loading) return <div className="p-8 text-center">Loading challenges...</div>;
 
   return (
     <div className="bg-white dark:bg-charcoal-800 rounded-2xl shadow-sm border border-gray-200 dark:border-charcoal-700 p-6">
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-charcoal-900 dark:text-white">My Projects</h2>
+        <h2 className="text-2xl font-bold text-charcoal-900 dark:text-white">My Learning Challenges</h2>
         <button
           onClick={() => setShowCreateModal(true)}
           className="flex items-center px-4 py-2 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition-colors font-medium"
         >
           <PlusIcon className="w-5 h-5 mr-2" />
-          Create Project
+          Create Challenge
         </button>
       </div>
 
       <div className="space-y-4">
         {projects.length === 0 ? (
           <div className="text-center py-12 bg-gray-50 dark:bg-charcoal-900/50 rounded-xl border border-dashed border-gray-300 dark:border-charcoal-600">
-            <p className="text-gray-500 dark:text-gray-400 mb-4">You haven't created any projects yet.</p>
+            <p className="text-gray-500 dark:text-gray-400 mb-4">You haven't created any challenges yet.</p>
             <button
               onClick={() => setShowCreateModal(true)}
               className="text-emerald-600 hover:text-emerald-700 font-medium"
             >
-              Start your first project
+              Start your first challenge
             </button>
           </div>
         ) : (
@@ -208,10 +208,10 @@ const MyProjectsSection = () => {
       {showCreateModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
           <div className="bg-white dark:bg-charcoal-900 rounded-2xl w-full max-w-lg p-6 shadow-xl border border-gray-200 dark:border-charcoal-700">
-            <h3 className="text-xl font-bold text-charcoal-900 dark:text-white mb-6">Create New Project</h3>
+            <h3 className="text-xl font-bold text-charcoal-900 dark:text-white mb-6">Create New Challenge</h3>
             <form onSubmit={handleCreateProject} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Project Title</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Challenge Title</label>
                 <input
                   type="text"
                   required
@@ -304,7 +304,7 @@ const MyProjectsSection = () => {
                   disabled={creating}
                   className="flex-1 px-4 py-2.5 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 disabled:opacity-50 font-medium transition-colors"
                 >
-                  {creating ? 'Creating...' : 'Create Project'}
+                  {creating ? 'Creating...' : 'Create Challenge'}
                 </button>
               </div>
             </form>

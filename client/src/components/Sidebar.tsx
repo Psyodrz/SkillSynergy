@@ -2,7 +2,6 @@ import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import {
   HomeIcon,
-  UserGroupIcon,
   ChatBubbleLeftRightIcon,
   BriefcaseIcon,
   UserCircleIcon,
@@ -10,9 +9,8 @@ import {
   ArrowRightOnRectangleIcon,
   SparklesIcon,
   PlusCircleIcon,
-  FolderIcon,
   XMarkIcon,
-  BanknotesIcon
+  AcademicCapIcon
 } from '@heroicons/react/24/outline';
 
 const Sidebar = ({ isOpen, onClose }: { isOpen?: boolean; onClose?: () => void }) => {
@@ -20,14 +18,11 @@ const Sidebar = ({ isOpen, onClose }: { isOpen?: boolean; onClose?: () => void }
   const { signOut, user, profile } = useAuth();
 
   const navigation = [
-    { name: 'Dashboard', href: '/dashboard', icon: HomeIcon },
-    { name: 'Discover Skills & Modules', href: '/discover', icon: SparklesIcon },
-    { name: 'Discover Challenges', href: '/app/discover-projects', icon: BriefcaseIcon },
+    { name: 'Home', href: '/dashboard', icon: HomeIcon },
+    { name: 'Skills', href: '/discover', icon: SparklesIcon },
+    { name: 'Instructors', href: '/instructors', icon: AcademicCapIcon },
+    { name: 'Learning Challenges', href: '/app/discover-projects', icon: BriefcaseIcon },
     { name: 'Discussions', href: '/messages', icon: ChatBubbleLeftRightIcon },
-    { name: 'My Challenges', href: '/app/my-projects', icon: FolderIcon },
-    { name: 'My Skills', href: '/app/my-skills', icon: SparklesIcon },
-    { name: 'Study Group Requests', href: '/requests', icon: UserGroupIcon },
-    { name: 'Plans', href: '/plans', icon: BanknotesIcon },
     { name: 'Profile', href: '/profile', icon: UserCircleIcon },
     { name: 'Settings', href: '/settings', icon: Cog6ToothIcon }
   ];

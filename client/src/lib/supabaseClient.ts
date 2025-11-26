@@ -29,6 +29,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
 // This matches the structure of the 'profiles' table in Supabase
 export interface UserProfile {
   id: string
+  email?: string // Added for admin display
   full_name: string | null
   avatar_url: string | null
   role: string | null

@@ -30,6 +30,7 @@ const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [role, setRole] = useState<'Teacher' | 'Learner'>('Learner');
 
   // UI State
   const [showPassword, setShowPassword] = useState(false);
@@ -67,7 +68,7 @@ const LoginPage = () => {
           return;
         }
 
-        const result = await signUp(email, password, fullName);
+        const result = await signUp(email, password, fullName, role);
 
         if (result.success) {
           setSuccessMessage('Account created! Please check your email to confirm your account before logging in.');

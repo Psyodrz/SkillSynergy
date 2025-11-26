@@ -2,7 +2,7 @@
   "rewrites": [
     {
       "source": "/api/:match*",
-      "destination": "https://skillsynergy-payment-backend.vercel.app/api/:match*"
+      "destination": "https://payment-backend-two.vercel.app/api/:match*"
     },
     {
       "source": "/(.*)",

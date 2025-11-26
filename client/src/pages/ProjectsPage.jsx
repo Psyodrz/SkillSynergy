@@ -11,6 +11,7 @@ import { useNavigate } from 'react-router-dom';
 import Button from '../components/Button';
 import Modal from '../components/Modal';
 import { supabase } from '../lib/supabaseClient';
+import { joinProject, leaveProject } from '../api/backendApi';
 
 const ProjectsPage = () => {
   const navigate = useNavigate();
@@ -21,6 +22,7 @@ const ProjectsPage = () => {
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState(null);
+  const [joinedProjectIds, setJoinedProjectIds] = useState([]);
 
   const statuses = ['All', 'active', 'planning', 'completed'];
 
@@ -39,18 +41,20 @@ const ProjectsPage = () => {
   const fetchProjects = async () => {
     setLoading(true);
     try {
+      // Fetch projects
       let query = supabase
         .from('projects')
-        .select('*')
+        .select('*, project_members(count)')
         .order('created_at', { ascending: false });
 
-      query = query.neq('owner_id', userId);
+      // query = query.neq('owner_id', userId); // Optional: hide own projects?
 
       const { data, error } = await query;
       if (error) throw error;
 
-      const ownerIds = [...new Set(data.map(p => p.owner_id))];
-
+      // Fetch owner profiles
+      const ownerIds = [...new Set(data.map(p => p.owner || p.owner_id))];
+      
       const { data: profiles } = await supabase
         .from('profiles')
         .select('id, full_name, avatar_url')
@@ -58,10 +62,24 @@ const ProjectsPage = () => {
 
       const mapped = data.map(project => ({
         ...project,
-        profiles: profiles?.find(p => p.id === project.owner_id) || null
+        profiles: profiles?.find(p => p.id === (project.owner || project.owner_id)) || null,
+        members_count: project.project_members?.[0]?.count || 0
       }));
 
       setProjects(mapped);
+
+      // Fetch my memberships
+      if (userId) {
+        const { data: memberships } = await supabase
+          .from('project_members')
+          .select('project_id')
+          .eq('user_id', userId);
+        
+        if (memberships) {
+          setJoinedProjectIds(memberships.map(m => m.project_id));
+        }
+      }
+
     } catch (error) {
       console.error('Error fetching projects:', error);
     } finally {
@@ -87,26 +105,36 @@ const ProjectsPage = () => {
   const handleJoinProject = async (projectId) => {
     if (!userId) return alert('Please log in');
 
-    const project = projects.find(p => p.id === projectId);
-    const collaborators = project.collaborators || [];
-
-    if (collaborators.includes(userId))
-      return alert('Already participating');
-
     try {
-      await supabase
-        .from('projects')
-        .update({
-          collaborators: [...collaborators, userId],
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', projectId);
-
-      alert('Joined challenge!');
-      fetchProjects();
-      setIsProjectModalOpen(false);
+      const result = await joinProject(projectId, userId);
+      if (result.success) {
+        alert('Joined challenge!');
+        fetchProjects(); // Refresh to update counts and button state
+        setIsProjectModalOpen(false);
+      } else {
+        alert(result.error || 'Failed to join');
+      }
     } catch (error) {
       alert('Error joining challenge');
+    }
+  };
+
+  const handleLeaveProject = async (projectId) => {
+    if (!userId) return;
+
+    if (!confirm('Are you sure you want to leave this challenge?')) return;
+
+    try {
+      const result = await leaveProject(projectId, userId);
+      if (result.success) {
+        alert('Left challenge');
+        fetchProjects();
+        setIsProjectModalOpen(false);
+      } else {
+        alert(result.error || 'Failed to leave');
+      }
+    } catch (error) {
+      alert('Error leaving challenge');
     }
   };
 
@@ -185,7 +213,7 @@ const ProjectsPage = () => {
               className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-emerald-glow"
             >
               <PlusIcon className="h-5 w-5" />
-              Create
+              Create Challenge
             </Button>
           </div>
         </div>
@@ -196,7 +224,7 @@ const ProjectsPage = () => {
         {loading ? (
           <div className="py-16 text-center">
             <div className="h-12 w-12 animate-spin border-2 border-emerald-500 border-t-transparent rounded-full mx-auto"></div>
-            <p className="text-mint-600 dark:text-mint-300 mt-4">Loading projects…</p>
+            <p className="text-mint-600 dark:text-mint-300 mt-4">Loading challenges…</p>
           </div>
         ) : (
           <motion.div
@@ -245,7 +273,7 @@ const ProjectsPage = () => {
                 <div className="flex justify-between mt-4 text-sm text-charcoal-500 dark:text-mint-400">
                   <span className="flex items-center gap-1">
                     <UserGroupIcon className="h-4 w-4" />
-                    {project.collaborators?.length || 0} learners
+                    {project.members_count} learners
                   </span>
                   <span className="flex items-center gap-1">
                     <ClockIcon className="h-4 w-4" />
@@ -261,10 +289,14 @@ const ProjectsPage = () => {
                     className="flex-1 bg-gradient-to-r from-emerald-500 to-teal-500 text-white"
                     onClick={(e) => {
                       e.stopPropagation();
-                      handleJoinProject(project.id);
+                      if (joinedProjectIds.includes(project.id)) {
+                        handleLeaveProject(project.id);
+                      } else {
+                        handleJoinProject(project.id);
+                      }
                     }}
                   >
-                    Join
+                    {joinedProjectIds.includes(project.id) ? 'Leave' : 'Join'}
                   </Button>
 
                   <Button variant="outline" size="sm">
@@ -290,10 +322,16 @@ const ProjectsPage = () => {
             </p>
             <Button
               variant="primary"
-              onClick={() => handleJoinProject(selectedProject.id)}
-              className="w-full bg-gradient-to-r from-emerald-500 to-teal-500 text-white"
+              onClick={() => {
+                if (joinedProjectIds.includes(selectedProject.id)) {
+                  handleLeaveProject(selectedProject.id);
+                } else {
+                  handleJoinProject(selectedProject.id);
+                }
+              }}
+              className={`w-full text-white ${joinedProjectIds.includes(selectedProject.id) ? 'bg-red-500 hover:bg-red-600' : 'bg-gradient-to-r from-emerald-500 to-teal-500'}`}
             >
-              Join Challenge
+              {joinedProjectIds.includes(selectedProject.id) ? 'Leave Challenge' : 'Join Challenge'}
             </Button>
           </div>
         )}

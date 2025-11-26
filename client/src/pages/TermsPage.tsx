@@ -7,7 +7,7 @@ const TermsPage = () => {
     <div className="min-h-screen bg-mint-50 dark:bg-charcoal-950 flex flex-col">
       <Helmet>
         <title>Terms and Conditions - SkillSynergy</title>
-        <meta name="description" content="Read the Terms and Conditions for using SkillSynergy. Understand our policies on digital services, user responsibilities, and payments." />
+        <meta name="description" content="Read the Terms and Conditions for using SkillSynergy. Understand our policies on digital services and user responsibilities." />
       </Helmet>
       {/* Header */}
       <div className="bg-white dark:bg-charcoal-900 border-b border-gray-200 dark:border-charcoal-800 py-12">
@@ -44,7 +44,7 @@ const TermsPage = () => {
                 <div>
                   <h3 className="font-semibold text-emerald-900 dark:text-emerald-100 text-sm mb-1">Digital Services Only</h3>
                   <p className="text-emerald-800 dark:text-emerald-200 text-sm">
-                    SkillSynergy deals exclusively in digital goods and services. We do not sell or ship any physical products. All subscriptions, mentorship sessions, and collaborative tools are accessed online.
+                    SkillSynergy is a free digital learning platform. We do not sell or ship any physical products. All learning modules, community features, and collaborative tools are accessed online at no cost.
                   </p>
                 </div>
               </div>
@@ -70,16 +70,16 @@ const TermsPage = () => {
               <li>Not use the platform for any illegal or unauthorized purpose.</li>
             </ul>
           </section>
-          {/* 4. Payments and Subscriptions */}
+          {/* 4. Platform Usage */}
           <section className="mb-8">
-            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">4. Payments and Subscriptions</h2>
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">4. Platform Usage</h2>
             <p className="text-gray-600 dark:text-gray-300 mb-4">
-              We offer Free, Pro Monthly, Pro Yearly, and Deluxe Yearly plans.
+              SkillSynergy is a free learning platform providing access to educational content and community features.
             </p>
             <ul className="list-disc pl-5 space-y-2 text-gray-600 dark:text-gray-300 mb-4">
-              <li><strong>Billing:</strong> Payments are processed securely via Razorpay. Subscriptions auto-renew unless cancelled.</li>
-              <li><strong>Currency:</strong> All transactions are processed in INR (Indian Rupees).</li>
-              <li><strong>Taxes:</strong> Prices may be exclusive of applicable taxes, which will be calculated at checkout.</li>
+              <li><strong>Access:</strong> All core features are freely available to registered users.</li>
+              <li><strong>Content:</strong> Educational materials, skill modules, and collaborative tools are provided at no cost.</li>
+              <li><strong>Fair Use:</strong> Users should utilize platform resources responsibly and not abuse system capabilities.</li>
             </ul>
           </section>
           {/* 5. Prohibited Activities */}

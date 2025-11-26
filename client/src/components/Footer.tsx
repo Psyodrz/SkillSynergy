@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Shield, Lock, CreditCard, Facebook, Linkedin, Globe } from 'lucide-react';
+import { Shield, Facebook, Linkedin, Globe } from 'lucide-react';
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
@@ -51,7 +51,7 @@ const Footer = () => {
               <li><Link to="/projects" className="text-gray-600 dark:text-gray-400 hover:text-emerald-500 dark:hover:text-emerald-400 text-sm transition-colors">Challenges</Link></li>
               <li><Link to="/chat" className="text-gray-600 dark:text-gray-400 hover:text-emerald-500 dark:hover:text-emerald-400 text-sm transition-colors">Discussions</Link></li>
               <li><Link id="watch-demo-footer-link" to="/demo" className="text-gray-600 dark:text-gray-400 hover:text-emerald-500 dark:hover:text-emerald-400 text-sm transition-colors">Watch Demo</Link></li>
-              <li><Link to="/pricing" className="text-gray-600 dark:text-gray-400 hover:text-emerald-500 dark:hover:text-emerald-400 text-sm transition-colors">Pricing</Link></li>
+
             </ul>
           </div>
 
@@ -86,14 +86,6 @@ const Footer = () => {
             </div>
             
             <div className="flex flex-wrap justify-center gap-4">
-               <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-500 bg-gray-50 dark:bg-charcoal-800 px-4 py-2 rounded-full border border-gray-100 dark:border-charcoal-700">
-                <Lock className="w-3 h-3 text-emerald-500" />
-                <span>PCI-DSS Compliant</span>
-              </div>
-              <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-500 bg-gray-50 dark:bg-charcoal-800 px-4 py-2 rounded-full border border-gray-100 dark:border-charcoal-700">
-                <CreditCard className="w-3 h-3 text-emerald-500" />
-                <span>Secured by Razorpay</span>
-              </div>
               <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-500 bg-gray-50 dark:bg-charcoal-800 px-4 py-2 rounded-full border border-gray-100 dark:border-charcoal-700">
                 <Shield className="w-3 h-3 text-emerald-500" />
                 <span>Data Encrypted</span>

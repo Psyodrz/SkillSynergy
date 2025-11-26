@@ -5,7 +5,7 @@ const MyProjectsPage = () => {
   return (
     <div className="max-w-5xl mx-auto">
       <Helmet>
-        <title>My Projects - SkillSynergy</title>
+        <title>My Challenges - SkillSynergy</title>
       </Helmet>
       <MyProjectsSection />
     </div>

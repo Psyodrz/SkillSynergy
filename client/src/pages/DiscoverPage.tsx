@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { 
   MagnifyingGlassIcon, 
   StarIcon,
@@ -17,22 +17,22 @@ import { getAllSkills, createSkill, getSkillCategories, deleteSkill } from '../a
 import { getAllProfiles } from '../api/profileApi';
 import type { Skill, SkillLevel } from '../types';
 import { TrashIcon } from '@heroicons/react/24/outline';
-import { addSkillToUser } from '../lib/skillHelpers';
-import { useTeacherMatch } from '../hooks/useTeacherMatch';
-import TeacherMatchList from '../components/TeacherMatchList';
+import { addUserSkill, getInstructors, createMentorshipRequest, createProject } from '../api/backendApi';
 
 const DiscoverPage = () => {
   const { user: currentUser } = useAuth();
   const navigate = useNavigate();
-  const { teachers: matchedTeachers, loading: matchTeachersLoading, error: matchTeachersError, findTeachers } = useTeacherMatch();
+  const location = useLocation();
   
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [selectedLevel, setSelectedLevel] = useState<SkillLevel | 'All'>('All');
   const [selectedSkill, setSelectedSkill] = useState<Skill | null>(null);
   const [isSkillModalOpen, setIsSkillModalOpen] = useState(false);
+  const [skillModalView, setSkillModalView] = useState<'initial' | 'instructors' | 'create-challenge' | 'mentorship-request'>('initial');
+  const [instructors, setInstructors] = useState<any[]>([]);
+  const [loadingInstructors, setLoadingInstructors] = useState(false);
   const [isCreateSkillModalOpen, setIsCreateSkillModalOpen] = useState(false);
-  const [isTeacherMatchOpen, setIsTeacherMatchOpen] = useState(false);
   const [addingSkill, setAddingSkill] = useState(false);
   const [toastMessage, setToastMessage] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   
@@ -73,6 +73,19 @@ const DiscoverPage = () => {
     }
   }, [toastMessage]);
 
+  // Handle hash scrolling
+  useEffect(() => {
+    if (location.hash === '#instructors' && !loadingUsers && !loadingSkills) {
+      // Small timeout to ensure DOM is fully rendered and layout is stable
+      setTimeout(() => {
+        const element = document.getElementById('instructors-section');
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth' });
+        }
+      }, 100);
+    }
+  }, [location.hash, loadingUsers, loadingSkills]);
+
   // Handle Add to My Skills
   const handleAddSkillToProfile = async () => {
     if (!currentUser || !selectedSkill) return;
@@ -81,12 +94,13 @@ const DiscoverPage = () => {
 
     setAddingSkill(true);
     try {
-      const result = await addSkillToUser(currentUser.id, selectedSkill.id, selectedSkill.level);
+      // Use backend API
+      const result = await addUserSkill(currentUser.id, selectedSkill.id);
 
       if (result.success) {
         setToastMessage({ type: 'success', message: `${selectedSkill.name} added to your skills!` });
-        setIsSkillModalOpen(false);
-      } else if (result.alreadyExists) {
+        // Don't close modal, just show success
+      } else if (result.error && result.error.includes('duplicate')) {
         setToastMessage({ type: 'error', message: 'You already have this skill!' });
       } else {
         setToastMessage({ type: 'error', message: result.error || 'Failed to add skill' });
@@ -98,43 +112,80 @@ const DiscoverPage = () => {
     }
   };
 
-  // Handle Find Professionals - Now includes AI teacher matching
+  // Handle Find Professionals
   const handleFindProfessionals = async () => {
     if (!selectedSkill) return;
-
-    console.log('Finding professionals for skill:', { skillId: selectedSkill.id });
-
-    // Close modal
-    setIsSkillModalOpen(false);
-
-    // Call teacher matching API if user is logged in
-    if (currentUser) {
-      await findTeachers({
-        userId: currentUser.id,
-        skillIds: [selectedSkill.id],
-        limit: 10
-      });
-      // Show teacher match results
-      setIsTeacherMatchOpen(true);
-    } else {
-      // Fallback: Set search query and scroll to users section
-      setSearchQuery(selectedSkill.name);
-      const usersSection = document.getElementById('users-section');
-      if (usersSection) {
-        usersSection.scrollIntoView({ behavior: 'smooth' });
+    
+    setSkillModalView('instructors');
+    setLoadingInstructors(true);
+    
+    try {
+      const result = await getInstructors(selectedSkill.id);
+      if (result.success && result.data) {
+        setInstructors(result.data);
       }
+    } catch (error) {
+      console.error('Error fetching instructors:', error);
+    } finally {
+      setLoadingInstructors(false);
     }
   };
 
   // Handle Start a Project
   const handleStartProject = () => {
     if (!selectedSkill) return;
+    setSkillModalView('create-challenge');
+  };
 
-    console.log('Starting project with skill:', { skillId: selectedSkill.id, skillName: selectedSkill.name });
+  const handleCreateChallenge = async (title: string, description: string) => {
+    if (!currentUser || !selectedSkill) return;
+    
+    try {
+      const result = await createProject(
+        title,
+        description,
+        [selectedSkill.name],
+        'public',
+        10,
+        currentUser.id
+      );
+      
+      if (result.success) {
+        setToastMessage({ type: 'success', message: 'Learning Challenge created!' });
+        setIsSkillModalOpen(false);
+        navigate('/projects'); // Or wherever appropriate
+      } else {
+        setToastMessage({ type: 'error', message: result.error || 'Failed to create challenge' });
+      }
+    } catch (error) {
+      console.error('Error creating challenge:', error);
+    }
+  };
 
-    // Navigate to projects page with skill pre-selected
-    navigate(`/projects?skillId=${selectedSkill.id}&skillName=${encodeURIComponent(selectedSkill.name)}`);
-    setIsSkillModalOpen(false);
+  const handleRequestMentorship = async (message: string, instructorId: string | null = null) => {
+    if (!currentUser || !selectedSkill) return;
+    
+    try {
+      const result = await createMentorshipRequest(
+        selectedSkill.id,
+        currentUser.id,
+        instructorId,
+        message
+      );
+      
+      if (result.success) {
+        setToastMessage({ type: 'success', message: 'Mentorship request sent!' });
+        if (instructorId) {
+          // If requested specific instructor, maybe close modal or show success
+        } else {
+          setIsSkillModalOpen(false);
+        }
+      } else {
+        setToastMessage({ type: 'error', message: result.error || 'Failed to send request' });
+      }
+    } catch (error) {
+      console.error('Error requesting mentorship:', error);
+    }
   };
 
   // Fetch skills from database
@@ -248,6 +299,7 @@ const DiscoverPage = () => {
 
   const handleSkillConnect = (skill: Skill) => {
     setSelectedSkill(skill);
+    setSkillModalView('initial');
     setIsSkillModalOpen(true);
   };
 
@@ -436,7 +488,7 @@ const DiscoverPage = () => {
             <div className="text-center py-12 bg-white dark:bg-navy-800 rounded-xl shadow-premium border border-warm-200 dark:border-navy-700">
               <StarIcon className="h-12 w-12 mx-auto text-navy-400 mb-3" />
               <h3 className="text-lg font-medium text-navy-900 dark:text-white">No skills available</h3>
-              <p className="text-navy-500 dark:text-warm-400 mb-4">Be the first to add skills!</p>
+              <p className="text-navy-500 dark:text-warm-400 mb-4">Add your first skill to start learning.</p>
               <Button variant="primary" onClick={() => setIsCreateSkillModalOpen(true)}>
                 <PlusIcon className="h-5 w-5 mr-2 inline" />
                 Create First Skill
@@ -452,6 +504,7 @@ const DiscoverPage = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.4 }}
             className="mb-8"
+            id="instructors-section"
           >
             <div className="flex items-center space-x-2 mb-4">
               <AcademicCapIcon className="h-6 w-6 text-emerald-600" />
@@ -617,6 +670,7 @@ const DiscoverPage = () => {
       >
         {selectedSkill && (
           <div className="space-y-4">
+            {/* Header */}
             <div className="flex items-center space-x-4">
               <div className={`w-16 h-16 ${selectedSkill.color.replace('text-', 'bg-')} rounded-lg flex items-center justify-center`}>
                 <span className="text-white font-bold text-2xl">
@@ -638,56 +692,109 @@ const DiscoverPage = () => {
                   <span className="text-sm text-navy-600 dark:text-warm-400">
                     {selectedSkill.level}
                   </span>
-                  <span className="text-navy-400">•</span>
-                  <span className="text-sm text-navy-600 dark:text-warm-400">
-                    {selectedSkill.users_count} users
-                  </span>
                 </div>
               </div>
             </div>
             
-            <div className="bg-warm-50 dark:bg-navy-700 rounded-lg p-4">
-              <h4 className="font-medium text-navy-900 dark:text-white mb-2">
-                What would you like to do?
-              </h4>
-              <div className="space-y-2">
-                <Button 
-                  variant="primary" 
-                  className="w-full" 
-                  onClick={handleAddSkillToProfile}
-                  disabled={addingSkill}
-                >
-                  {addingSkill ? (
-                    <>
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
-                      Adding...
-                    </>
-                  ) : (
-                    'Add to My Learning Path'
-                  )}
-                </Button>
-                <Button variant="outline" className="w-full" onClick={handleFindProfessionals}>
-                  Start Learning
-                </Button>
-                <Button variant="outline" className="w-full" onClick={handleStartProject}>
-                  Join a Practice Challenge
-                </Button>
+            {/* Content based on view */}
+            {skillModalView === 'initial' && (
+              <div className="bg-warm-50 dark:bg-navy-700 rounded-lg p-4">
+                <h4 className="font-medium text-navy-900 dark:text-white mb-2">
+                  What would you like to do?
+                </h4>
+                <div className="space-y-2">
+                  <Button 
+                    variant="primary" 
+                    className="w-full" 
+                    onClick={handleAddSkillToProfile}
+                    disabled={addingSkill}
+                  >
+                    {addingSkill ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                        Adding...
+                      </>
+                    ) : (
+                      'Add to My Learning Path'
+                    )}
+                  </Button>
+                  <Button variant="outline" className="w-full" onClick={handleFindProfessionals}>
+                    Find Instructors
+                  </Button>
+                  <Button variant="outline" className="w-full" onClick={handleStartProject}>
+                    Start Learning (Challenge / Mentorship)
+                  </Button>
+                </div>
               </div>
-            </div>
+            )}
+
+            {skillModalView === 'instructors' && (
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <h4 className="font-medium text-navy-900 dark:text-white">Instructors</h4>
+                  <button onClick={() => setSkillModalView('initial')} className="text-sm text-emerald-500 hover:underline">Back</button>
+                </div>
+                {loadingInstructors ? (
+                  <div className="flex justify-center py-4">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div>
+                  </div>
+                ) : instructors.length > 0 ? (
+                  <div className="space-y-3 max-h-60 overflow-y-auto">
+                    {instructors.map(inst => (
+                      <div key={inst.id} className="flex items-center justify-between p-3 bg-white dark:bg-navy-800 rounded-lg border border-warm-200 dark:border-navy-600">
+                        <div className="flex items-center space-x-3">
+                          <img src={inst.avatar_url || 'https://via.placeholder.com/40'} alt={inst.full_name} className="w-10 h-10 rounded-full" />
+                          <div>
+                            <p className="font-medium text-navy-900 dark:text-white">{inst.full_name}</p>
+                            <p className="text-xs text-navy-500">{inst.qualification}</p>
+                          </div>
+                        </div>
+                        <Button size="sm" variant="outline" onClick={() => handleRequestMentorship(`Hi ${inst.full_name}, I'd like help with ${selectedSkill.name}.`, inst.id)}>
+                          Request
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-center text-navy-500">No instructors found for this skill.</p>
+                )}
+              </div>
+            )}
+
+            {skillModalView === 'create-challenge' && (
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <h4 className="font-medium text-navy-900 dark:text-white">Start Learning</h4>
+                  <button onClick={() => setSkillModalView('initial')} className="text-sm text-emerald-500 hover:underline">Back</button>
+                </div>
+                
+                <div className="grid grid-cols-1 gap-3">
+                  <div className="p-4 border border-warm-200 dark:border-navy-600 rounded-lg hover:border-emerald-500 cursor-pointer transition-colors"
+                       onClick={() => {
+                         const title = `${selectedSkill.name} Study Group`;
+                         const desc = `${selectedSkill.name} Study Group — 4 weeks, beginner → intermediate.\nGoal: Complete 8 small exercises and a capstone mini-project.\nWeekly format: 2x live sessions, 3x homework tasks.\nExpected workload: ~4 hrs/week.\nTools: Zoom/Discord, GitHub, Google Docs.`;
+                         handleCreateChallenge(title, desc);
+                       }}>
+                    <h5 className="font-bold text-emerald-600">Create Learning Challenge</h5>
+                    <p className="text-sm text-navy-600 dark:text-warm-400">Start a public study group. We'll fill in a template for you.</p>
+                  </div>
+
+                  <div className="p-4 border border-warm-200 dark:border-navy-600 rounded-lg hover:border-emerald-500 cursor-pointer transition-colors"
+                       onClick={() => {
+                         const msg = `Hi, I'm ${currentUser?.user_metadata?.full_name || 'a learner'}. I'd like one-on-one help with ${selectedSkill.name}. My current level: Beginner. I can commit 5 hours/week.`;
+                         handleRequestMentorship(msg);
+                       }}>
+                    <h5 className="font-bold text-emerald-600">Request 1:1 Mentorship</h5>
+                    <p className="text-sm text-navy-600 dark:text-warm-400">Post a general request for any instructor to pick up.</p>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </Modal>
 
-      {/* Teacher Match List Modal */}
-      {isTeacherMatchOpen && (
-        <TeacherMatchList
-          teachers={matchedTeachers}
-          loading={matchTeachersLoading}
-          error={matchTeachersError}
-          onClose={() => setIsTeacherMatchOpen(false)}
-          skillName={selectedSkill?.name}
-        />
-      )}
+
     </div>
   );
 };

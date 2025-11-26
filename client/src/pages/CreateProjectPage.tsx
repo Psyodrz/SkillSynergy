@@ -23,7 +23,7 @@ const CreateProjectPage: React.FC = () => {
 
         {/* Helper text */}
         <p className="font-medium">
-          Redirecting to <span className="text-emerald-500 dark:text-emerald-400">My Projects</span>…
+          Redirecting to <span className="text-emerald-500 dark:text-emerald-400">My Challenges</span>…
         </p>
       </div>
     </div>

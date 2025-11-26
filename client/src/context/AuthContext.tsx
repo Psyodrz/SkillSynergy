@@ -6,9 +6,6 @@ import type { UserProfile } from '../lib/supabaseClient';
 // ============================================================================
 // SUPABASE AUTH CONTEXT - REAL BACKEND AUTHENTICATION
 // ============================================================================
-// This replaces the old fake/demo auth that accepted any email/password
-// and logged in a hardcoded "John Doe" user.
-// ============================================================================
 
 interface AuthContextType {
   // Supabase User object (contains id, email, etc.)
@@ -22,7 +19,7 @@ interface AuthContextType {
   loading: boolean;
   // Auth functions
   signIn: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
-  signUp: (email: string, password: string, fullName?: string) => Promise<{ success: boolean; error?: string }>;
+  signUp: (email: string, password: string, fullName?: string, role?: string) => Promise<{ success: boolean; error?: string }>;
   signOut: () => Promise<void>;
   refreshSession: () => Promise<void>;
 }
@@ -81,6 +78,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (!data || data.length === 0) {
         console.log('Profile not found, creating new profile for:', userId);
         
+        // Try to get user metadata from Supabase auth
+        const { data: { user: authUser } } = await supabase.auth.getUser();
+        const fullNameFromMeta = authUser?.user_metadata?.full_name || '';
+        const roleFromMeta = authUser?.user_metadata?.role || 'Learner';
+        const email = authUser?.email || '';
+        
         const createResponse = await fetch(`${supabaseUrl}/rest/v1/profiles`, {
           method: 'POST',
           headers: {
@@ -91,8 +94,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           },
           body: JSON.stringify({
             id: userId,
-            full_name: '',
-            role: 'New User',
+            email: email, // Save email to profile
+            full_name: fullNameFromMeta,
+            role: roleFromMeta,
             skills: [],
             experience: []
           })
@@ -103,8 +107,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return (Array.isArray(newProfile) ? newProfile[0] : newProfile) as UserProfile;
       }
 
-      console.log('🟢 Profile fetched successfully:', data[0]);
-      return data[0] as UserProfile;
+      // Existing profile found
+      const userProfile = data[0] as UserProfile;
+
+      // Check if email is missing in profile and sync it if possible
+      if (!userProfile.email) {
+        const { data: { user: authUser } } = await supabase.auth.getUser();
+        if (authUser?.email) {
+          console.log('Syncing email to profile...');
+          await fetch(`${supabaseUrl}/rest/v1/profiles?id=eq.${userId}`, {
+            method: 'PATCH',
+            headers: {
+              'Content-Type': 'application/json',
+              'apikey': supabaseKey,
+              'Authorization': `Bearer ${userToken || supabaseKey}`,
+              'Prefer': 'return=representation'
+            },
+            body: JSON.stringify({ email: authUser.email })
+          });
+          userProfile.email = authUser.email;
+        }
+      }
+
+      console.log('🟢 Profile fetched successfully:', userProfile);
+      return userProfile;
     } catch (error) {
       console.error('Error fetching user profile:', error);
       return null;
@@ -201,10 +227,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     password: string
   ): Promise<{ success: boolean; error?: string }> => {
     try {
-      // REMOVED: Fake authentication that accepted any email/password
-      // await new Promise(resolve => setTimeout(resolve, 1000));
-      // const userData = { id: 1, name: 'John Doe', ... };
-
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -238,19 +260,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signUp = async (
     email: string,
     password: string,
-    fullName?: string
+    fullName?: string,
+    role?: string
   ): Promise<{ success: boolean; error?: string }> => {
     try {
-      // REMOVED: Fake registration that created a demo user
-      // const userData = { id: Date.now(), name: email.split('@')[0], ... };
-
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
           data: {
             full_name: fullName || email.split('@')[0],
-            role: 'New User',
+            role: role || 'Learner',
           },
         },
       });
@@ -265,11 +285,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (data.user) {
         console.log('Sign up successful:', data.user.email);
-        
-        // Note: If email confirmation is enabled in Supabase, the user will need to
-        // confirm their email before they can sign in. The profile will be created
-        // automatically by the database trigger when the user is created.
-        
         return { success: true };
       }
 
@@ -286,10 +301,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // REAL Sign Out with Supabase
   const signOut = async () => {
     try {
-      // REMOVED: Manual localStorage clearing
-      // localStorage.removeItem('authToken');
-      // localStorage.removeItem('userData');
-
       const { error } = await supabase.auth.signOut();
 
       if (error) {
@@ -304,16 +315,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // Refresh the current session
+  // Refresh session
   const refreshSession = async () => {
     try {
       const { data, error } = await supabase.auth.refreshSession();
-
-      if (error) {
-        console.error('Error refreshing session:', error);
-        return;
-      }
-
+      if (error) throw error;
       if (data.user) {
         setUser(data.user);
         const userProfile = await fetchUserProfile(data.user.id);
@@ -324,7 +330,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const value: AuthContextType = {
+  const value = {
     user,
     profile,
     userData: user && profile ? { user, profile } : null,
@@ -333,8 +339,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     signIn,
     signUp,
     signOut,
-    refreshSession,
+    refreshSession
   };
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+    </AuthContext.Provider>
+  );
 };

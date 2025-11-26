@@ -24,6 +24,18 @@ const DashboardPage = () => {
   const [isUserModalOpen, setIsUserModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
 
+  const [isNewUser, setIsNewUser] = useState(false);
+
+  // Check if user is new (created within the last hour)
+  useEffect(() => {
+    if (profile?.created_at) {
+      const createdAt = new Date(profile.created_at);
+      const now = new Date();
+      const hoursSinceCreation = (now.getTime() - createdAt.getTime()) / (1000 * 60 * 60);
+      setIsNewUser(hoursSinceCreation < 1); // New user if created within last hour
+    }
+  }, [profile]);
+
   // Real stats from database
   const [stats, setStats] = useState({
     skills: 0,
@@ -74,9 +86,9 @@ const DashboardPage = () => {
       try {
         const profilesData = await getAllProfiles();
 
-        // Filter out current user and map to expected format
+        // Filter out current user and only show Teachers (case-insensitive)
         const formattedUsers = profilesData
-          .filter(u => u.id !== user?.id)
+          .filter(u => u.id !== user?.id && u.role?.toLowerCase().trim() === 'teacher')
           .map(u => ({
             id: u.id,
             name: u.full_name || 'User',
@@ -125,10 +137,16 @@ const DashboardPage = () => {
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
               <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-slate-50 mb-1">
-                Welcome back, {profile?.full_name || user?.email || 'User'}! 👋
+                {isNewUser 
+                  ? `Welcome to SkillSynergy, ${profile?.full_name || user?.email || 'User'}! 🎉`
+                  : `Welcome back, ${profile?.full_name || user?.email || 'User'}! 👋`
+                }
               </h1>
               <p className="text-sm sm:text-base text-slate-600 dark:text-slate-300">
-                Discover new skills and connect with professionals
+                {isNewUser 
+                  ? "Let's get you started! Explore skills and connect with professionals"
+                  : "Discover new skills and connect with professionals"
+                }
               </p>
             </div>
           </div>
@@ -240,9 +258,9 @@ const DashboardPage = () => {
         >
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg sm:text-xl font-semibold text-slate-900 dark:text-slate-50">
-              Top Professionals
+              Featured Instructors
             </h2>
-            <Button variant="outline" size="sm" className="text-sm" onClick={() => navigate('/discover')}>
+            <Button variant="outline" size="sm" className="text-sm" onClick={() => navigate('/instructors')}>
               View All
             </Button>
           </div>
@@ -313,16 +331,16 @@ const DashboardPage = () => {
                 <Button
                   variant="outline"
                   className="w-full"
-                  onClick={() => navigate('/discover')}
+                  onClick={() => navigate('/instructors')}
                 >
                   Find Professionals
                 </Button>
                 <Button
                   variant="outline"
                   className="w-full"
-                  onClick={() => navigate('/projects')}
+                  onClick={() => navigate('/projects/create')}
                 >
-                  Start a Project
+                  Start a Learning Challenge
                 </Button>
               </div>
             </div>

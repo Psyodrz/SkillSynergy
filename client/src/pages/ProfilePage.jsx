@@ -117,6 +117,9 @@ const ProfilePage = () => {
     location: '',
     bio: '',
     skills: [],
+    teaching_skills: [],
+    qualification: '',
+    languages: '',
     experience: []
   });
 
@@ -138,13 +141,37 @@ const ProfilePage = () => {
   // Load data
   useEffect(() => {
     if (profile) {
+      const allSkills = parseJSON(profile.skills);
+      const learning = allSkills.filter(s => !s.type || s.type === 'learn');
+      const teaching = allSkills.filter(s => s.type === 'teach');
+
+      // Parse bio for qualification/languages
+      let bioText = profile.bio || '';
+      let qual = '';
+      let langs = '';
+      
+      const qualMatch = bioText.match(/Qualification: (.*?)(\n|$)/);
+      if (qualMatch) {
+        qual = qualMatch[1];
+        bioText = bioText.replace(qualMatch[0], '').trim();
+      }
+      
+      const langMatch = bioText.match(/Languages: (.*?)(\n|$)/);
+      if (langMatch) {
+        langs = langMatch[1];
+        bioText = bioText.replace(langMatch[0], '').trim();
+      }
+
       setFormData({
         full_name: profile.full_name || '',
         avatar_url: profile.avatar_url || '',
         role: profile.role || '',
         location: profile.location || '',
-        bio: profile.bio || '',
-        skills: parseJSON(profile.skills),
+        bio: bioText,
+        skills: learning,
+        teaching_skills: teaching,
+        qualification: qual,
+        languages: langs,
         experience: parseJSON(profile.experience)
       });
     }
@@ -171,6 +198,26 @@ const ProfilePage = () => {
     setFormData(prev => ({
       ...prev,
       skills: prev.skills.filter((_, i) => i !== index)
+    }));
+  };
+
+  const [newTeachingSkill, setNewTeachingSkill] = useState('');
+
+  const addTeachingSkill = (e) => {
+    e.preventDefault();
+    if (newTeachingSkill.trim()) {
+      setFormData(prev => ({
+        ...prev,
+        teaching_skills: [...prev.teaching_skills, { name: newTeachingSkill.trim(), level: 'Expert', type: 'teach' }]
+      }));
+      setNewTeachingSkill('');
+    }
+  };
+
+  const removeTeachingSkill = (index) => {
+    setFormData(prev => ({
+      ...prev,
+      teaching_skills: prev.teaching_skills.filter((_, i) => i !== index)
     }));
   };
 
@@ -206,13 +253,22 @@ const ProfilePage = () => {
     try {
       console.log('🔵 Current formData:', formData);
       
+      const combinedSkills = [
+        ...formData.skills.map(s => ({ ...s, type: 'learn' })),
+        ...formData.teaching_skills.map(s => ({ ...s, type: 'teach' }))
+      ];
+      
+      let finalBio = formData.bio;
+      if (formData.qualification) finalBio += `\nQualification: ${formData.qualification}`;
+      if (formData.languages) finalBio += `\nLanguages: ${formData.languages}`;
+
       const updates = {
         full_name: formData.full_name?.trim() || null,
         avatar_url: formData.avatar_url || null,
         role: formData.role?.trim() || null,
         location: formData.location?.trim() || null,
-        bio: formData.bio?.trim() || null,
-        skills: formData.skills,
+        bio: finalBio?.trim() || null,
+        skills: combinedSkills,
         experience: formData.experience,
       };
 
@@ -425,7 +481,8 @@ const ProfilePage = () => {
                     className="text-lg text-charcoal-700 dark:text-mint-200 w-full bg-transparent border-b border-mint-200 dark:border-charcoal-600 focus:border-emerald-500 focus:outline-none px-0 py-1 cursor-pointer"
                   >
                     <option value="Student">Student</option>
-                    <option value="Instructor">Instructor (Content Contributor)</option>
+                    <option value="Instructor">Instructor</option>
+                    <option value="Instructor & Student">Instructor & Student</option>
                   </select>
                 </div>
                 <div className="flex items-center gap-2 text-charcoal-500 dark:text-mint-300">
@@ -472,18 +529,60 @@ const ProfilePage = () => {
                 About
               </h2>
               {isEditing ? (
-                <textarea
-                  name="bio"
-                  value={formData.bio}
-                  onChange={handleInputChange}
-                  rows={4}
-                  className="w-full rounded-xl border-mint-200 dark:border-charcoal-600 dark:bg-charcoal-700 dark:text-white focus:ring-emerald-500 focus:border-emerald-500 p-4"
-                  placeholder="Tell us about yourself..."
-                />
+                <div className="space-y-4">
+                  <textarea
+                    name="bio"
+                    value={formData.bio}
+                    onChange={handleInputChange}
+                    rows={4}
+                    className="w-full rounded-xl border-mint-200 dark:border-charcoal-600 dark:bg-charcoal-700 dark:text-white focus:ring-emerald-500 focus:border-emerald-500 p-4"
+                    placeholder="Tell us about yourself..."
+                  />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-charcoal-700 dark:text-mint-200 mb-1">Qualification</label>
+                      <input
+                        name="qualification"
+                        value={formData.qualification}
+                        onChange={handleInputChange}
+                        className="w-full rounded-lg border-mint-200 dark:border-charcoal-600 dark:bg-charcoal-700 dark:text-white focus:ring-emerald-500 focus:border-emerald-500"
+                        placeholder="e.g. PhD in CS"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-charcoal-700 dark:text-mint-200 mb-1">Languages</label>
+                      <input
+                        name="languages"
+                        value={formData.languages}
+                        onChange={handleInputChange}
+                        className="w-full rounded-lg border-mint-200 dark:border-charcoal-600 dark:bg-charcoal-700 dark:text-white focus:ring-emerald-500 focus:border-emerald-500"
+                        placeholder="e.g. English, Spanish"
+                      />
+                    </div>
+                  </div>
+                </div>
               ) : (
-                <p className="text-charcoal-700 dark:text-mint-200 leading-relaxed whitespace-pre-wrap">
-                  {formData.bio || 'No bio added yet.'}
-                </p>
+                <div className="space-y-4">
+                  <p className="text-charcoal-700 dark:text-mint-200 leading-relaxed whitespace-pre-wrap">
+                    {formData.bio || 'No bio added yet.'}
+                  </p>
+                  {(formData.qualification || formData.languages) && (
+                    <div className="flex flex-wrap gap-4 pt-4 border-t border-mint-100 dark:border-charcoal-700">
+                      {formData.qualification && (
+                        <div className="flex items-center gap-2 text-sm text-charcoal-600 dark:text-mint-300">
+                          <AcademicCapIcon className="w-5 h-5 text-emerald-500" />
+                          <span>{formData.qualification}</span>
+                        </div>
+                      )}
+                      {formData.languages && (
+                        <div className="flex items-center gap-2 text-sm text-charcoal-600 dark:text-mint-300">
+                          <span className="font-semibold text-emerald-500">Aa</span>
+                          <span>{formData.languages}</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
               )}
             </motion.div>
 
@@ -543,6 +642,62 @@ const ProfilePage = () => {
           {/* Right Column */}
           <div className="space-y-8">
             
+            {/* Teaching Skills Section - Only for Instructors */}
+            {(formData.role?.toLowerCase().includes('instructor') || formData.role?.toLowerCase().includes('teacher')) && (
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.25 }}
+                className="bg-white dark:bg-charcoal-800 rounded-2xl shadow-premium border border-mint-200 dark:border-charcoal-700 p-6"
+              >
+                <h2 className="text-xl font-bold text-charcoal-900 dark:text-white mb-4 flex items-center gap-2">
+                  <BriefcaseIcon className="w-6 h-6 text-emerald-500" />
+                  Skills I Teach
+                </h2>
+                
+                <div className="flex flex-wrap gap-2 mb-4">
+                  {formData.teaching_skills.length > 0 ? (
+                    formData.teaching_skills.map((skill, index) => (
+                      <div 
+                        key={index}
+                        className="group flex items-center gap-2 px-3 py-1.5 bg-emerald-100 dark:bg-emerald-900/30 rounded-full text-sm font-medium text-emerald-800 dark:text-emerald-200"
+                      >
+                        <span>{skill.name}</span>
+                        {isEditing && (
+                          <button 
+                            onClick={() => removeTeachingSkill(index)}
+                            className="text-emerald-600 hover:text-emerald-800 dark:text-emerald-400 dark:hover:text-emerald-200 transition-colors"
+                          >
+                            <XMarkIcon className="w-3 h-3" />
+                          </button>
+                        )}
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-charcoal-500 dark:text-mint-300 italic text-sm">No teaching skills added yet.</p>
+                  )}
+                </div>
+
+                {isEditing && (
+                  <form onSubmit={addTeachingSkill} className="flex gap-2">
+                    <input
+                      value={newTeachingSkill}
+                      onChange={(e) => setNewTeachingSkill(e.target.value)}
+                      placeholder="Add a skill you teach..."
+                      className="flex-1 rounded-lg border-mint-200 dark:border-charcoal-600 dark:bg-charcoal-700 dark:text-white text-sm focus:ring-emerald-500 focus:border-emerald-500"
+                    />
+                    <button 
+                      type="submit"
+                      disabled={!newTeachingSkill.trim()}
+                      className="p-2 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-lg hover:from-emerald-600 hover:to-teal-600 disabled:opacity-50 disabled:cursor-not-allowed shadow-emerald-glow"
+                    >
+                      <PlusIcon className="w-5 h-5" />
+                    </button>
+                  </form>
+                )}
+              </motion.div>
+            )}
+
             {/* Skills Section */}
             <motion.div 
               initial={{ opacity: 0, y: 20 }}

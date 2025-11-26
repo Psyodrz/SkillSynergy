@@ -131,7 +131,7 @@ const MessagesPage = () => {
       {/* Sidebar / Conversations List */}
       <div className={`w-full md:w-80 bg-mint-100 dark:bg-charcoal-900 border-r border-mint-200 dark:border-charcoal-700 flex flex-col ${targetUserId ? 'hidden md:flex' : 'flex'}`}>
         <div className="p-4 border-b border-mint-200 dark:border-charcoal-700">
-          <h2 className="text-xl font-bold text-charcoal-900 dark:text-white">Messages</h2>
+          <h2 className="text-xl font-bold text-charcoal-900 dark:text-white">Learning Discussions</h2>
         </div>
         
         <div className="flex-1 overflow-y-auto">
@@ -181,6 +181,7 @@ const MessagesPage = () => {
       <div className={`flex-1 flex flex-col ${!targetUserId ? 'hidden md:flex' : 'flex'}`}>
         {targetUserId ? (
           <>
+            {/* Chat Header */}
             {/* Chat Header */}
             <div className="p-4 bg-mint-100 dark:bg-charcoal-900 border-b border-mint-200 dark:border-charcoal-700 flex items-center justify-between">
               <div className="flex items-center space-x-3">
@@ -297,7 +298,7 @@ const MessagesPage = () => {
                     type="text"
                     value={newMessage}
                     onChange={handleInputChange}
-                    placeholder="Type a message..."
+                    placeholder="Ask a doubt..."
                     className="flex-1 p-2 border border-teal-200 dark:border-charcoal-700 rounded-lg bg-white dark:bg-charcoal-800 text-charcoal-900 dark:text-mint-100 focus:outline-none focus:ring-2 focus:ring-emerald-500"
                   />
                   <button
@@ -314,7 +315,7 @@ const MessagesPage = () => {
         ) : (
           <div className="flex-1 flex flex-col items-center justify-center text-charcoal-500 dark:text-mint-300">
             <ChatBubbleLeftIcon className="w-16 h-16 mb-4" />
-            <p className="text-lg">Select a conversation to start chatting</p>
+            <p className="text-lg">Select a discussion to start learning</p>
           </div>
         )}
       </div>
