@@ -55,7 +55,7 @@ const authFetch = async (endpoint: string, options: RequestInit = {}): Promise<R
 /**
  * Add a skill to the user's profile
  */
-export const addUserSkill = async (userId: string, skillId: string): Promise<ApiResponse<any>> => {
+export const addUserSkill = async (_userId: string, skillId: string): Promise<ApiResponse<any>> => {
   try {
     const response = await authFetch('/api/user-skills', {
       method: 'POST',
@@ -85,7 +85,7 @@ export const getInstructors = async (skillId: string, page: number = 1, pageSize
  */
 export const createMentorshipRequest = async (
   skillId: string, 
-  learnerId: string, 
+  _learnerId: string, 
   instructorId: string | null, 
   message: string
 ): Promise<ApiResponse<any>> => {
@@ -109,7 +109,7 @@ export const createProject = async (
   tags: string[], 
   visibility: 'public' | 'private', 
   capacity: number, 
-  ownerId: string
+  _ownerId: string
 ): Promise<ApiResponse<any>> => {
   try {
     const response = await authFetch('/api/projects', {
@@ -125,7 +125,7 @@ export const createProject = async (
 /**
  * Join a project
  */
-export const joinProject = async (projectId: string, userId: string): Promise<ApiResponse<any>> => {
+export const joinProject = async (projectId: string, _userId: string): Promise<ApiResponse<any>> => {
   try {
     const response = await authFetch('/api/project_members', {
       method: 'POST',
@@ -140,7 +140,7 @@ export const joinProject = async (projectId: string, userId: string): Promise<Ap
 /**
  * Leave a project
  */
-export const leaveProject = async (projectId: string, userId: string): Promise<ApiResponse<any>> => {
+export const leaveProject = async (projectId: string, _userId: string): Promise<ApiResponse<any>> => {
   try {
     const response = await authFetch('/api/project_members', {
       method: 'DELETE',
