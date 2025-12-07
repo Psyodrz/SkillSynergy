@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
   BellIcon, 
@@ -12,16 +12,18 @@ import {
   QuestionMarkCircleIcon,
   EnvelopeIcon,
   ChatBubbleLeftRightIcon,
-  BookOpenIcon
+  BookOpenIcon,
+  CreditCardIcon
 } from '@heroicons/react/24/outline';
 import Button from '../components/Button';
+import PricingCard from '../components/PricingCard';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
 
 const SettingsPage = () => {
   const { tab = 'profile' } = useParams();
   const { isDark, toggleTheme } = useTheme();
-  const { user, profile } = useAuth();
+  const { user, profile, refreshSession } = useAuth();
 
   const [settings, setSettings] = useState({
     notifications: {
@@ -77,6 +79,13 @@ const SettingsPage = () => {
       console.log('Account deletion requested');
     }
   };
+
+  const tabs = [
+    { id: 'profile', label: 'Profile', icon: UserIcon },
+    { id: 'notifications', label: 'Notifications', icon: BellIcon },
+    { id: 'billing', label: 'Billing', icon: CreditCardIcon },
+    { id: 'help', label: 'Help', icon: QuestionMarkCircleIcon },
+  ];
 
   const renderProfileSettings = () => (
     <div className="space-y-6">
@@ -393,6 +402,71 @@ const SettingsPage = () => {
     </motion.div>
   );
 
+  const renderBillingSettings = () => (
+    <div className="space-y-6">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bg-white dark:bg-charcoal-800 rounded-xl shadow-premium border border-mint-200 dark:border-charcoal-700 p-6"
+      >
+        <div className="flex items-center space-x-3 mb-6">
+          <CreditCardIcon className="h-6 w-6 text-emerald-600" />
+          <h2 className="text-xl font-semibold text-charcoal-900 dark:text-white">
+            Subscription & Billing
+          </h2>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          {/* Current Plan Info */}
+          <div>
+            <h3 className="text-lg font-medium text-charcoal-900 dark:text-white mb-2">
+              Your Plan
+            </h3>
+            <p className="text-charcoal-600 dark:text-mint-200 mb-4">
+              You are currently on the <span className="font-bold text-emerald-600 dark:text-emerald-400 capitalize">{profile?.subscription_plan || 'Free'}</span> plan.
+            </p>
+            {profile?.subscription_status === 'active' && (
+               <div className="inline-flex items-center px-3 py-1 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 text-sm font-medium">
+                 Active
+               </div>
+            )}
+          </div>
+
+          {/* Pricing Cards */}
+          <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+            {/* Free Plan (Visual only) */}
+            <div className="p-8 rounded-2xl border border-mint-200 dark:border-charcoal-700 bg-white dark:bg-charcoal-800 shadow-sm flex flex-col opacity-70">
+              <h3 className="text-xl font-bold text-charcoal-900 dark:text-white mb-2">Free Plan</h3>
+              <div className="flex items-baseline mb-6">
+                <span className="text-4xl font-extrabold text-charcoal-900 dark:text-white">₹0</span>
+                <span className="text-charcoal-500 dark:text-mint-300 ml-2">/month</span>
+              </div>
+              <ul className="space-y-4 mb-8 flex-1">
+                <li className="flex items-start">
+                  <span className="mr-3 text-emerald-500">✓</span>
+                  <span className="text-charcoal-700 dark:text-mint-100 text-sm">Basic Project Creation</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="mr-3 text-emerald-500">✓</span>
+                  <span className="text-charcoal-700 dark:text-mint-100 text-sm">Limited AI Matches</span>
+                </li>
+              </ul>
+              <Button variant="outline" disabled>Current Plan</Button>
+            </div>
+
+            {/* Pro Plan */}
+            <PricingCard 
+              isCurrentPlan={profile?.subscription_plan === 'pro'} 
+              onSuccess={() => {
+                refreshSession(); // Refresh profile to show updated status
+              }}
+            />
+          </div>
+        </div>
+      </motion.div>
+    </div>
+  );
+
   const renderHelpSettings = () => (
     <div className="space-y-6">
       {/* Help Header */}
@@ -504,20 +578,44 @@ const SettingsPage = () => {
           className="mb-6"
         >
           <h1 className="text-3xl font-bold text-charcoal-900 dark:text-white mb-2 capitalize">
-            {tab === 'profile' ? 'Profile Settings' : tab === 'notifications' ? 'Notifications' : 'Help Center'}
+            {tab === 'profile' ? 'Profile Settings' : tab === 'notifications' ? 'Notifications' : tab === 'billing' ? 'Billing & Subscription' : 'Help Center'}
           </h1>
           <p className="text-charcoal-700 dark:text-mint-200">
             {tab === 'profile' 
               ? 'Manage your account settings and preferences'
               : tab === 'notifications'
               ? 'Control how and when you receive updates'
+              : tab === 'billing'
+              ? 'Manage your subscription plan and payment methods'
               : 'Get help and support for SkillSynergy'
             }
           </p>
         </motion.div>
 
+        {/* Tab Navigation */}
+        <div className="flex space-x-4 mb-8 overflow-x-auto pb-2">
+          {tabs.map((t) => {
+            const isActive = tab === t.id;
+            return (
+              <Link
+                key={t.id}
+                to={`/settings/${t.id}`}
+                className={`flex items-center px-4 py-2 rounded-lg transition-colors whitespace-nowrap ${
+                  isActive 
+                    ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-500/30' 
+                    : 'bg-white dark:bg-charcoal-800 text-charcoal-600 dark:text-mint-200 hover:bg-emerald-50 dark:hover:bg-charcoal-700'
+                }`}
+              >
+                <t.icon className={`h-5 w-5 mr-2 ${isActive ? 'text-white' : 'text-emerald-500'}`} />
+                <span className="font-medium">{t.label}</span>
+              </Link>
+            );
+          })}
+        </div>
+
         {tab === 'profile' && renderProfileSettings()}
         {tab === 'notifications' && renderNotificationSettings()}
+        {tab === 'billing' && renderBillingSettings()}
         {tab === 'help' && renderHelpSettings()}
       </div>
     </div>

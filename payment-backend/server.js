@@ -1,10 +1,11 @@
+require('dotenv').config();
 const express = require('express');
 const Razorpay = require('razorpay');
 const crypto = require('crypto');
 const { Pool } = require('pg');
 const cors = require('cors');
 const OpenAI = require('openai');
-require('dotenv').config();
+const authMiddleware = require('./middleware/auth');
 
 const app = express();
 
@@ -42,118 +43,92 @@ const openai = new OpenAI({
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', endpoints: ['/api/smart-match', '/api/match/teachers'], timestamp: new Date().toISOString() });
+  res.json({ status: 'ok', endpoints: ['/api/smart-match', '/api/match/teachers', '/api/create-order'], timestamp: new Date().toISOString() });
 });
 
 /**
- * POST /api/smart-match
- * AI-Assisted Discovery for Skills, Projects, and Mentors
- * TEMPORARILY DISABLED - Database connection needs configuration
+ * POST /api/create-order
+ * Create a Razorpay order
+ * Protected Route
  */
-/* 
-app.post('/api/smart-match', async (req, res) => {
+app.post('/api/create-order', authMiddleware, async (req, res) => {
   try {
-    const { user_id, query } = req.body;
+    const { amount, currency = 'INR', receipt } = req.body;
+    
+    // Amount is in smallest currency unit (paise for INR)
+    // Example: 500 INR = 50000 paise
+    
+    const options = {
+      amount: amount * 100, 
+      currency,
+      receipt,
+      payment_capture: 1
+    };
 
-    console.log('Smart Match request:', { user_id, query });
-
-    let queryEmbedding = null;
-
-    // 1. Generate Embedding
-    if (query) {
-      // If user provided a specific query, use that
-      const response = await openai.embeddings.create({
-        model: "openai/text-embedding-3-small",
-        input: query.replace(/\n/g, ' '),
-      });
-      queryEmbedding = response.data[0].embedding;
-    } else if (user_id) {
-      // Fallback: Use user's profile embedding if it exists
-      const profileResult = await pool.query('SELECT interests_embedding FROM profiles WHERE id = $1', [user_id]);
-      if (profileResult.rows.length > 0 && profileResult.rows[0].interests_embedding) {
-        queryEmbedding = JSON.parse(profileResult.rows[0].interests_embedding);
-      }
-    }
-
-    if (!queryEmbedding) {
-      return res.status(400).json({ error: 'Could not generate search context. Please provide a query or update your profile.' });
-    }
-
-    // 2. Run Vector Searches
-    // Note: We use <=> for cosine distance (requires vector extension)
-    // We cast the parameter to vector explicitly: $1::vector
-
-    const vectorStr = JSON.stringify(queryEmbedding);
-
-    // A. Recommended Skills
-    const skillsQuery = `
-      SELECT id, name, category, description, 
-             1 - (embedding <=> $1::vector) as similarity
-      FROM skills
-      WHERE embedding IS NOT NULL
-      ORDER BY embedding <=> $1::vector
-      LIMIT 6
-    `;
-
-    // B. Suggested Projects
-    const projectsQuery = `
-      SELECT id, title, description, category, status,
-             1 - (embedding <=> $1::vector) as similarity
-      FROM projects
-      WHERE embedding IS NOT NULL AND status = 'active'
-      ORDER BY embedding <=> $1::vector
-      LIMIT 6
-    `;
-
-    // C. Mentors / Experts (Profiles)
-    // Exclude current user
-    const mentorsQuery = `
-      SELECT id, full_name, role, avatar_url, bio,
-             1 - (interests_embedding <=> $1::vector) as similarity
-      FROM profiles
-      WHERE interests_embedding IS NOT NULL 
-        AND id != $2
-        AND (role ILIKE '%mentor%' OR role ILIKE '%teacher%' OR role ILIKE '%expert%' OR role IS NOT NULL)
-      ORDER BY interests_embedding <=> $1::vector
-      LIMIT 6
-    `;
-
-    const [skillsResult, projectsResult, mentorsResult] = await Promise.all([
-      pool.query(skillsQuery, [vectorStr]),
-      pool.query(projectsQuery, [vectorStr]),
-      pool.query(mentorsQuery, [vectorStr, user_id || '00000000-0000-0000-0000-000000000000'])
-    ]);
-
-    res.json({
-      skills: skillsResult.rows,
-      projects: projectsResult.rows,
-      mentors: mentorsResult.rows
-    });
-
+    const order = await razorpay.orders.create(options);
+    
+    res.json({ success: true, order });
   } catch (error) {
-    console.error('Smart Match Error:', error);
-    res.status(500).json({ error: error.message });
+    console.error('Error creating Razorpay order:', error);
+    res.status(500).json({ success: false, error: error.message });
   }
 });
-*/
+
+/**
+ * POST /api/verify-payment
+ * Verify Razorpay payment signature
+ * Protected Route
+ */
+app.post('/api/verify-payment', authMiddleware, async (req, res) => {
+  try {
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
+    
+    const body = razorpay_order_id + "|" + razorpay_payment_id;
+    
+    const expectedSignature = crypto
+      .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
+      .update(body.toString())
+      .digest('hex');
+
+    const isAuthentic = expectedSignature === razorpay_signature;
+
+    if (isAuthentic) {
+      // Payment successful - Update user subscription in database
+      const userId = req.user.id;
+      
+      // Update profile with subscription details
+      // Assuming 'pro' plan for now
+      const updateQuery = `
+        UPDATE profiles 
+        SET subscription_status = 'active', 
+            subscription_plan = 'pro',
+            subscription_updated_at = NOW()
+        WHERE id = $1
+      `;
+      
+      await pool.query(updateQuery, [userId]);
+
+      res.json({ success: true, message: 'Payment verified successfully' });
+    } else {
+      res.status(400).json({ success: false, error: 'Invalid signature' });
+    }
+  } catch (error) {
+    console.error('Error verifying payment:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
 
 /**
  * POST /api/match/teachers
  * AI-Assisted Teacher Matching
- * Finds the best teachers for a given learner and/or skills
+ * Protected Route
  */
-app.post('/api/match/teachers', async (req, res) => {
+app.post('/api/match/teachers', authMiddleware, async (req, res) => {
   try {
-    const { userId, skillIds, limit = 10 } = req.body;
+    const { skillIds, limit = 10 } = req.body;
+    const userId = req.user.id; // Get from auth token
 
     console.log('Teacher Match request:', { userId, skillIds, limit });
-
-    // Validate input
-    if (!userId && (!skillIds || skillIds.length === 0)) {
-      return res.status(400).json({ 
-        error: 'Either userId or skillIds must be provided' 
-      });
-    }
 
     let queryEmbedding = null;
     let skillEmbeddings = [];
@@ -176,7 +151,7 @@ app.post('/api/match/teachers', async (req, res) => {
       }
 
       skillEmbeddings = skillsResult.rows.map(row => JSON.parse(row.embedding));
-    } else if (userId) {
+    } else {
       // Get user's learning skills if no skillIds provided
       const userSkillsQuery = `
         SELECT s.embedding
@@ -243,7 +218,7 @@ app.post('/api/match/teachers', async (req, res) => {
         FROM profiles p
         WHERE p.role IN ('teacher', 'both')
           AND p.onboarding_completed = true
-          ${userId ? 'AND p.id != $3' : ''}
+          AND p.id != $3
       ),
       teacher_skills AS (
         SELECT 
@@ -278,16 +253,16 @@ app.post('/api/match/teachers', async (req, res) => {
       LEFT JOIN teacher_skills ts ON tc.id = ts.user_id
       WHERE tc.similarity > 0.2
       ORDER BY tc.similarity DESC
-      LIMIT $${userId ? '4' : '2'}
+      LIMIT $4
     `;
 
     const queryParams = [vectorStr];
     if (skillIds && skillIds.length > 0) {
       queryParams.push(skillIds);
+    } else {
+      queryParams.push(null); // Placeholder if no skillIds
     }
-    if (userId) {
-      queryParams.push(userId);
-    }
+    queryParams.push(userId);
     queryParams.push(limit);
 
     const teachersResult = await pool.query(teachersQuery, queryParams);
@@ -320,13 +295,15 @@ app.post('/api/match/teachers', async (req, res) => {
 /**
  * POST /api/user-skills
  * Add a skill to the user's profile
+ * Protected Route
  */
-app.post('/api/user-skills', async (req, res) => {
+app.post('/api/user-skills', authMiddleware, async (req, res) => {
   try {
-    const { user_id, skill_id } = req.body;
+    const { skill_id } = req.body;
+    const user_id = req.user.id;
     
-    if (!user_id || !skill_id) {
-      return res.status(400).json({ success: false, error: 'Missing user_id or skill_id' });
+    if (!skill_id) {
+      return res.status(400).json({ success: false, error: 'Missing skill_id' });
     }
 
     const query = `
@@ -348,6 +325,7 @@ app.post('/api/user-skills', async (req, res) => {
 /**
  * GET /api/instructors
  * Find instructors for a specific skill
+ * Public Route (can be protected if needed, but usually discovery is public)
  */
 app.get('/api/instructors', async (req, res) => {
   try {
@@ -382,12 +360,14 @@ app.get('/api/instructors', async (req, res) => {
 /**
  * POST /api/mentorship-requests
  * Create a mentorship request
+ * Protected Route
  */
-app.post('/api/mentorship-requests', async (req, res) => {
+app.post('/api/mentorship-requests', authMiddleware, async (req, res) => {
   try {
-    const { skill_id, learner_id, instructor_id, message } = req.body;
+    const { skill_id, instructor_id, message } = req.body;
+    const learner_id = req.user.id;
 
-    if (!skill_id || !learner_id) {
+    if (!skill_id) {
       return res.status(400).json({ success: false, error: 'Missing required fields' });
     }
 
@@ -409,12 +389,14 @@ app.post('/api/mentorship-requests', async (req, res) => {
 /**
  * POST /api/projects
  * Create a new learning challenge (project)
+ * Protected Route
  */
-app.post('/api/projects', async (req, res) => {
+app.post('/api/projects', authMiddleware, async (req, res) => {
   try {
-    const { title, description, tags, visibility, capacity, owner_id } = req.body;
+    const { title, description, tags, visibility, capacity } = req.body;
+    const owner_id = req.user.id;
 
-    if (!title || !owner_id) {
+    if (!title) {
       return res.status(400).json({ success: false, error: 'Missing required fields' });
     }
 
@@ -467,18 +449,17 @@ app.post('/api/projects', async (req, res) => {
 /**
  * POST /api/project_members
  * Join a project
+ * Protected Route
  */
-app.post('/api/project_members', async (req, res) => {
+app.post('/api/project_members', authMiddleware, async (req, res) => {
   try {
-    const { project_id, user_id } = req.body;
+    const { project_id } = req.body;
+    const user_id = req.user.id;
 
-    if (!project_id || !user_id) {
+    if (!project_id) {
       return res.status(400).json({ success: false, error: 'Missing required fields' });
     }
 
-    // Check capacity first (optional, but good practice)
-    // For now, we'll trust the database constraints or add a check if needed
-    
     const query = `
       INSERT INTO project_members (project_id, user_id, role, joined_at)
       SELECT $1, $2, 'member', NOW()
@@ -491,8 +472,6 @@ app.post('/api/project_members', async (req, res) => {
     const result = await pool.query(query, [project_id, user_id]);
     
     if (result.rowCount === 0) {
-      // Either already a member or project doesn't exist (or capacity full if we checked)
-      // We'll assume already member for now
       return res.json({ success: false, error: 'Already a member or join failed' });
     }
 
@@ -506,12 +485,14 @@ app.post('/api/project_members', async (req, res) => {
 /**
  * DELETE /api/project_members
  * Leave a project
+ * Protected Route
  */
-app.delete('/api/project_members', async (req, res) => {
+app.delete('/api/project_members', authMiddleware, async (req, res) => {
   try {
-    const { project_id, user_id } = req.body;
+    const { project_id } = req.body;
+    const user_id = req.user.id;
 
-    if (!project_id || !user_id) {
+    if (!project_id) {
       return res.status(400).json({ success: false, error: 'Missing required fields' });
     }
 

@@ -175,7 +175,7 @@ function App() {
                   <RequestsPage />
                 </ProtectedRoute>
               } />
-              <Route path="/settings" element={
+              <Route path="/settings/:tab?" element={
                 <ProtectedRoute>
                   <SettingsPage />
                 </ProtectedRoute>
