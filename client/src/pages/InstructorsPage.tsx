@@ -1,10 +1,8 @@
 import { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { useLocation } from 'react-router-dom';
-import { 
   MagnifyingGlassIcon, 
-  AcademicCapIcon,
-  SparklesIcon
+  AcademicCapIcon
 } from '@heroicons/react/24/outline';
 import UserCard from '../components/UserCard';
 import AITeacherCard from '../components/AITeacherCard';
@@ -50,7 +48,10 @@ const InstructorsPage = () => {
         const data = await response.json();
         
         if (data.success && data.teachers) {
+          console.log('Fetched AI Teachers:', data.teachers.length);
           setAiTeachers(data.teachers);
+        } else {
+          console.warn('AI Teachers fetch returned no data:', data);
         }
       } catch (error) {
         console.error('Error fetching AI teachers:', error);
@@ -152,29 +153,7 @@ const InstructorsPage = () => {
           </div>
         </div>
       </motion.div>
-      {/* AI Teachers Section */}
-      {aiTeachers.length > 0 && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.15 }}
-          className="mb-8"
-        >
-          <div className="flex items-center gap-2 mb-4">
-            <SparklesIcon className="h-6 w-6 text-violet-500" />
-            <h2 className="text-xl font-bold text-charcoal-900 dark:text-white">
-              AI Tutors - Available 24/7
-            </h2>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {aiTeachers.map((teacher, index) => (
-              <AITeacherCard key={teacher.id} teacher={teacher} index={index} />
-            ))}
-          </div>
-        </motion.div>
-      )}
-
-      {/* Human Teachers Grid */}
+      {/* Instructors Grid */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -194,30 +173,26 @@ const InstructorsPage = () => {
               {searchQuery ? `We couldn't find any instructors matching "${searchQuery}".` : "Check back later for new instructors!"}
             </p>
           </div>
-        ) : teachers.length > 0 ? (
-          <>
-            {aiTeachers.length > 0 && (
-              <div className="flex items-center gap-2 mb-4">
-                <AcademicCapIcon className="h-6 w-6 text-emerald-500" />
-                <h2 className="text-xl font-bold text-charcoal-900 dark:text-white">
-                  Human Instructors
-                </h2>
-              </div>
-            )}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {teachers.map((user, index) => (
-                <motion.div
-                  key={user.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.4, delay: index * 0.05 }}
-                >
-                  <UserCard user={user} onConnect={handleUserConnect} />
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {/* Show all AI Teachers first */}
+            {aiTeachers.map((teacher, index) => (
+              <AITeacherCard key={`ai-${teacher.id}`} teacher={teacher} index={index} />
+            ))}
+            
+            {/* Then show Human Teachers */}
+            {teachers.map((user, index) => (
+              <motion.div
+                key={`user-${user.id}`}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: (aiTeachers.length + index) * 0.05 }}
+              >
+                <UserCard user={user} onConnect={handleUserConnect} />
               </motion.div>
             ))}
           </div>
-          </>
-        ) : null}
+        )}
       </motion.div>
 
       {/* User Connection Modal */}
