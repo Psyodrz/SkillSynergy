@@ -55,8 +55,8 @@ const ChallengePage: React.FC = () => {
   
   const [challenge, setChallenge] = useState<Challenge | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [completingTask, setCompletingTask] = useState<string | null>(null);
-  const [aiFeedback, setAiFeedback] = useState<{ taskId: string; feedback: string } | null>(null);
+  // const [completingTask, setCompletingTask] = useState<string | null>(null); // Unused
+  // const [aiFeedback, setAiFeedback] = useState<{ taskId: string; feedback: string } | null>(null); // Unused
   const [isGeneratingContent, setIsGeneratingContent] = useState(false);
 
   // Fetch challenge details
@@ -105,7 +105,8 @@ const ChallengePage: React.FC = () => {
     }
   };
 
-  // Complete task
+  // Complete task - CURRENTLY UNUSED (Tasks completed in TaskDetailPage)
+  /*
   const completeTask = async (taskId: string) => {
     if (!user?.id) return;
     
@@ -132,6 +133,7 @@ const ChallengePage: React.FC = () => {
       setCompletingTask(null);
     }
   };
+  */
 
   // Generate AI content
   const generateContent = async () => {
@@ -342,8 +344,8 @@ const ChallengePage: React.FC = () => {
                 <div className="p-4 space-y-3">
                   {milestoneTasks.map((task) => {
                     const isCompleted = challenge.completedTasks.includes(task.id);
-                    const isCompleting = completingTask === task.id;
-                    const showFeedback = aiFeedback?.taskId === task.id;
+                    // const isCompleting = completingTask === task.id; // Unused
+                    // const showFeedback = aiFeedback?.taskId === task.id; // Unused
 
                     return (
                       <div key={task.id} className="relative">
@@ -390,7 +392,7 @@ const ChallengePage: React.FC = () => {
                         </div>
 
                         {/* AI Feedback */}
-                        {showFeedback && (
+                        {/* showFeedback && (
                           <motion.div
                             initial={{ opacity: 0, y: -10 }}
                             animate={{ opacity: 1, y: 0 }}
@@ -404,7 +406,7 @@ const ChallengePage: React.FC = () => {
                               </div>
                             </div>
                           </motion.div>
-                        )}
+                        ) */}
                       </div>
                     );
                   })}
