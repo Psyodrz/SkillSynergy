@@ -3,12 +3,15 @@ import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import SkillCard from '../components/SkillCard';
 import UserCard from '../components/UserCard';
+import AITeacherCard from '../components/AITeacherCard';
+import type { AITeacher } from '../components/AITeacherCard';
 import Modal from '../components/Modal';
 import Button from '../components/Button';
 import { useAuth } from '../context/AuthContext';
 import { getAllSkills } from '../api/skillsApi';
 import { getAllProfiles } from '../api/profileApi';
 import type { Skill } from '../types';
+import config from '../config';
 
 import { supabase } from '../lib/supabaseClient';
 import 'keen-slider/keen-slider.min.css';
@@ -18,6 +21,7 @@ const DashboardPage = () => {
   const navigate = useNavigate();
   const [skills, setSkills] = useState<Skill[]>([]);
   const [users, setUsers] = useState<any[]>([]);
+  const [aiTutors, setAiTutors] = useState<AITeacher[]>([]);
   const [selectedSkill, setSelectedSkill] = useState<Skill | null>(null);
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const [isSkillModalOpen, setIsSkillModalOpen] = useState(false);
@@ -86,9 +90,13 @@ const DashboardPage = () => {
       try {
         const profilesData = await getAllProfiles();
 
-        // Filter out current user and only show Teachers (case-insensitive)
+        // Filter out current user and show instructors (any instructor-like role)
         const formattedUsers = profilesData
-          .filter(u => u.id !== user?.id && u.role?.toLowerCase().trim() === 'teacher')
+          .filter(u => {
+            if (u.id === user?.id) return false;
+            const role = u.role?.toLowerCase().trim() || '';
+            return role === 'teacher' || role === 'both' || role === 'instructor & student' || role === 'instructor';
+          })
           .map(u => ({
             id: u.id,
             name: u.full_name || 'User',
@@ -108,8 +116,22 @@ const DashboardPage = () => {
       }
     };
 
+    // Fetch AI tutors as well
+    const fetchAITutors = async () => {
+      try {
+        const response = await fetch(`${config.API_URL}/api/ai-teachers?limit=6`);
+        const data = await response.json();
+        if (data.success && data.teachers) {
+          setAiTutors(data.teachers);
+        }
+      } catch (error) {
+        console.error('Error fetching AI tutors:', error);
+      }
+    };
+
     if (user) {
       fetchUsers();
+      fetchAITutors();
     }
   }, [user]);
 
@@ -269,22 +291,30 @@ const DashboardPage = () => {
             <div className="flex justify-center py-12">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-500" />
             </div>
-          ) : users.length === 0 ? (
-            <div className="bg-mint-100 dark:bg-charcoal-900/80 rounded-xl shadow-premium border border-mint-200 dark:border-charcoal-700 p-8 text-center">
-              <p className="text-slate-700 dark:text-slate-300">No professionals to show yet</p>
-            </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {users.slice(0, 6).map((user, index) => (
+              {/* Show 2 AI Tutors first */}
+              {aiTutors.slice(0, 2).map((teacher, index) => (
+                <AITeacherCard key={teacher.id} teacher={teacher} index={index} />
+              ))}
+              
+              {/* Show remaining spots with Human Instructors (up to 4) */}
+              {users.slice(0, 4).map((user, index) => (
                 <motion.div
                   key={user.id}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.4, delay: index * 0.1 }}
+                  transition={{ duration: 0.4, delay: (index + 2) * 0.1 }}
                 >
                   <UserCard user={user} onConnect={handleUserConnect} />
                 </motion.div>
               ))}
+              
+              {aiTutors.length === 0 && users.length === 0 && (
+                <div className="col-span-full bg-mint-100 dark:bg-charcoal-900/80 rounded-xl shadow-premium border border-mint-200 dark:border-charcoal-700 p-8 text-center">
+                  <p className="text-slate-700 dark:text-slate-300">No instructors available yet</p>
+                </div>
+              )}
             </div>
           )}
         </motion.div>
@@ -338,7 +368,7 @@ const DashboardPage = () => {
                 <Button
                   variant="outline"
                   className="w-full"
-                  onClick={() => navigate('/projects/create')}
+                  onClick={() => navigate('/app/discover-projects')}
                 >
                   Start a Learning Challenge
                 </Button>

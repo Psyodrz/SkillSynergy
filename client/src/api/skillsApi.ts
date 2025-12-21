@@ -1,5 +1,6 @@
 import { supabase } from '../lib/supabaseClient';
 import type { Skill, CreateSkillPayload, SkillFilters } from '../types';
+import { generateThumbnailPath } from '../utils/thumbnailUtils';
 
 /**
  * Fetch all skills from the database with optional filters
@@ -57,7 +58,8 @@ export async function createSkill(payload: CreateSkillPayload): Promise<Skill | 
         description: payload.description || null,
         color: payload.color || 'text-blue-500',
         users_count: 0,
-        created_by: user?.id || null
+        created_by: user?.id || null,
+        thumbnail: generateThumbnailPath(payload.category) // Auto-assign thumbnail based on category
       })
       .select()
       .single();

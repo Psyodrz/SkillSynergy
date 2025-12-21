@@ -703,8 +703,16 @@ const DiscoverPage = () => {
                   What would you like to do?
                 </h4>
                 <div className="space-y-2">
+                  {/* Primary: Enter AI Learning Room */}
                   <Button 
                     variant="primary" 
+                    className="w-full bg-gradient-to-r from-emerald-500 to-teal-500" 
+                    onClick={() => navigate(`/skill/${selectedSkill.id}/room`)}
+                  >
+                    🤖 Enter AI Learning Room
+                  </Button>
+                  <Button 
+                    variant="outline" 
                     className="w-full" 
                     onClick={handleAddSkillToProfile}
                     disabled={addingSkill}
@@ -734,29 +742,58 @@ const DiscoverPage = () => {
                   <h4 className="font-medium text-navy-900 dark:text-white">Instructors</h4>
                   <button onClick={() => setSkillModalView('initial')} className="text-sm text-emerald-500 hover:underline">Back</button>
                 </div>
+                
+                {/* AI Tutor Option - Always shown first */}
+                <div className="p-4 bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 rounded-xl border-2 border-emerald-200 dark:border-emerald-700">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center">
+                        <span className="text-white text-xl">🤖</span>
+                      </div>
+                      <div>
+                        <p className="font-bold text-emerald-700 dark:text-emerald-300">{selectedSkill?.name} AI Tutor</p>
+                        <p className="text-xs text-emerald-600 dark:text-emerald-400">Available 24/7 • Instant responses</p>
+                      </div>
+                    </div>
+                    <Button 
+                      size="sm" 
+                      variant="primary" 
+                      className="bg-gradient-to-r from-emerald-500 to-teal-500"
+                      onClick={() => navigate(`/skill/${selectedSkill?.id}/room`)}
+                    >
+                      Start Learning
+                    </Button>
+                  </div>
+                </div>
+                
                 {loadingInstructors ? (
                   <div className="flex justify-center py-4">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div>
                   </div>
                 ) : instructors.length > 0 ? (
-                  <div className="space-y-3 max-h-60 overflow-y-auto">
-                    {instructors.map(inst => (
-                      <div key={inst.id} className="flex items-center justify-between p-3 bg-white dark:bg-navy-800 rounded-lg border border-warm-200 dark:border-navy-600">
-                        <div className="flex items-center space-x-3">
-                          <img src={inst.avatar_url || 'https://via.placeholder.com/40'} alt={inst.full_name} className="w-10 h-10 rounded-full" />
-                          <div>
-                            <p className="font-medium text-navy-900 dark:text-white">{inst.full_name}</p>
-                            <p className="text-xs text-navy-500">{inst.qualification}</p>
+                  <>
+                    <p className="text-xs text-navy-500 dark:text-mint-400 text-center">— or connect with human instructors —</p>
+                    <div className="space-y-3 max-h-60 overflow-y-auto">
+                      {instructors.map(inst => (
+                        <div key={inst.id} className="flex items-center justify-between p-3 bg-white dark:bg-navy-800 rounded-lg border border-warm-200 dark:border-navy-600">
+                          <div className="flex items-center space-x-3">
+                            <img src={inst.avatar_url || 'https://via.placeholder.com/40'} alt={inst.full_name} className="w-10 h-10 rounded-full" />
+                            <div>
+                              <p className="font-medium text-navy-900 dark:text-white">{inst.full_name}</p>
+                              <p className="text-xs text-navy-500">{inst.qualification}</p>
+                            </div>
                           </div>
+                          <Button size="sm" variant="outline" onClick={() => handleRequestMentorship(`Hi ${inst.full_name}, I'd like help with ${selectedSkill.name}.`, inst.id)}>
+                            Request
+                          </Button>
                         </div>
-                        <Button size="sm" variant="outline" onClick={() => handleRequestMentorship(`Hi ${inst.full_name}, I'd like help with ${selectedSkill.name}.`, inst.id)}>
-                          Request
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
+                      ))}
+                    </div>
+                  </>
                 ) : (
-                  <p className="text-center text-navy-500">No instructors found for this skill.</p>
+                  <p className="text-center text-sm text-navy-500 dark:text-mint-400 py-2">
+                    No human instructors yet. The AI tutor above is ready to help!
+                  </p>
                 )}
               </div>
             )}

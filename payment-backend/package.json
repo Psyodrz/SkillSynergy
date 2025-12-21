@@ -8,6 +8,8 @@
     "dev": "nodemon server.js"
   },
   "dependencies": {
+    "@google/generative-ai": "^0.24.1",
+    "@huggingface/inference": "^4.13.5",
     "@supabase/supabase-js": "^2.86.2",
     "cors": "^2.8.5",
     "crypto": "^1.0.1",
@@ -16,7 +18,8 @@
     "nodemailer": "^7.0.10",
     "openai": "^6.9.1",
     "pg": "^8.11.3",
-    "razorpay": "^2.9.2"
+    "razorpay": "^2.9.2",
+    "replicate": "^1.4.0"
   },
   "devDependencies": {
     "nodemon": "^3.0.1"

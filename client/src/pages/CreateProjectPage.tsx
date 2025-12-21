@@ -6,7 +6,7 @@ const CreateProjectPage: React.FC = () => {
 
   useEffect(() => {
     // Redirect to My Projects page where the create modal is
-    navigate("/my-projects", { replace: true });
+    navigate("/app/my-projects?action=create", { replace: true });
   }, [navigate]);
 
   return (

@@ -36,6 +36,10 @@ import MySkillsPage from './pages/MySkillsPage';
 import MyProjectsPage from './pages/MyProjectsPage';
 import DiscoverProjectsPage from './pages/DiscoverProjectsPage';
 import AdminPanelPage from './pages/AdminPanelPage';
+import AIChatPage from './pages/AIChatPage';
+import SkillRoomPage from './pages/SkillRoomPage';
+import ChallengePage from './pages/ChallengePage';
+import TaskDetailPage from './pages/TaskDetailPage';
 import { useAuth } from './context/AuthContext';
 
 function App() {
@@ -129,6 +133,21 @@ function App() {
                   <MessagesPage />
                 </ProtectedRoute>
               } />
+              
+              {/* AI Teacher Chat */}
+              <Route path="/ai-chat/:skillId" element={
+                <ProtectedRoute>
+                  <AIChatPage />
+                </ProtectedRoute>
+              } />
+              
+              {/* Skill Learning Room (Public) */}
+              <Route path="/skill/:skillId/room" element={
+                <ProtectedRoute>
+                  <SkillRoomPage />
+                </ProtectedRoute>
+              } />
+              
               <Route path="/messages/:id" element={
                 <ProtectedRoute>
                   <MessagesPage />
@@ -145,6 +164,20 @@ function App() {
               <Route path="/projects/create" element={
                 <ProtectedRoute>
                   <CreateProjectPage />
+                </ProtectedRoute>
+              } />
+              
+              {/* Challenge Page */}
+              <Route path="/challenge/:projectId" element={
+                <ProtectedRoute>
+                  <ChallengePage />
+                </ProtectedRoute>
+              } />
+              
+              {/* Task Detail Page */}
+              <Route path="/challenge/:projectId/task/:taskId" element={
+                <ProtectedRoute>
+                  <TaskDetailPage />
                 </ProtectedRoute>
               } />
               

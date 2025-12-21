@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../../context/AuthContext';
 import type { Project } from '../../types';
-import { ArrowRightOnRectangleIcon, UserPlusIcon, FunnelIcon, TrashIcon } from '@heroicons/react/24/outline';
+import { ArrowRightOnRectangleIcon, UserPlusIcon, FunnelIcon, TrashIcon, EyeIcon } from '@heroicons/react/24/outline';
 
 const DiscoverProjects = () => {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
@@ -183,7 +185,24 @@ const DiscoverProjects = () => {
             const isMember = joinedProjectIds.has(project.id);
 
             return (
-              <div key={project.id} className="bg-white dark:bg-charcoal-800 rounded-2xl shadow-sm border border-gray-200 dark:border-charcoal-700 p-6 flex flex-col h-full hover:shadow-md transition-shadow">
+              <div 
+                key={project.id} 
+                className="bg-white dark:bg-charcoal-800 rounded-2xl shadow-sm border border-gray-200 dark:border-charcoal-700 flex flex-col h-full hover:shadow-lg hover:scale-[1.02] transition-all cursor-pointer overflow-hidden"
+                onClick={() => navigate(`/challenge/${project.id}`)}
+              >
+                {project.thumbnail_url && (
+                  <div className="h-48 w-full bg-gray-100 dark:bg-charcoal-900 border-b border-gray-100 dark:border-charcoal-700">
+                    <img 
+                      src={project.thumbnail_url} 
+                      alt={project.title} 
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).style.display = 'none';
+                      }}
+                    />
+                  </div>
+                )}
+                <div className="p-6 flex flex-col flex-1">
                 <div className="flex justify-between items-start mb-4">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-emerald-500 rounded-full flex items-center justify-center text-white font-bold shrink-0">
@@ -219,7 +238,7 @@ const DiscoverProjects = () => {
                   {project.description}
                 </p>
 
-                <div className="mt-auto pt-4 border-t border-gray-100 dark:border-charcoal-700">
+                <div className="mt-auto pt-4 border-t border-gray-100 dark:border-charcoal-700" onClick={(e) => e.stopPropagation()}>
                   {isOwner ? (
                     <button
                       onClick={() => handleDeleteProject(project.id)}
@@ -228,13 +247,22 @@ const DiscoverProjects = () => {
                       <TrashIcon className="w-5 h-5 mr-2" /> Delete Challenge
                     </button>
                   ) : isMember ? (
-                    <button
-                      onClick={() => handleLeave(project.id)}
-                      disabled={actionLoading === project.id}
-                      className="w-full py-2.5 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-xl hover:bg-red-100 dark:hover:bg-red-900/30 font-medium transition-colors flex items-center justify-center"
-                    >
-                      {actionLoading === project.id ? 'Leaving...' : <><ArrowRightOnRectangleIcon className="w-5 h-5 mr-2" /> Leave Challenge</>}
-                    </button>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => navigate(`/challenge/${project.id}`)}
+                        className="flex-1 py-2.5 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 font-medium transition-colors flex items-center justify-center shadow-lg shadow-emerald-500/20"
+                      >
+                        <EyeIcon className="w-5 h-5 mr-2" /> Open Challenge
+                      </button>
+                      <button
+                        onClick={() => handleLeave(project.id)}
+                        disabled={actionLoading === project.id}
+                        className="px-4 py-2.5 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-xl hover:bg-red-100 dark:hover:bg-red-900/30 font-medium transition-colors"
+                        title="Leave Challenge"
+                      >
+                        {actionLoading === project.id ? '...' : <ArrowRightOnRectangleIcon className="w-5 h-5" />}
+                      </button>
+                    </div>
                   ) : (
                     <button
                       onClick={() => handleJoin(project.id)}
@@ -244,6 +272,7 @@ const DiscoverProjects = () => {
                       {actionLoading === project.id ? 'Joining...' : <><UserPlusIcon className="w-5 h-5 mr-2" /> Join Challenge</>}
                     </button>
                   )}
+                </div>
                 </div>
               </div>
             );

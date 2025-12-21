@@ -238,7 +238,7 @@ const ProjectsPage = () => {
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.05 }}
-                onClick={() => handleProjectClick(project)}
+                onClick={() => navigate(`/challenge/${project.id}`)}
                 className="bg-white/80 dark:bg-charcoal-800/80 backdrop-blur-xl border border-mint-200 dark:border-charcoal-700 rounded-xl p-6 shadow hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition cursor-pointer"
               >
                 {/* Icon + Status */}
@@ -281,27 +281,47 @@ const ProjectsPage = () => {
                   </span>
                 </div>
 
-                {/* Actions */}
-                <div className="flex gap-2 mt-5">
-                  <Button
-                    variant="primary"
-                    size="sm"
-                    className="flex-1 bg-gradient-to-r from-emerald-500 to-teal-500 text-white"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (joinedProjectIds.includes(project.id)) {
-                        handleLeaveProject(project.id);
-                      } else {
+                {/* Single Action Button */}
+                <div className="mt-5">
+                  {joinedProjectIds.includes(project.id) ? (
+                    <div className="flex gap-2">
+                      <Button
+                        variant="primary"
+                        size="sm"
+                        className="flex-1 bg-gradient-to-r from-emerald-500 to-teal-500 text-white"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/challenge/${project.id}`);
+                        }}
+                      >
+                        <EyeIcon className="h-4 w-4 mr-1" />
+                        Open Challenge
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="text-red-500 border-red-500/30 hover:bg-red-500/10"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleLeaveProject(project.id);
+                        }}
+                      >
+                        Leave
+                      </Button>
+                    </div>
+                  ) : (
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      className="w-full bg-gradient-to-r from-emerald-500 to-teal-500 text-white"
+                      onClick={(e) => {
+                        e.stopPropagation();
                         handleJoinProject(project.id);
-                      }
-                    }}
-                  >
-                    {joinedProjectIds.includes(project.id) ? 'Leave' : 'Join'}
-                  </Button>
-
-                  <Button variant="outline" size="sm">
-                    <EyeIcon className="h-4 w-4" />
-                  </Button>
+                      }}
+                    >
+                      Join Challenge
+                    </Button>
+                  )}
                 </div>
               </motion.div>
             ))}

@@ -12,6 +12,7 @@ export type Skill = {
   color: string;
   created_at: string;
   created_by?: string | null;
+  thumbnail?: string | null; // Format: "slug/filename.png" (e.g., "tech/tech_1.png")
 };
 
 export type ProfileSkill = {
@@ -115,6 +116,7 @@ export type Project = {
   status: 'active' | 'archived' | 'completed';
   max_members: number;
   visibility: 'public' | 'private';
+  thumbnail_url?: string;
   category?: string;
   difficulty?: string;
   created_at: string;

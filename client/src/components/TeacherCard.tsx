@@ -8,6 +8,7 @@ import {
 import { StarIcon as StarIconSolid } from '@heroicons/react/24/solid';
 import type { TeacherProfile } from '../types';
 import Button from './Button';
+import AsyncImage from './AsyncImage';
 
 interface TeacherCardProps {
   teacher: TeacherProfile;
@@ -36,14 +37,23 @@ export default function TeacherCard({ teacher, index = 0 }: TeacherCardProps) {
       {/* Header with Avatarmatching badge */}
       <div className="flex items-start gap-4 mb-4">
         {/* Avatar */}
-        <div className="relative">
-          <img
-            src={teacher.avatar_url || `https://ui-avatars.com/api/?name=${teacher.full_name}&background=random`}
-            alt={teacher.full_name}
-            className="w-16 h-16 rounded-full object-cover border-2 border-emerald-200 dark:border-emerald-800"
-          />
+        <div className="relative w-16 h-16 rounded-full overflow-hidden border-2 border-emerald-200 dark:border-emerald-800">
+           <AsyncImage
+              entityType="TUTOR"
+              entityId={teacher.id}
+              alt={teacher.full_name}
+              className="w-full h-full object-cover"
+              fallbackSrc={`https://ui-avatars.com/api/?name=${teacher.full_name}&background=random`}
+              placeholder={
+                <img 
+                    src={`https://ui-avatars.com/api/?name=${teacher.full_name}&background=random`} 
+                    alt={teacher.full_name} 
+                    className="w-full h-full object-cover"
+                />
+              }
+           />
           {teacher.similarity && teacher.similarity >= 70 && (
-            <div className="absolute -top-1 -right-1 w-6 h-6 bg-emerald-500 rounded-full flex items-center justify-center">
+            <div className="absolute -top-1 -right-1 w-6 h-6 bg-emerald-500 rounded-full flex items-center justify-center z-10">
               <StarIconSolid className="w-4 h-4 text-white" />
             </div>
           )}

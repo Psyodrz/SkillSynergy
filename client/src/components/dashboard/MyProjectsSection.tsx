@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../../context/AuthContext';
 import type { Project } from '../../types';
@@ -6,9 +7,18 @@ import { PlusIcon, TrashIcon, PencilIcon, UserGroupIcon, EyeIcon } from '@heroic
 
 const MyProjectsSection = () => {
   const { user } = useAuth();
+  const location = useLocation();
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  
+  // Check for action param
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    if (searchParams.get('action') === 'create') {
+      setShowCreateModal(true);
+    }
+  }, [location.search]);
   
   // Create Form State
   const [title, setTitle] = useState('');
