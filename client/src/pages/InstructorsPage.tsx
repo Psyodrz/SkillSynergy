@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { useLocation } from 'react-router-dom';
+import { 
   MagnifyingGlassIcon, 
   AcademicCapIcon
 } from '@heroicons/react/24/outline';
