@@ -10,7 +10,7 @@ const pool = new Pool({
 
 async function runMigration() {
   try {
-    const sqlPath = path.join(__dirname, '../client/src/data/schema_update.sql');
+    const sqlPath = path.join(__dirname, '../client/src/data/ota_schema.sql');
     const sql = fs.readFileSync(sqlPath, 'utf8');
 
     console.log('Running migration...');

@@ -85,12 +85,55 @@ const hf = new HfInference(process.env.HUGGINGFACE_API_KEY);
 // Supabase Client (for reliable HTTPS connection)
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
 
+// Supabase Admin Client (bypasses RLS for backend operations)
+const supabaseAdmin = createClient(
+  process.env.SUPABASE_URL, 
+  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY,
+  { auth: { persistSession: false } }
+);
+
 // In-memory cache for generated images (to avoid regenerating)
 const imageCache = new Map();
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', endpoints: ['/api/smart-match', '/api/match/teachers', '/api/create-order', '/api/generate-image'], timestamp: new Date().toISOString() });
+});
+
+/**
+ * GET /api/app-update
+ * Endpoint for Capacitor Updater Plugin (Self-Hosted)
+ * Returns the latest version and download URL from DB
+ */
+app.get('/api/app-update', async (req, res) => {
+  try {
+    // Check if the request is from a valid device if needed, but usually public for OTA
+    const query = `
+      SELECT version, url, notes 
+      FROM app_versions 
+      WHERE is_active = true 
+      ORDER BY released_at DESC 
+      LIMIT 1
+    `;
+    const result = await pool.query(query);
+
+    if (result.rows.length > 0) {
+      const latest = result.rows[0];
+      res.json({
+        version: latest.version,
+        url: latest.url,
+        // Optional metadata
+        notes: latest.notes
+      });
+    } else {
+      // Return empty if no updates, or specific error code
+      // Capacitor Updater just parses JSON
+      res.status(404).json({ error: 'No updates found' });
+    }
+  } catch (error) {
+    console.error('Error checking updates:', error);
+    res.status(500).json({ error: 'Internal Server Error', details: error.message });
+  }
 });
 
 /**
@@ -1219,30 +1262,34 @@ app.get('/api/skill-room/:skillId/messages', async (req, res) => {
     const { skillId } = req.params;
     const { limit = 50, before } = req.query;
 
-    let query = `
-      SELECT m.*, 
-             COALESCE(m.sender_name, p.full_name, 'AI Tutor') as display_name,
-             p.avatar_url
-      FROM skill_room_messages m
-      LEFT JOIN profiles p ON m.sender_id = p.id
-      WHERE m.skill_id = $1
-    `;
-    
-    const params = [skillId];
-    
-    if (before) {
-      query += ` AND m.created_at < $2`;
-      params.push(before);
-    }
-    
-    query += ` ORDER BY m.created_at DESC LIMIT $${params.length + 1}`;
-    params.push(parseInt(limit));
+    // Use Supabase client for reliable connection on Vercel
+    let query = supabase
+      .from('skill_room_messages')
+      .select('*')
+      .eq('skill_id', skillId)
+      .order('created_at', { ascending: false })
+      .limit(parseInt(limit));
 
-    const { rows } = await pool.query(query, params);
+    if (before) {
+      query = query.lt('created_at', before);
+    }
+
+    const { data: messages, error } = await query;
+
+    if (error) {
+      throw error;
+    }
+
+    // Transform to expected format - use stored sender_name or default to AI Tutor
+    const formattedMessages = (messages || []).map(m => ({
+      ...m,
+      display_name: m.sender_name || m.display_name || 'AI Tutor',
+      avatar_url: m.avatar_url || null
+    }));
 
     res.json({
       success: true,
-      messages: rows.reverse() // Return in chronological order
+      messages: formattedMessages.reverse() // Return in chronological order
     });
 
   } catch (error) {
@@ -1264,36 +1311,46 @@ app.post('/api/skill-room/:skillId/messages', async (req, res) => {
       return res.status(400).json({ success: false, error: 'Content is required' });
     }
 
-    // Get skill info for AI context
-    const { rows: skillRows } = await pool.query(
-      'SELECT name, category, description FROM skills WHERE id = $1',
-      [skillId]
-    );
-    const skill = skillRows[0];
+    // Get skill info for AI context using Supabase
+    const { data: skill, error: skillError } = await supabase
+      .from('skills')
+      .select('name, category, description')
+      .eq('id', skillId)
+      .single();
     
-    if (!skill) {
+    if (skillError || !skill) {
       return res.status(404).json({ success: false, error: 'Skill not found' });
     }
 
-    // Insert user message
-    const { rows: userMsg } = await pool.query(`
-      INSERT INTO skill_room_messages (skill_id, sender_id, sender_name, is_ai, content)
-      VALUES ($1, $2, $3, false, $4)
-      RETURNING *
-    `, [skillId, sender_id, sender_name, content.trim()]);
+    // Insert user message using Supabase Admin (bypasses RLS)
+    const { data: userMsg, error: insertError } = await supabaseAdmin
+      .from('skill_room_messages')
+      .insert({
+        skill_id: skillId,
+        sender_id: sender_id || null,
+        sender_name: sender_name,
+        is_ai: false,
+        content: content.trim()
+      })
+      .select()
+      .single();
+
+    if (insertError) {
+      throw insertError;
+    }
 
     // Generate AI response if triggered
     let aiResponse = null;
     if (trigger_ai) {
-      // Get recent context (last 10 messages)
-      const { rows: recentMessages } = await pool.query(`
-        SELECT content, is_ai FROM skill_room_messages
-        WHERE skill_id = $1
-        ORDER BY created_at DESC
-        LIMIT 10
-      `, [skillId]);
+      // Get recent context (last 10 messages) using Supabase
+      const { data: recentMessages } = await supabase
+        .from('skill_room_messages')
+        .select('content, is_ai')
+        .eq('skill_id', skillId)
+        .order('created_at', { ascending: false })
+        .limit(10);
 
-      const conversationHistory = recentMessages.reverse().map(m => ({
+      const conversationHistory = (recentMessages || []).reverse().map(m => ({
         role: m.is_ai ? 'assistant' : 'user',
         content: m.content
       }));
@@ -1322,13 +1379,19 @@ You are teaching in the ${skill.category} category.`;
         const aiContent = completion.choices[0]?.message?.content;
         
         if (aiContent) {
-          const { rows: aiMsg } = await pool.query(`
-            INSERT INTO skill_room_messages (skill_id, sender_id, sender_name, is_ai, content)
-            VALUES ($1, NULL, $2, true, $3)
-            RETURNING *
-          `, [skillId, `${skill.name} AI Tutor`, aiContent]);
+          const { data: aiMsg } = await supabaseAdmin
+            .from('skill_room_messages')
+            .insert({
+              skill_id: skillId,
+              sender_id: null,
+              sender_name: `${skill.name} AI Tutor`,
+              is_ai: true,
+              content: aiContent
+            })
+            .select()
+            .single();
           
-          aiResponse = aiMsg[0];
+          aiResponse = aiMsg;
         }
       } catch (aiError) {
         console.error('AI Response Error:', aiError);
@@ -1338,7 +1401,7 @@ You are teaching in the ${skill.category} category.`;
 
     res.json({
       success: true,
-      message: userMsg[0],
+      message: userMsg,
       aiResponse
     });
 
@@ -1356,19 +1419,40 @@ app.get('/api/skill/:skillId', async (req, res) => {
   try {
     const { skillId } = req.params;
     
-    const { rows } = await pool.query(`
-      SELECT s.*, 
-             (SELECT COUNT(*) FROM skill_room_messages WHERE skill_id = s.id) as message_count,
-             (SELECT COUNT(DISTINCT sender_id) FROM skill_room_messages WHERE skill_id = s.id AND sender_id IS NOT NULL) as participant_count
-      FROM skills s
-      WHERE s.id = $1
-    `, [skillId]);
+    // Get skill using Supabase client
+    const { data: skill, error } = await supabase
+      .from('skills')
+      .select('*')
+      .eq('id', skillId)
+      .single();
 
-    if (rows.length === 0) {
+    if (error || !skill) {
       return res.status(404).json({ success: false, error: 'Skill not found' });
     }
 
-    res.json({ success: true, skill: rows[0] });
+    // Get message count
+    const { count: messageCount } = await supabase
+      .from('skill_room_messages')
+      .select('*', { count: 'exact', head: true })
+      .eq('skill_id', skillId);
+
+    // Get participant count
+    const { data: participants } = await supabase
+      .from('skill_room_messages')
+      .select('sender_id')
+      .eq('skill_id', skillId)
+      .not('sender_id', 'is', null);
+
+    const uniqueParticipants = new Set((participants || []).map(p => p.sender_id));
+
+    res.json({ 
+      success: true, 
+      skill: {
+        ...skill,
+        message_count: messageCount || 0,
+        participant_count: uniqueParticipants.size
+      }
+    });
 
   } catch (error) {
     console.error('Skill Details Error:', error);
@@ -1737,59 +1821,77 @@ app.get('/api/challenge/:projectId', async (req, res) => {
     const { projectId } = req.params;
     const { user_id } = req.query;
 
-    // Get project details
-    const { rows: projects } = await pool.query(`
-      SELECT p.*, pr.full_name as owner_name
-      FROM projects p
-      LEFT JOIN profiles pr ON p.owner_id = pr.id
-      WHERE p.id = $1
-    `, [projectId]);
+    // Get project details using Supabase client (more reliable on Vercel)
+    const { data: projectData, error: projectError } = await supabase
+      .from('projects')
+      .select('*')
+      .eq('id', projectId)
+      .single();
 
-    if (projects.length === 0) {
+    if (projectError || !projectData) {
       return res.status(404).json({ success: false, error: 'Challenge not found' });
     }
 
-    const project = projects[0];
+    // Get owner name separately to avoid FK naming issues
+    let ownerName = null;
+    if (projectData.owner_id) {
+      const { data: owner } = await supabase
+        .from('profiles')
+        .select('full_name')
+        .eq('id', projectData.owner_id)
+        .single();
+      ownerName = owner?.full_name || null;
+    }
+
+    const projectWithOwner = {
+      ...projectData,
+      owner_name: ownerName
+    };
 
     // Get milestones
-    const { rows: milestones } = await pool.query(`
-      SELECT * FROM challenge_milestones
-      WHERE project_id = $1
-      ORDER BY order_index
-    `, [projectId]);
+    const { data: milestones, error: milestonesError } = await supabase
+      .from('challenge_milestones')
+      .select('*')
+      .eq('project_id', projectId)
+      .order('order_index');
 
     // Get tasks
-    const { rows: tasks } = await pool.query(`
-      SELECT * FROM challenge_tasks
-      WHERE project_id = $1
-      ORDER BY order_index
-    `, [projectId]);
+    const { data: tasks, error: tasksError } = await supabase
+      .from('challenge_tasks')
+      .select('*')
+      .eq('project_id', projectId)
+      .order('order_index');
 
     // Get user progress if user_id provided
     let progress = null;
     let completedTasks = [];
     if (user_id) {
-      const { rows: progressRows } = await pool.query(`
-        SELECT * FROM challenge_progress
-        WHERE project_id = $1 AND user_id = $2
-      `, [projectId, user_id]);
-      progress = progressRows[0] || null;
+      const { data: progressData } = await supabase
+        .from('challenge_progress')
+        .select('*')
+        .eq('project_id', projectId)
+        .eq('user_id', user_id)
+        .single();
+      progress = progressData || null;
 
-      const { rows: completions } = await pool.query(`
-        SELECT task_id FROM task_completions
-        WHERE user_id = $1 AND task_id IN (
-          SELECT id FROM challenge_tasks WHERE project_id = $2
-        )
-      `, [user_id, projectId]);
-      completedTasks = completions.map(c => c.task_id);
+      // Get completed tasks
+      const taskIds = (tasks || []).map(t => t.id);
+      if (taskIds.length > 0) {
+        const { data: completions } = await supabase
+          .from('task_completions')
+          .select('task_id')
+          .eq('user_id', user_id)
+          .in('task_id', taskIds);
+        completedTasks = (completions || []).map(c => c.task_id);
+      }
     }
 
     res.json({
       success: true,
       challenge: {
-        ...project,
-        milestones,
-        tasks,
+        ...projectWithOwner,
+        milestones: milestones || [],
+        tasks: tasks || [],
         progress,
         completedTasks
       }
@@ -2257,6 +2359,176 @@ Keep the response friendly, specific, and constructive. Maximum 150 words.`;
 
   } catch (error) {
     console.error('Submit Task Error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// ==========================================
+// NOTIFICATION SYSTEM (Unified Flow)
+// ==========================================
+
+const admin = require('firebase-admin');
+
+// Initialize Firebase Admin SDK
+// Expects FIREBASE_SERVICE_ACCOUNT to be a JSON string of the service account key
+try {
+  if (process.env.FIREBASE_SERVICE_ACCOUNT) {
+    const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+    admin.initializeApp({
+      credential: admin.credential.cert(serviceAccount)
+    });
+    console.log('Firebase Admin Initialized successfully');
+  } else {
+    console.warn('FIREBASE_SERVICE_ACCOUNT not found. Push notifications will be disabled.');
+  }
+} catch (error) {
+  console.error('Firebase Admin Init Error:', error.message);
+}
+
+/**
+ * Unified helper to send notifications
+ * 1. Saves to DB (triggers Realtime In-App)
+ * 2. Sends Push Notification (FCM)
+ */
+async function sendNotification(userId, title, message, type = 'info', data = {}) {
+  try {
+    // 1. Save to Database (Triggers Supabase Realtime for In-App UI)
+    const { data: notif, error } = await supabaseAdmin
+      .from('notifications')
+      .insert({
+        user_id: userId,
+        title,
+        message,
+        type,
+        data,
+        read: false
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+    // console.log(`Notification saved for user ${userId}:`, notif.id);
+
+    // 2. Fetch User Devices for Push
+    const { data: devices } = await supabaseAdmin
+      .from('user_devices')
+      .select('fcm_token')
+      .eq('user_id', userId);
+
+    const tokens = devices?.map(d => d.fcm_token).filter(Boolean) || [];
+    
+    // Remove duplicates
+    const uniqueTokens = [...new Set(tokens)];
+
+    if (uniqueTokens.length > 0 && admin.apps.length > 0) {
+      // Create FCM payload
+      // Note: 'data' fields must be strings for FCM
+      const stringifiedData = Object.keys(data).reduce((acc, key) => {
+        acc[key] = String(data[key]);
+        return acc;
+      }, {});
+
+      // Add notification id for tracking
+      stringifiedData.notification_id = notif.id;
+      stringifiedData.url = data.url || '/notifications'; // Fallback URL
+
+      const messagePayload = {
+        tokens: uniqueTokens,
+        notification: {
+          title: title,
+          body: message,
+        },
+        data: stringifiedData,
+        // Webpush specific config
+        webpush: {
+          fcm_options: {
+            link: data.url || '/notifications'
+          }
+        },
+        // Android specific config (Future proofing)
+        android: {
+          priority: 'high',
+          notification: {
+            icon: 'stock_ticker_update', // Resource name in res/drawable
+            color: '#10B981', // Emerald-500
+            clickAction: 'FLUTTER_NOTIFICATION_CLICK' // Standard for many cross-platform apps
+          }
+        }
+      };
+
+      const response = await admin.messaging().sendMulticast(messagePayload);
+      console.log(`[FCM] Sent to ${response.successCount} devices (Failed: ${response.failureCount})`);
+      
+      // Optional: Cleanup invalid tokens?
+      if (response.failureCount > 0) {
+        const failedTokens = [];
+        response.responses.forEach((resp, idx) => {
+          if (!resp.success) {
+            failedTokens.push(uniqueTokens[idx]);
+          }
+        });
+        // Could remove failedTokens from user_devices here...
+      }
+    } else if (uniqueTokens.length > 0) {
+      console.warn('[FCM] Tokens found but Firebase Admin not initialized.');
+    }
+
+    return notif;
+  } catch (error) {
+    console.error('Send Notification Error:', error);
+    return null;
+  }
+}
+
+/**
+ * POST /api/notifications/register-device
+ * Register detailed device token for push notifications
+ */
+app.post('/api/notifications/register-device', authMiddleware, async (req, res) => {
+  try {
+    const { token, platform } = req.body;
+    const userId = req.user.id;
+
+    if (!token || !platform) {
+      return res.status(400).json({ success: false, error: 'Token and platform required' });
+    }
+
+    // Upsert device token
+    const { error } = await supabaseAdmin
+      .from('user_devices')
+      .upsert({
+        user_id: userId,
+        fcm_token: token,
+        platform: platform, // 'web', 'android', 'ios'
+        last_active: new Date().toISOString()
+      }, { onConflict: 'user_id, fcm_token' });
+
+    if (error) throw error;
+
+    res.json({ success: true, message: 'Device registered' });
+  } catch (error) {
+    console.error('Device Register Error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * POST /api/notifications/test
+ * Manually trigger a notification to test the flow
+ */
+app.post('/api/notifications/test', authMiddleware, async (req, res) => {
+  try {
+    const { title = 'Test Notification', message = 'This is a test.', type = 'info' } = req.body;
+    const userId = req.user.id;
+
+    const notif = await sendNotification(userId, title, message, type);
+
+    if (notif) {
+      res.json({ success: true, notification: notif });
+    } else {
+      res.status(500).json({ success: false, error: 'Failed to send notification' });
+    }
+  } catch (error) {
     res.status(500).json({ success: false, error: error.message });
   }
 });

@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
+import CapacitorStorage from './CapacitorStorage'
 
 // Get Supabase credentials from Vite environment variables
 // These should be defined in a .env file in the project root
@@ -18,8 +19,9 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     // Auto refresh the session when it expires
     autoRefreshToken: true,
-    // Persist the session to localStorage so users stay logged in on page refresh
+    // Persist the session to storage (localStorage on web, Preferences on mobile)
     persistSession: true,
+    storage: CapacitorStorage,
     // Detect session from URL (useful for email confirmations, password resets, etc.)
     detectSessionInUrl: true
   }

@@ -17,6 +17,7 @@ import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { Link, useLocation } from 'react-router-dom';
 import { getNotifications, markAsRead, markAllAsRead } from '../api/notificationsApi';
+import { supabase } from '../lib/supabaseClient';
 
 const Navbar = ({ onSearch = null, className = '', onToggleSidebar }) => {
   const [isSearchFocused, setIsSearchFocused] = useState(false);
@@ -35,10 +36,36 @@ const Navbar = ({ onSearch = null, className = '', onToggleSidebar }) => {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(false);
 
+  /* 
+   * Real-time Notifications Setup
+   * Subscribes to new inserts on the notifications table
+   */
   useEffect(() => {
-    if (user) {
-      fetchNotifications();
-    }
+    if (!user) return;
+
+    fetchNotifications();
+
+    // Subscribe to real-time changes
+    const subscription = supabase
+      .channel('public:notifications')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'notifications',
+          filter: `user_id=eq.${user.id}`
+        },
+        (payload) => {
+          console.log('New notification received:', payload);
+          setNotifications(prev => [payload.new, ...prev]);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(subscription);
+    };
   }, [user]);
 
   const fetchNotifications = async () => {
@@ -94,6 +121,45 @@ const Navbar = ({ onSearch = null, className = '', onToggleSidebar }) => {
     setIsProfileOpen(false);
     setIsMobileMenuOpen(false);
   };
+
+  /*
+   * Push Notifications Setup
+   */
+  const handleEnableNotifications = async () => {
+    try {
+      // 1. Request Permission & Get Token
+      const { requestNotificationPermission } = await import('../lib/firebase');
+      const token = await requestNotificationPermission();
+      
+      if (token && user) {
+        // 2. Register Device on Backend
+        const { supabase } = await import('../lib/supabaseClient'); // Dynamic import to avoid cycles? No, static is fine usually but we're in handler.
+        const tokenStr = (await supabase.auth.getSession()).data.session?.access_token;
+
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/notifications/register-device`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${tokenStr}`
+          },
+          body: JSON.stringify({
+            token,
+            platform: 'web'
+          })
+        });
+
+        if (response.ok) {
+          alert('Notifications enabled successfully!');
+        } else {
+          console.error('Failed to register device');
+        }
+      }
+    } catch (error) {
+      console.error('Error enabling notifications:', error);
+    }
+  };
+
+  const [permissionState, setPermissionState] = useState(Notification.permission);
 
   const getNotificationIcon = (type) => {
     switch (type) {
@@ -212,14 +278,24 @@ const Navbar = ({ onSearch = null, className = '', onToggleSidebar }) => {
               >
                 <div className="p-4 border-b border-teal-100 dark:border-charcoal-700 flex justify-between items-center">
                   <h3 className="font-semibold text-charcoal-900 dark:text-white">Notifications</h3>
-                  {unreadCount > 0 && (
-                    <button 
-                      onClick={handleMarkAllAsRead}
-                      className="text-xs text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 font-medium"
-                    >
-                      Mark all as read
-                    </button>
-                  )}
+                  <div className="flex gap-2">
+                    {permissionState === 'default' && (
+                      <button 
+                        onClick={handleEnableNotifications}
+                        className="text-xs text-teal-600 dark:text-teal-400 hover:text-teal-700 font-medium bg-teal-50 dark:bg-charcoal-800 px-2 py-1 rounded-md"
+                      >
+                        Enable Push
+                      </button>
+                    )}
+                    {unreadCount > 0 && (
+                      <button 
+                        onClick={handleMarkAllAsRead}
+                        className="text-xs text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 font-medium"
+                      >
+                        Mark all read
+                      </button>
+                    )}
+                  </div>
                 </div>
                 
                 <div className="max-h-[400px] overflow-y-auto">

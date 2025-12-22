@@ -241,7 +241,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       if (data.user) {
-        // Auth state will be updated by the onAuthStateChange listener
+        // Explicitly set state immediately to avoid race conditions
+        setUser(data.user);
+        
+        // Fetch profile immediately
+        const userProfile = await fetchUserProfile(data.user.id);
+        setProfile(userProfile);
+        
         console.log('Sign in successful:', data.user.email);
         return { success: true };
       }
