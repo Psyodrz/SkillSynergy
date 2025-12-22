@@ -17,7 +17,24 @@ CREATE POLICY "Public can read active versions"
 ON app_versions FOR SELECT 
 USING (is_active = true);
 
--- Insert initial version (placeholder)
-INSERT INTO app_versions (version, url, notes)
-VALUES ('0.0.0', '', 'Initial Release')
-ON CONFLICT (version) DO NOTHING;
+-- Skill Room Messages (Public Chat)
+CREATE TABLE IF NOT EXISTS skill_room_messages (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  skill_id UUID NOT NULL REFERENCES skills(id),
+  user_id UUID REFERENCES profiles(id), -- Can be null for system/AI messages
+  user_name TEXT,
+  user_avatar TEXT,
+  content TEXT NOT NULL,
+  role TEXT DEFAULT 'user', -- 'user', 'ai', 'system'
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+ALTER TABLE skill_room_messages ENABLE ROW LEVEL SECURITY;
+
+-- Allow public read/write for now (or restrict write to auth/members)
+DROP POLICY IF EXISTS "Public read/write messages" ON skill_room_messages;
+CREATE POLICY "Public read/write messages" ON skill_room_messages FOR ALL USING (true) WITH CHECK (true);
+
+-- Indexes
+CREATE INDEX IF NOT EXISTS idx_messages_skill_id ON skill_room_messages(skill_id);
+CREATE INDEX IF NOT EXISTS idx_messages_created_at ON skill_room_messages(created_at);

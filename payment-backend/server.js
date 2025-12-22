@@ -137,6 +137,90 @@ app.get('/api/app-update', async (req, res) => {
 });
 
 /**
+ * GET /api/tutor-avatar/:skill_id
+ * Get the AI Tutor avatar for a skill (either a teacher profile or generated)
+ */
+app.get('/api/tutor-avatar/:skill_id', async (req, res) => {
+  try {
+    const { skill_id } = req.params;
+    
+    // Find an existing teacher for this skill
+    const query = `
+      SELECT p.avatar_url 
+      FROM profiles p
+      JOIN user_skills us ON p.id = us.user_id
+        AND us.skill_id = $1
+      WHERE p.role IN ('Teacher', 'Both', 'teacher', 'both')
+        AND p.avatar_url IS NOT NULL
+      ORDER BY p.experience_years DESC NULLS LAST
+      LIMIT 1;
+    `;
+    const result = await pool.query(query, [skill_id]);
+
+    if (result.rows.length > 0) {
+      res.json({ success: true, avatarUrl: result.rows[0].avatar_url });
+    } else {
+      // Fallback or generic avatar
+      res.json({ success: true, avatarUrl: null });
+    }
+  } catch (error) {
+    console.error('Error fetching avatar:', error);
+    // Silent fail for avatar
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * GET /api/skill/:id
+ * Get skill details
+ */
+app.get('/api/skill/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const result = await pool.query('SELECT * FROM skills WHERE id = $1', [id]);
+    
+    if (result.rows.length > 0) {
+      res.json({ success: true, data: result.rows[0] });
+    } else {
+      res.status(404).json({ success: false, error: 'Skill not found' });
+    }
+  } catch (error) {
+    console.error('Error fetching skill:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * GET /api/skill-room/:skill_id/messages
+ * Get chat history for a skill room
+ */
+app.get('/api/skill-room/:skill_id/messages', async (req, res) => {
+  try {
+    const { skill_id } = req.params;
+    const { limit = 50 } = req.query;
+    
+    // Check if table exists (it was added in migration)
+    const query = `
+      SELECT * FROM skill_room_messages 
+      WHERE skill_id = $1 
+      ORDER BY created_at ASC 
+      LIMIT $2
+    `;
+    const result = await pool.query(query, [skill_id, limit]);
+    
+    res.json({ success: true, data: result.rows });
+  } catch (error) {
+    console.error('Error fetching room messages:', error);
+    // If table doesn't exist yet, return empty list gracefully
+    if (error.code === '42P01') { 
+       res.json({ success: true, data: [] });
+    } else {
+       res.status(500).json({ success: false, error: error.message });
+    }
+  }
+});
+
+/**
  * Helper function to generate embedding from text using OpenRouter
  */
 async function generateQueryEmbedding(text) {
