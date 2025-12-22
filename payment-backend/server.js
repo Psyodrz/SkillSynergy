@@ -6,30 +6,66 @@ const { Pool } = require('pg');
 const cors = require('cors');
 const OpenAI = require('openai');
 const { HfInference } = require('@huggingface/inference');
+const { createClient } = require('@supabase/supabase-js');
 const authMiddleware = require('./middleware/auth');
 const { generateImage: generateGoogleImage, buildEducationalPrompt } = require('./services/googleImageService');
 
 const app = express();
 
-// Middleware
-app.use(cors({
-  origin: [
-    'http://localhost:5173',
-    'http://localhost:5174',
-    'http://localhost:3000',
-    'https://skillsynergy.online',
-    'https://www.skillsynergy.online',
-    /\.vercel\.app$/
-  ],
-  credentials: true
-}));
+// ============================================
+// 1. UNIVERSAL CORS CONFIG (production-ready)
+// ============================================
+const corsOptions = {
+  origin: function (origin, callback) {
+    // Allow requests with no origin (Postman, curl, serverless)
+    if (!origin) return callback(null, true);
+    
+    // Allowed origins list
+    const allowedOrigins = [
+      'http://localhost:5173',
+      'http://localhost:5174',
+      'http://localhost:3000',
+      'https://skillsynergy.online',
+      'https://www.skillsynergy.online'
+    ];
+    
+    // Check exact match first
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    
+    // Allow any Vercel preview/production domain
+    if (origin.endsWith('.vercel.app')) {
+      return callback(null, true);
+    }
+    
+    // Reject others
+    callback(new Error('Not allowed by CORS'));
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+};
+
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions)); // Enable pre-flight for all routes
 app.use(express.json());
 
-// Database connection
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false }
-});
+// ============================================
+// 2. SERVERLESS-SAFE PG POOL (global reuse)
+// ============================================
+// Reuse pool across serverless invocations
+let pool;
+if (!global._pgPool) {
+  global._pgPool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    ssl: { rejectUnauthorized: false },
+    max: 5,                    // Limit connections for serverless
+    idleTimeoutMillis: 30000,  // Close idle connections after 30s
+    connectionTimeoutMillis: 10000 // Timeout after 10s
+  });
+}
+pool = global._pgPool;
 
 // Razorpay instance
 const razorpay = new Razorpay({
@@ -45,6 +81,9 @@ const openai = new OpenAI({
 
 // Hugging Face instance
 const hf = new HfInference(process.env.HUGGINGFACE_API_KEY);
+
+// Supabase Client (for reliable HTTPS connection)
+const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
 
 // In-memory cache for generated images (to avoid regenerating)
 const imageCache = new Map();
@@ -424,7 +463,11 @@ app.post('/api/match/teachers', authMiddleware, async (req, res) => {
 
   } catch (error) {
     console.error('Teacher Match Error:', error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ 
+      success: false, 
+      error: error.message || 'Unknown error',
+      details: error 
+    });
   }
 });
 
@@ -859,11 +902,22 @@ app.get('/api/ai-teachers', async (req, res) => {
       let skillInfo = null;
 
       if (skill_id) {
-        const { rows } = await pool.query('SELECT id, name, category, description FROM skills WHERE id = $1', [skill_id]);
-        skillInfo = rows[0];
+        const { data, error } = await supabase
+          .from('skills')
+          .select('id, name, category, description')
+          .eq('id', skill_id)
+          .single();
+        
+        if (!error) skillInfo = data;
       } else if (skill_name) {
-        const { rows } = await pool.query('SELECT id, name, category, description FROM skills WHERE LOWER(name) LIKE LOWER($1) LIMIT 1', [`%${skill_name}%`]);
-        skillInfo = rows[0];
+        const { data, error } = await supabase
+          .from('skills')
+          .select('id, name, category, description')
+          .ilike('name', `%${skill_name}%`)
+          .limit(1)
+          .single();
+          
+        if (!error) skillInfo = data;
       }
 
       if (skillInfo) {
@@ -893,12 +947,16 @@ app.get('/api/ai-teachers', async (req, res) => {
     }
 
     // Otherwise, return AI teachers for all skills
-    const { rows: popularSkills } = await pool.query(`
-      SELECT id, name, category, description 
-      FROM skills 
-      ORDER BY name ASC
-      LIMIT $1
-    `, [limit || 50]);
+    const { data: popularSkills, error } = await supabase
+      .from('skills')
+      .select('id, name, category, description')
+      .order('name', { ascending: true })
+      .limit(limit || 50);
+    
+    if (error) {
+      console.error('Supabase Error details:', JSON.stringify(error, null, 2));
+      throw error;
+    }
 
     const aiTeachers = popularSkills.map(skill => ({
       id: `ai-teacher-${skill.id}`,
@@ -955,11 +1013,17 @@ async function cleanupStuckJobs() {
       console.log(`[Startup] Reset ${result.rowCount} stuck image generation jobs to FAILED.`);
     }
   } catch (error) {
-    console.error('[Startup] Failed to cleanup stuck jobs:', error);
+    // LOG but don't crash - startup jobs must be non-fatal
+    console.error('[Startup] Failed to cleanup stuck jobs (non-fatal):', error.message || error);
   }
 }
-// Run cleanup immediately
-cleanupStuckJobs();
+
+// Run cleanup after short delay to allow pool initialization (non-blocking, non-fatal)
+setTimeout(() => {
+  cleanupStuckJobs().catch(err => {
+    console.error('[Startup] Deferred cleanup failed (non-fatal):', err.message || err);
+  });
+}, 2000);
 
 /**
  * Background Job: Process Image Generation (Unified)
@@ -2197,10 +2261,18 @@ Keep the response friendly, specific, and constructive. Maximum 150 words.`;
   }
 });
 
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`✅ Payment server running on http://localhost:${PORT}`);
-  console.log(`📘 Razorpay Key ID: ${process.env.RAZORPAY_KEY_ID}`);
-});
+// ============================================
+// 5. VERCEL SERVERLESS COMPATIBILITY
+// ============================================
+// Only call app.listen() when running locally (not on Vercel)
+if (process.env.VERCEL !== '1' && !process.env.VERCEL) {
+  const PORT = process.env.PORT || 5000;
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log(`✅ Payment server running on http://localhost:${PORT}`);
+    console.log(`📘 Razorpay Key ID: ${process.env.RAZORPAY_KEY_ID}`);
+  });
+}
 
+// Export for Vercel serverless
 module.exports = app;
+
