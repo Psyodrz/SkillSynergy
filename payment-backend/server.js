@@ -165,8 +165,8 @@ app.get('/api/tutor-avatar/:skill_id', async (req, res) => {
     }
   } catch (error) {
     console.error('Error fetching avatar:', error);
-    // Silent fail for avatar
-    res.status(500).json({ success: false, error: error.message });
+    // Graceful fallback - return null avatar instead of 500
+    res.json({ success: true, avatarUrl: null });
   }
 });
 
@@ -186,39 +186,17 @@ app.get('/api/skill/:id', async (req, res) => {
     }
   } catch (error) {
     console.error('Error fetching skill:', error);
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
-
-/**
- * GET /api/skill-room/:skill_id/messages
- * Get chat history for a skill room
- */
-app.get('/api/skill-room/:skill_id/messages', async (req, res) => {
-  try {
-    const { skill_id } = req.params;
-    const { limit = 50 } = req.query;
-    
-    // Check if table exists (it was added in migration)
-    const query = `
-      SELECT * FROM skill_room_messages 
-      WHERE skill_id = $1 
-      ORDER BY created_at ASC 
-      LIMIT $2
-    `;
-    const result = await pool.query(query, [skill_id, limit]);
-    
-    res.json({ success: true, data: result.rows });
-  } catch (error) {
-    console.error('Error fetching room messages:', error);
-    // If table doesn't exist yet, return empty list gracefully
-    if (error.code === '42P01') { 
-       res.json({ success: true, data: [] });
+    // Graceful fallback for missing table or DB errors
+    if (error.code === '42P01') {
+      res.status(404).json({ success: false, error: 'Skill not found' });
     } else {
-       res.status(500).json({ success: false, error: error.message });
+      res.status(500).json({ success: false, error: error.message });
     }
   }
 });
+
+// NOTE: Removed duplicate /api/skill-room/:skill_id/messages route
+// The primary implementation using Supabase is at line ~1344
 
 /**
  * Helper function to generate embedding from text using OpenRouter
