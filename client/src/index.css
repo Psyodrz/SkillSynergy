@@ -132,3 +132,54 @@
     min-height: 100dvh;
   }
 }
+
+/* Brand Loader Animations */
+@keyframes brand-stroke {
+  0% {
+    stroke-dashoffset: 200;
+    opacity: 0.6;
+  }
+  50% {
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
+  100% {
+    stroke-dashoffset: -200;
+    opacity: 0.6;
+  }
+}
+
+@keyframes brand-pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.9;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 1;
+  }
+}
+
+@keyframes brand-glow {
+  0%, 100% {
+    opacity: 0.2;
+    transform: scale(0.95);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(1.05);
+  }
+}
+
+.animate-brand-stroke {
+  animation: brand-stroke 2.5s ease-in-out infinite;
+}
+
+.animate-brand-pulse {
+  animation: brand-pulse 2s ease-in-out infinite;
+}
+
+.animate-brand-glow {
+  animation: brand-glow 3s ease-in-out infinite;
+}
+

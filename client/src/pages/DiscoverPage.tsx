@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
+import { InlineLoader } from '../components/BrandLoader';
 import { motion } from 'framer-motion';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { 
@@ -151,14 +152,15 @@ const DiscoverPage = () => {
       );
       
       if (result.success) {
-        setToastMessage({ type: 'success', message: 'Learning Challenge created!' });
+        setToastMessage({ type: 'success', message: `Learning Challenge "${title}" created!` });
         setIsSkillModalOpen(false);
-        navigate('/projects'); // Or wherever appropriate
+        navigate('/app/discover-projects'); // Navigate to discover projects page
       } else {
         setToastMessage({ type: 'error', message: result.error || 'Failed to create challenge' });
       }
     } catch (error) {
       console.error('Error creating challenge:', error);
+      setToastMessage({ type: 'error', message: 'Failed to create challenge. Please try again.' });
     }
   };
 
@@ -174,17 +176,17 @@ const DiscoverPage = () => {
       );
       
       if (result.success) {
-        setToastMessage({ type: 'success', message: 'Mentorship request sent!' });
-        if (instructorId) {
-          // If requested specific instructor, maybe close modal or show success
-        } else {
-          setIsSkillModalOpen(false);
-        }
+        const successMsg = instructorId 
+          ? 'Mentorship request sent to the instructor!' 
+          : `Your ${selectedSkill.name} mentorship request is now visible to all instructors. They will contact you if interested!`;
+        setToastMessage({ type: 'success', message: successMsg });
+        setIsSkillModalOpen(false);
       } else {
         setToastMessage({ type: 'error', message: result.error || 'Failed to send request' });
       }
     } catch (error) {
       console.error('Error requesting mentorship:', error);
+      setToastMessage({ type: 'error', message: 'Failed to send mentorship request. Please try again.' });
     }
   };
 
@@ -451,7 +453,7 @@ const DiscoverPage = () => {
           
           {loadingSkills ? (
             <div className="flex justify-center py-12">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600"></div>
+              <InlineLoader size="lg" />
             </div>
           ) : filteredSkills.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
@@ -543,7 +545,7 @@ const DiscoverPage = () => {
 
         {loadingUsers && (
           <div className="flex justify-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600"></div>
+            <InlineLoader size="lg" />
           </div>
         )}
 
@@ -768,7 +770,7 @@ const DiscoverPage = () => {
                 
                 {loadingInstructors ? (
                   <div className="flex justify-center py-4">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div>
+                    <InlineLoader size="md" />
                   </div>
                 ) : instructors.length > 0 ? (
                   <>

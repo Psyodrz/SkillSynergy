@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { InlineLoader } from '../components/BrandLoader';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
@@ -177,7 +178,7 @@ const ChallengePage: React.FC = () => {
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-mint-50 dark:bg-charcoal-950">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600"></div>
+        <InlineLoader size="lg" />
       </div>
     );
   }

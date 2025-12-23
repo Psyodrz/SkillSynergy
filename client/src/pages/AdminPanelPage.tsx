@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { InlineLoader } from '../components/BrandLoader';
 import { supabase } from '../lib/supabaseClient';
 import { 
   UsersIcon, 
@@ -231,7 +232,7 @@ const AdminPanelPage = () => {
         <div className="bg-white dark:bg-charcoal-900 rounded-xl border border-gray-200 dark:border-charcoal-800 overflow-hidden">
           {loading ? (
             <div className="flex justify-center items-center py-12">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-500"></div>
+              <InlineLoader size="lg" />
             </div>
           ) : (
             <div className="overflow-x-auto">

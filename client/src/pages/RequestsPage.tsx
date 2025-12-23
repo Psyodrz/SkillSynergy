@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion';
+import { InlineLoader } from '../components/BrandLoader';
 import { useAuth } from '../context/AuthContext';
 import { useFriends } from '../hooks/useFriends';
 import { CheckIcon, XMarkIcon } from '@heroicons/react/24/outline';
@@ -11,7 +12,7 @@ const RequestsPage = () => {
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-screen bg-mint-50 dark:bg-charcoal-900">
-        <div className="animate-spin rounded-full h-12 w-12 border-2 border-emerald-500 border-t-transparent"></div>
+        <InlineLoader size="lg" />
       </div>
     );
   }

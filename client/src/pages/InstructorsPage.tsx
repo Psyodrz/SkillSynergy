@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { InlineLoader } from '../components/BrandLoader';
 import { motion } from 'framer-motion';
 import { useLocation } from 'react-router-dom';
 import { 
@@ -162,7 +163,7 @@ const InstructorsPage = () => {
       >
         {loading ? (
           <div className="flex justify-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600"></div>
+            <InlineLoader size="lg" />
           </div>
         ) : teachers.length === 0 && aiTeachers.length === 0 ? (
           <div className="text-center py-12 bg-white dark:bg-navy-800 rounded-xl shadow-premium border border-warm-200 dark:border-navy-700">

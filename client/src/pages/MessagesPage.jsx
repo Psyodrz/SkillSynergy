@@ -10,6 +10,7 @@ import {
   PaperClipIcon
 } from '@heroicons/react/24/outline';
 import { useAuth } from '../context/AuthContext';
+import { InlineLoader } from '../components/BrandLoader';
 import { useDirectMessages } from '../hooks/useDirectMessages';
 import { useFriends } from '../hooks/useFriends';
 import { usePresence } from '../hooks/usePresence';
@@ -259,17 +260,17 @@ const MessagesPage = () => {
   };
 
   return (
-    <div className="flex h-[100dvh] md:h-[calc(100vh-64px)]">
+    <div className="flex h-[100dvh] md:h-[calc(100vh-64px)] overflow-hidden">
       {/* Conversations List */}
-      <div className={`w-full md:w-80 lg:w-96 border-r border-mint-200 dark:border-charcoal-700 flex flex-col bg-mint-50/50 dark:bg-charcoal-950 ${targetUserId ? 'hidden md:flex' : 'flex'}`}>
-        <div className="p-4 bg-mint-100 dark:bg-charcoal-900 border-b border-mint-200 dark:border-charcoal-700">
+      <div className={`w-full md:w-80 lg:w-96 border-r border-mint-200 dark:border-charcoal-700 flex flex-col min-h-0 overflow-hidden bg-mint-50/50 dark:bg-charcoal-950 ${targetUserId ? 'hidden md:flex' : 'flex'}`}>
+        <div className="flex-shrink-0 p-4 bg-mint-100 dark:bg-charcoal-900 border-b border-mint-200 dark:border-charcoal-700">
           <h2 className="text-xl font-bold text-charcoal-900 dark:text-white">Learning Discussions</h2>
         </div>
         
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 min-h-0 overflow-y-auto pt-1">
           {loadingConversations ? (
             <div className="flex justify-center p-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-500"></div>
+              <InlineLoader size="md" />
             </div>
           ) : conversations.length === 0 ? (
             <div className="p-8 text-center text-charcoal-500 dark:text-mint-300">
@@ -311,11 +312,11 @@ const MessagesPage = () => {
       </div>
 
       {/* Chat Area - Full height flex container */}
-      <div className={`flex-1 flex flex-col ${!targetUserId ? 'hidden md:flex' : 'flex'}`}>
+      <div className={`flex-1 flex flex-col min-h-0 overflow-hidden ${!targetUserId ? 'hidden md:flex' : 'flex'}`}>
         {targetUserId ? (
-          <div className="flex flex-col flex-1 bg-gradient-to-b from-mint-50 to-white dark:from-charcoal-900 dark:to-charcoal-950">
-            {/* Chat Header - fixed height */}
-            <div className="p-3 bg-white/80 dark:bg-charcoal-900/90 backdrop-blur-sm border-b border-mint-200 dark:border-charcoal-700 flex items-center justify-between shadow-sm">
+          <div className="flex flex-col flex-1 min-h-0 overflow-hidden bg-gradient-to-b from-mint-50 to-white dark:from-charcoal-900 dark:to-charcoal-950">
+            {/* Chat Header - fixed height, never shrinks */}
+            <div className="flex-shrink-0 p-3 bg-white/80 dark:bg-charcoal-900/90 backdrop-blur-sm border-b border-mint-200 dark:border-charcoal-700 flex items-center justify-between shadow-sm">
               <div className="flex items-center space-x-3">
                 <button 
                   onClick={() => navigate('/messages')}
@@ -356,10 +357,10 @@ const MessagesPage = () => {
             </div>
 
             {/* Messages Area - fills remaining space, scrolls only when needed, no visible scrollbar */}
-            <div className="flex-1 overflow-auto scrollbar-hide p-4 space-y-2">
+            <div className="flex-1 min-h-0 overflow-y-auto scrollbar-hide p-4 space-y-2">
               {friendStatus === 'checking' ? (
                 <div className="flex justify-center p-4">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-500"></div>
+                  <InlineLoader size="md" />
                 </div>
               ) : friendStatus !== 'friends' ? (
                 <div className="flex flex-col items-center justify-center h-full text-center p-8">

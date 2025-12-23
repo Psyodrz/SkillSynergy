@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { InlineLoader } from '../components/BrandLoader';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import SkillCard from '../components/SkillCard';
@@ -283,7 +284,7 @@ const DashboardPage = () => {
 
           {loading ? (
             <div className="flex justify-center py-12">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-500" />
+              <InlineLoader size="lg" />
             </div>
           ) : skills.length === 0 ? (
             <div className="bg-mint-100 dark:bg-charcoal-900/80 rounded-xl shadow-premium border border-mint-200 dark:border-charcoal-700 p-8 text-center">
@@ -325,7 +326,7 @@ const DashboardPage = () => {
 
           {loading ? (
             <div className="flex justify-center py-12">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-500" />
+              <InlineLoader size="lg" />
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">

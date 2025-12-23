@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import BrandLoader from '../components/BrandLoader';
 import { Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import HomePage from '../components/HomePage';
 import ProtectedRoute from '../components/ProtectedRoute';
@@ -61,11 +62,7 @@ function WebRoutes() {
   const { loading: guardLoading } = useOnboardingGuard();
 
   if (guardLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-mint-50 dark:bg-charcoal-950">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-500"></div>
-      </div>
-    );
+    return <BrandLoader loading={true} />;
   }
 
   return (

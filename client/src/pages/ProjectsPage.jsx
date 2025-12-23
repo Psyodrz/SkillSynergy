@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { InlineLoader } from '../components/BrandLoader';
 import { motion } from 'framer-motion';
 import {
   PlusIcon,
@@ -223,7 +224,7 @@ const ProjectsPage = () => {
       <div className="p-6">
         {loading ? (
           <div className="py-16 text-center">
-            <div className="h-12 w-12 animate-spin border-2 border-emerald-500 border-t-transparent rounded-full mx-auto"></div>
+            <InlineLoader size="lg" />
             <p className="text-mint-600 dark:text-mint-300 mt-4">Loading challenges…</p>
           </div>
         ) : (

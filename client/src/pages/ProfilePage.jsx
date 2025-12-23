@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { InlineLoader } from '../components/BrandLoader';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -492,7 +493,7 @@ const ProfilePage = () => {
   if (authLoading || (!isOwnProfile && loadingViewedProfile)) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-mint-50 dark:bg-charcoal-900">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-500" />
+        <InlineLoader size="lg" />
       </div>
     );
   }

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { InlineLoader } from '../components/BrandLoader';
 import { motion } from 'framer-motion';
 import { 
   PaperAirplaneIcon, 
@@ -285,7 +286,7 @@ const SkillRoomPage: React.FC = () => {
       <div ref={messagesContainerRef} className="flex-1 overflow-y-auto p-4 space-y-4">
         {isLoading ? (
           <div className="flex justify-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600" />
+            <InlineLoader size="lg" />
           </div>
         ) : messages.length === 0 ? (
           <motion.div

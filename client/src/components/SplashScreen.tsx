@@ -1,3 +1,5 @@
+import { InlineLoader } from './BrandLoader';
+
 const SplashScreen = () => {
   return (
     <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white dark:bg-charcoal-950 transition-opacity duration-500">
@@ -8,7 +10,7 @@ const SplashScreen = () => {
           SkillSynergy
         </h1>
         <div className="mt-8">
-           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-500"></div>
+          <InlineLoader size="md" />
         </div>
       </div>
     </div>

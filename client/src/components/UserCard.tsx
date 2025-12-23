@@ -82,9 +82,7 @@ const UserCard: React.FC<UserCardProps> = ({ user, onConnect, className = '' }) 
         p-6 hover:shadow-xl transition-all duration-300 cursor-pointer flex flex-col h-full
         ${className}
       `}
-      onClick={() => {
-        // Navigate to profile or something? For now just stop propagation if clicking buttons
-      }}
+      onClick={() => navigate(`/profile/${user.id}`)}
     >
       {/* User Header */}
       <div className="flex items-center space-x-4 mb-4">

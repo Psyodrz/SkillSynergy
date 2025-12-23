@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { InlineLoader } from '../components/BrandLoader';
 import { motion } from 'framer-motion';
 import { 
   CheckCircleIcon, 
@@ -95,7 +96,7 @@ const NotificationsPage = () => {
 
       {loading ? (
         <div className="flex justify-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-500"></div>
+          <InlineLoader size="md" />
         </div>
       ) : notifications.length === 0 ? (
         <div className="text-center py-12 bg-white dark:bg-charcoal-900 rounded-2xl shadow-sm border border-teal-100 dark:border-charcoal-800">

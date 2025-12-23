@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { InlineLoader } from '../BrandLoader';
 import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../../context/AuthContext';
 import type { DbSkill, UserSkill } from '../../types';
@@ -184,7 +185,7 @@ const MySkillsSection = () => {
 
   if (loading) return (
     <div className="p-8 text-center">
-      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-500 mx-auto"></div>
+      <InlineLoader size="md" />
       <p className="mt-2 text-gray-500">Loading skills...</p>
     </div>
   );
