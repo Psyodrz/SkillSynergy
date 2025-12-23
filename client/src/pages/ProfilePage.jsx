@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   UserCircleIcon, 
@@ -8,11 +9,16 @@ import {
   PlusIcon, 
   XMarkIcon, 
   CheckIcon,
-  AcademicCapIcon
+  AcademicCapIcon,
+  SparklesIcon,
+  ChatBubbleLeftIcon,
+  ArrowLeftIcon
 } from '@heroicons/react/24/outline';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabaseClient';
 import AvatarUploader from '../components/AvatarUploader';
+import SkillPickerModal from '../components/SkillPickerModal';
+import { useFriends } from '../hooks/useFriends';
 
 // Modal Component for adding Experience
 const ExperienceModal = ({ isOpen, onClose, onSave }) => {
@@ -101,13 +107,29 @@ const ExperienceModal = ({ isOpen, onClose, onSave }) => {
 };
 
 const ProfilePage = () => {
+  const { userId } = useParams();
+  const navigate = useNavigate();
   const { user, profile, loading: authLoading, refreshSession } = useAuth();
+  
+  // Determine if viewing own profile or someone else's
+  const isOwnProfile = !userId || (user && userId === user.id);
+  
+  const [viewedProfile, setViewedProfile] = useState(null);
+  // Start loading true if we have a userId (viewing someone else)
+  const [loadingViewedProfile, setLoadingViewedProfile] = useState(!!userId);
   
   const [isEditing, setIsEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState(null);
   const [showExpModal, setShowExpModal] = useState(false);
   const [newSkill, setNewSkill] = useState('');
+  const [showTeachSkillModal, setShowTeachSkillModal] = useState(false);
+  const [showLearnSkillModal, setShowLearnSkillModal] = useState(false);
+  
+  // Friend status for other user's profile
+  const { getFriendStatus, sendFriendRequest } = useFriends(user?.id || null);
+  const [friendStatus, setFriendStatus] = useState('none');
+  const [sendingRequest, setSendingRequest] = useState(false);
 
   // Form State
   const [formData, setFormData] = useState({
@@ -138,15 +160,54 @@ const ProfilePage = () => {
     return [];
   };
 
-  // Load data
+  // Fetch other user's profile if not own
   useEffect(() => {
-    if (profile) {
-      const allSkills = parseJSON(profile.skills);
+    // Only fetch if we have a userId and user is loaded
+    if (userId && user && userId !== user.id) {
+      setLoadingViewedProfile(true);
+      
+      // Fetch profile
+      supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single()
+        .then(({ data, error }) => {
+          if (data) {
+            setViewedProfile(data);
+          } else {
+            console.error('Error fetching profile:', error);
+            setViewedProfile(null);
+          }
+          setLoadingViewedProfile(false);
+        })
+        .catch(() => {
+          setLoadingViewedProfile(false);
+        });
+      
+      // Fetch friend status
+      getFriendStatus(userId).then(status => {
+        setFriendStatus(status);
+      });
+    } else if (!userId || (user && userId === user.id)) {
+      // Viewing own profile, no need to load
+      setLoadingViewedProfile(false);
+    }
+  }, [userId, user]);
+
+  // The active profile to display (own or viewed)
+  const activeProfile = isOwnProfile ? profile : viewedProfile;
+
+  // Load data into formData
+  useEffect(() => {
+    const profileToLoad = isOwnProfile ? profile : viewedProfile;
+    if (profileToLoad) {
+      const allSkills = parseJSON(profileToLoad.skills);
       const learning = allSkills.filter(s => !s.type || s.type === 'learn');
       const teaching = allSkills.filter(s => s.type === 'teach');
 
       // Parse bio for qualification/languages
-      let bioText = profile.bio || '';
+      let bioText = profileToLoad.bio || '';
       let qual = '';
       let langs = '';
       
@@ -163,19 +224,33 @@ const ProfilePage = () => {
       }
 
       setFormData({
-        full_name: profile.full_name || '',
-        avatar_url: profile.avatar_url || '',
-        role: profile.role || '',
-        location: profile.location || '',
+        full_name: profileToLoad.full_name || '',
+        avatar_url: profileToLoad.avatar_url || '',
+        role: profileToLoad.role || '',
+        location: profileToLoad.location || '',
         bio: bioText,
         skills: learning,
         teaching_skills: teaching,
         qualification: qual,
         languages: langs,
-        experience: parseJSON(profile.experience)
+        experience: parseJSON(profileToLoad.experience)
       });
     }
-  }, [profile]);
+  }, [profile, viewedProfile, isOwnProfile]);
+
+  // Handle sending friend request
+  const handleSendFriendRequest = async () => {
+    if (!userId) return;
+    setSendingRequest(true);
+    try {
+      await sendFriendRequest(userId);
+      setFriendStatus('pending');
+    } catch (error) {
+      console.error('Error sending friend request:', error);
+    } finally {
+      setSendingRequest(false);
+    }
+  };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -218,6 +293,44 @@ const ProfilePage = () => {
     setFormData(prev => ({
       ...prev,
       teaching_skills: prev.teaching_skills.filter((_, i) => i !== index)
+    }));
+  };
+
+  // Handle skill picker modal changes
+  const handleTeachingSkillsFromModal = (skills) => {
+    setFormData(prev => ({
+      ...prev,
+      teaching_skills: skills.map(s => ({ name: s.name, level: s.level, type: 'teach' }))
+    }));
+  };
+
+  const handleLearningSkillsFromModal = (skills) => {
+    setFormData(prev => ({
+      ...prev,
+      skills: skills.map(s => ({ name: s.name, level: s.level }))
+    }));
+  };
+
+  // Convert form skills to modal format
+  const getTeachingSkillsForModal = () => {
+    return formData.teaching_skills.map(s => ({
+      id: s.name.toLowerCase().replace(/\s+/g, '-'),
+      name: s.name,
+      level: s.level || 'Intermediate',
+      category: 'Other',
+      description: '',
+      keywords: []
+    }));
+  };
+
+  const getLearningSkillsForModal = () => {
+    return formData.skills.map(s => ({
+      id: s.name.toLowerCase().replace(/\s+/g, '-'),
+      name: s.name,
+      level: s.level || 'Beginner',
+      category: 'Other',
+      description: '',
+      keywords: []
     }));
   };
 
@@ -375,7 +488,8 @@ const ProfilePage = () => {
     }
   };
 
-  if (authLoading) {
+  // Loading state
+  if (authLoading || (!isOwnProfile && loadingViewedProfile)) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-mint-50 dark:bg-charcoal-900">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-500" />
@@ -383,9 +497,39 @@ const ProfilePage = () => {
     );
   }
 
+  // Profile not found
+  if (!isOwnProfile && !viewedProfile) {
+    return (
+      <div className="min-h-screen bg-mint-50 dark:bg-charcoal-900 flex flex-col items-center justify-center p-4">
+        <UserCircleIcon className="w-24 h-24 text-charcoal-400 mb-4" />
+        <h2 className="text-xl font-bold text-charcoal-900 dark:text-white mb-2">User Not Found</h2>
+        <p className="text-charcoal-600 dark:text-mint-300 mb-4">The profile you're looking for doesn't exist.</p>
+        <button 
+          onClick={() => navigate(-1)}
+          className="px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600"
+        >
+          Go Back
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-mint-50 dark:bg-charcoal-900 py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-5xl mx-auto space-y-8">
+
+        {/* Back Button for viewing other profiles */}
+        {!isOwnProfile && (
+          <motion.button
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            onClick={() => navigate(-1)}
+            className="flex items-center gap-2 text-charcoal-600 dark:text-mint-300 hover:text-emerald-500 dark:hover:text-emerald-400 mb-4"
+          >
+            <ArrowLeftIcon className="w-5 h-5" />
+            Back
+          </motion.button>
+        )}
         
         {/* Toast Message */}
         <AnimatePresence>
@@ -412,50 +556,102 @@ const ProfilePage = () => {
           <div className="h-32 bg-gradient-to-r from-emerald-500 to-teal-500 relative">
             <div className="absolute -bottom-12 left-8">
               <div className="w-24 h-24 rounded-full bg-white dark:bg-charcoal-800 p-1 shadow-lg">
-                <AvatarUploader
-                  url={formData.avatar_url}
-                  size={88} // 24 * 4 - padding (approx) or just fit parent
-                  onUpload={(url) => {
-                    setFormData(prev => ({ ...prev, avatar_url: url }));
-                    // Optional: Auto-save or just let user click save
-                  }}
-                  editable={isEditing}
-                  userId={user?.id}
-                  name={formData.full_name}
-                />
+                {isOwnProfile ? (
+                  <AvatarUploader
+                    url={formData.avatar_url}
+                    size={88}
+                    onUpload={(url) => {
+                      setFormData(prev => ({ ...prev, avatar_url: url }));
+                    }}
+                    editable={isEditing}
+                    userId={user?.id}
+                    name={formData.full_name}
+                  />
+                ) : (
+                  // Read-only avatar for other users
+                  formData.avatar_url ? (
+                    <img 
+                      src={formData.avatar_url} 
+                      alt={formData.full_name} 
+                      className="w-full h-full rounded-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full rounded-full bg-emerald-500 flex items-center justify-center text-white text-3xl font-bold">
+                      {formData.full_name?.[0] || '?'}
+                    </div>
+                  )
+                )}
               </div>
             </div>
-            <div className="absolute top-4 right-4">
-              {!isEditing ? (
-                <button
-                  onClick={() => setIsEditing(true)}
-                  className="flex items-center gap-2 px-4 py-2 bg-white/20 backdrop-blur-md hover:bg-white/30 text-white rounded-lg transition-colors text-sm font-medium"
-                >
-                  <PencilSquareIcon className="w-4 h-4" />
-                  Edit Profile
-                </button>
-              ) : (
-                <div className="flex gap-2">
+            <div className="absolute top-4 right-4 flex gap-2">
+              {isOwnProfile ? (
+                // Own profile - show edit/save buttons
+                !isEditing ? (
                   <button
-                    onClick={() => setIsEditing(false)}
-                    disabled={saving}
-                    className="px-4 py-2 bg-white/20 backdrop-blur-md hover:bg-white/30 text-white rounded-lg transition-colors text-sm font-medium"
+                    onClick={() => setIsEditing(true)}
+                    className="flex items-center gap-2 px-4 py-2 bg-white/20 backdrop-blur-md hover:bg-white/30 text-white rounded-lg transition-colors text-sm font-medium"
                   >
-                    Cancel
+                    <PencilSquareIcon className="w-4 h-4" />
+                    Edit Profile
                   </button>
+                ) : (
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setIsEditing(false)}
+                      disabled={saving}
+                      className="px-4 py-2 bg-white/20 backdrop-blur-md hover:bg-white/30 text-white rounded-lg transition-colors text-sm font-medium"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleSave}
+                      disabled={saving}
+                      className="flex items-center gap-2 px-4 py-2 bg-white text-emerald-600 hover:bg-mint-50 rounded-lg transition-colors text-sm font-medium shadow-sm"
+                    >
+                      {saving ? (
+                        <div className="w-4 h-4 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin" />
+                      ) : (
+                        <CheckIcon className="w-4 h-4" />
+                      )}
+                      Save Changes
+                    </button>
+                  </div>
+                )
+              ) : (
+                // Other user's profile - show Message/Add Friend buttons
+                <>
                   <button
-                    onClick={handleSave}
-                    disabled={saving}
+                    onClick={() => navigate(`/messages/${userId}`)}
                     className="flex items-center gap-2 px-4 py-2 bg-white text-emerald-600 hover:bg-mint-50 rounded-lg transition-colors text-sm font-medium shadow-sm"
                   >
-                    {saving ? (
-                      <div className="w-4 h-4 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin" />
-                    ) : (
-                      <CheckIcon className="w-4 h-4" />
-                    )}
-                    Save Changes
+                    <ChatBubbleLeftIcon className="w-4 h-4" />
+                    Message
                   </button>
-                </div>
+                  {friendStatus === 'none' && (
+                    <button
+                      onClick={handleSendFriendRequest}
+                      disabled={sendingRequest}
+                      className="flex items-center gap-2 px-4 py-2 bg-white/20 backdrop-blur-md hover:bg-white/30 text-white rounded-lg transition-colors text-sm font-medium"
+                    >
+                      {sendingRequest ? (
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      ) : (
+                        <PlusIcon className="w-4 h-4" />
+                      )}
+                      Add Friend
+                    </button>
+                  )}
+                  {friendStatus === 'pending' && (
+                    <span className="px-4 py-2 bg-white/20 backdrop-blur-md text-white rounded-lg text-sm font-medium">
+                      Request Sent
+                    </span>
+                  )}
+                  {friendStatus === 'friends' && (
+                    <span className="px-4 py-2 bg-emerald-400/30 backdrop-blur-md text-white rounded-lg text-sm font-medium">
+                      ✓ Friends
+                    </span>
+                  )}
+                </>
               )}
             </div>
           </div>
@@ -678,7 +874,7 @@ const ProfilePage = () => {
                   )}
                 </div>
 
-                {isEditing && (
+              {isOwnProfile && (isEditing || formData.teaching_skills.length === 0) && (
                   <form onSubmit={addTeachingSkill} className="flex gap-2">
                     <input
                       value={newTeachingSkill}
@@ -694,6 +890,15 @@ const ProfilePage = () => {
                       <PlusIcon className="w-5 h-5" />
                     </button>
                   </form>
+                )}
+                
+                {isOwnProfile && (
+                  <button
+                    onClick={() => setShowTeachSkillModal(true)}
+                    className="w-full mt-3 text-sm text-emerald-600 hover:text-emerald-700 font-medium hover:underline"
+                  >
+                    Or browse from 150+ skills →
+                  </button>
                 )}
               </motion.div>
             )}
@@ -733,7 +938,7 @@ const ProfilePage = () => {
                 )}
               </div>
 
-              {isEditing && (
+              {isOwnProfile && (isEditing || formData.skills.length === 0) && (
                 <form onSubmit={addSkill} className="flex gap-2">
                   <input
                     value={newSkill}
@@ -749,6 +954,15 @@ const ProfilePage = () => {
                     <PlusIcon className="w-5 h-5" />
                   </button>
                 </form>
+              )}
+              
+              {isOwnProfile && (
+                <button
+                  onClick={() => setShowLearnSkillModal(true)}
+                  className="w-full mt-3 text-sm text-emerald-600 hover:text-emerald-700 font-medium hover:underline"
+                >
+                  Or browse from 150+ skills →
+                </button>
               )}
             </motion.div>
 
@@ -780,6 +994,25 @@ const ProfilePage = () => {
         isOpen={showExpModal} 
         onClose={() => setShowExpModal(false)} 
         onSave={addExperience}
+      />
+      
+      {/* Skill Picker Modals */}
+      <SkillPickerModal
+        isOpen={showTeachSkillModal}
+        onClose={() => setShowTeachSkillModal(false)}
+        selectedSkills={getTeachingSkillsForModal()}
+        onSkillsChange={handleTeachingSkillsFromModal}
+        mode="teach"
+        maxSelections={20}
+      />
+      
+      <SkillPickerModal
+        isOpen={showLearnSkillModal}
+        onClose={() => setShowLearnSkillModal(false)}
+        selectedSkills={getLearningSkillsForModal()}
+        onSkillsChange={handleLearningSkillsFromModal}
+        mode="learn"
+        maxSelections={20}
       />
     </div>
   );

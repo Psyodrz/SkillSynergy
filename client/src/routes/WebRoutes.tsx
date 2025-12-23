@@ -24,6 +24,7 @@ import RefundPage from '../pages/RefundPage';
 import AboutPage from '../pages/AboutPage';
 import ContactPage from '../pages/ContactPage';
 import CookiePolicyPage from '../pages/CookiePolicyPage';
+import DisclaimerPage from '../pages/DisclaimerPage';
 import FAQPage from '../pages/FAQPage';
 import ConnectPage from '../pages/ConnectPage';
 import LearnPage from '../pages/LearnPage';
@@ -50,7 +51,7 @@ function WebRoutes() {
   // Check if current route is a public route
   const publicRoutes = [
     '/', '/login', '/terms', '/privacy', '/refund', '/about', '/contact',
-    '/cookies', '/faq', '/connect', '/learn', '/projects', '/chat', '/demo', '/blog'
+    '/cookies', '/disclaimer', '/faq', '/connect', '/learn', '/projects', '/chat', '/demo', '/blog'
   ];
   // Helper to check if path starts with public route (for dynamic routes like /blog/:slug)
   const isPublicRoute = publicRoutes.some(route => location.pathname === route) || location.pathname.startsWith('/blog/');
@@ -91,6 +92,7 @@ function WebRoutes() {
               <Route path="/privacy" element={<PrivacyPage />} />
               <Route path="/refund" element={<RefundPage />} />
               <Route path="/cookies" element={<CookiePolicyPage />} />
+              <Route path="/disclaimer" element={<DisclaimerPage />} />
               <Route path="/about" element={<AboutPage />} />
               <Route path="/contact" element={<ContactPage />} />
 
@@ -199,6 +201,11 @@ function WebRoutes() {
               } />
 
               <Route path="/profile" element={
+                <ProtectedRoute>
+                  <ProfilePage />
+                </ProtectedRoute>
+              } />
+              <Route path="/profile/:userId" element={
                 <ProtectedRoute>
                   <ProfilePage />
                 </ProtectedRoute>

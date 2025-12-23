@@ -8,14 +8,22 @@ export interface Message {
   receiver_id: string;
   content: string;
   read: boolean;
+  status?: 'sending' | 'sent' | 'delivered' | 'read';
+  reply_to_id?: string;
+  reply_to_content?: string;
+  reply_to_sender_name?: string;
+  deleted_for_sender?: boolean;
+  deleted_for_all?: boolean;
 }
 
 interface UseDirectMessagesReturn {
   messages: Message[];
   loading: boolean;
   error?: string;
-  sendMessage: (text: string) => Promise<void>;
+  sendMessage: (text: string, replyToId?: string) => Promise<void>;
   markAsRead: (messageIds: string[]) => Promise<void>;
+  markAsDelivered: () => Promise<void>;
+  deleteMessage: (messageId: string, deleteForAll: boolean) => Promise<void>;
 }
 
 /**
@@ -53,7 +61,21 @@ export function useDirectMessages(
 
         if (fetchError) throw fetchError;
 
-        setMessages(data || []);
+        // Filter out deleted messages and set default status
+        const processedMessages = (data || [])
+          .filter(msg => {
+            // Hide if deleted for everyone
+            if (msg.deleted_for_all) return true; // Show "deleted" placeholder
+            // Hide if deleted for sender and current user is sender
+            if (msg.deleted_for_sender && msg.sender_id === currentUserId) return false;
+            return true;
+          })
+          .map(msg => ({
+            ...msg,
+            status: msg.read ? 'read' : (msg.status || 'sent')
+          }));
+
+        setMessages(processedMessages);
       } catch (err: any) {
         console.error('Error fetching messages:', err);
         setError(err.message);
@@ -74,26 +96,36 @@ export function useDirectMessages(
       .on(
         'postgres_changes',
         {
-          event: 'INSERT',
+          event: '*', // Listen to all events (INSERT, UPDATE, DELETE)
           schema: 'public',
           table: 'messages',
         },
         (payload) => {
-          const newMessage = payload.new as Message;
-          // Filter for messages relevant to this conversation
-          if (
-            (newMessage.sender_id === currentUserId && newMessage.receiver_id === otherUserId) ||
-            (newMessage.sender_id === otherUserId && newMessage.receiver_id === currentUserId)
-          ) {
-            setMessages((prev) => {
-              // Prevent duplicates
-              if (prev.some((m) => m.id === newMessage.id)) return prev;
-              // Add and sort
-              const updated = [...prev, newMessage];
-              return updated.sort((a, b) => 
-                new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-              );
-            });
+          if (payload.eventType === 'INSERT') {
+            const newMessage = payload.new as Message;
+            // Filter for messages relevant to this conversation
+            if (
+              (newMessage.sender_id === currentUserId && newMessage.receiver_id === otherUserId) ||
+              (newMessage.sender_id === otherUserId && newMessage.receiver_id === currentUserId)
+            ) {
+              setMessages((prev) => {
+                // Prevent duplicates
+                if (prev.some((m) => m.id === newMessage.id)) return prev;
+                // Add and sort
+                const updated = [...prev, { ...newMessage, status: 'sent' as const }];
+                return updated.sort((a, b) => 
+                  new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+                );
+              });
+            }
+          } else if (payload.eventType === 'UPDATE') {
+            const updatedMessage = payload.new as Message;
+            setMessages((prev) => 
+              prev.map((m) => m.id === updatedMessage.id ? { ...m, ...updatedMessage } : m)
+            );
+          } else if (payload.eventType === 'DELETE') {
+            const deletedMessage = payload.old as Message;
+            setMessages((prev) => prev.filter((m) => m.id !== deletedMessage.id));
           }
         }
       )
@@ -106,12 +138,23 @@ export function useDirectMessages(
 
   // Send a new message with optimistic update
   const sendMessage = useCallback(
-    async (text: string) => {
+    async (text: string, replyToId?: string) => {
       if (!text.trim() || !currentUserId || !otherUserId) return;
 
-      // Generate a temporary ID (or real UUID if possible) for optimistic update
+      // Generate a temporary ID for optimistic update
       const optimisticId = crypto.randomUUID();
       const timestamp = new Date().toISOString();
+
+      // If replying, find the original message content
+      let replyToContent: string | undefined;
+      let replyToSenderName: string | undefined;
+      if (replyToId) {
+        const replyMsg = messages.find(m => m.id === replyToId);
+        if (replyMsg) {
+          replyToContent = replyMsg.content;
+          replyToSenderName = replyMsg.sender_id === currentUserId ? 'You' : undefined;
+        }
+      }
 
       const optimisticMessage: Message = {
         id: optimisticId,
@@ -120,6 +163,10 @@ export function useDirectMessages(
         receiver_id: otherUserId,
         content: text.trim(),
         read: false,
+        status: 'sending',
+        reply_to_id: replyToId,
+        reply_to_content: replyToContent,
+        reply_to_sender_name: replyToSenderName
       };
 
       // 1. Optimistic UI update
@@ -127,19 +174,24 @@ export function useDirectMessages(
 
       try {
         // 2. Send to Supabase
-        // We use the same ID to ensure the realtime event matches our optimistic message
         const { error: sendError } = await supabase.from('messages').insert({
           id: optimisticId,
           sender_id: currentUserId,
           receiver_id: otherUserId,
           content: text.trim(),
           read: false,
+          status: 'sent',
+          reply_to_id: replyToId
         });
 
         if (sendError) throw sendError;
 
+        // Update status to sent
+        setMessages((prev) => 
+          prev.map((m) => m.id === optimisticId ? { ...m, status: 'sent' } : m)
+        );
+
         // 3. Create Notification for the receiver
-        // We don't await this to avoid blocking the UI, but we log errors
         supabase
           .from('notifications')
           .insert({
@@ -162,8 +214,24 @@ export function useDirectMessages(
         throw err;
       }
     },
-    [currentUserId, otherUserId]
+    [currentUserId, otherUserId, messages]
   );
+
+  // Mark messages as delivered when conversation is opened
+  const markAsDelivered = useCallback(async () => {
+    if (!currentUserId || !otherUserId) return;
+
+    try {
+      await supabase
+        .from('messages')
+        .update({ status: 'delivered' })
+        .eq('sender_id', otherUserId)
+        .eq('receiver_id', currentUserId)
+        .eq('status', 'sent');
+    } catch (err: any) {
+      console.error('Error marking messages as delivered:', err);
+    }
+  }, [currentUserId, otherUserId]);
 
   // Mark messages as read
   const markAsRead = useCallback(
@@ -173,12 +241,50 @@ export function useDirectMessages(
       try {
         const { error: updateError } = await supabase
           .from('messages')
-          .update({ read: true })
+          .update({ read: true, status: 'read' })
           .in('id', messageIds);
 
         if (updateError) throw updateError;
+
+        // Update local state
+        setMessages((prev) => 
+          prev.map((m) => messageIds.includes(m.id) ? { ...m, read: true, status: 'read' } : m)
+        );
       } catch (err: any) {
         console.error('Error marking messages as read:', err);
+        setError(err.message);
+      }
+    },
+    []
+  );
+
+  // Delete a message
+  const deleteMessage = useCallback(
+    async (messageId: string, deleteForAll: boolean) => {
+      try {
+        if (deleteForAll) {
+          // Mark as deleted for everyone
+          await supabase
+            .from('messages')
+            .update({ deleted_for_all: true, content: '' })
+            .eq('id', messageId);
+          
+          // Update local state
+          setMessages((prev) => 
+            prev.map((m) => m.id === messageId ? { ...m, deleted_for_all: true } : m)
+          );
+        } else {
+          // Mark as deleted for sender only
+          await supabase
+            .from('messages')
+            .update({ deleted_for_sender: true })
+            .eq('id', messageId);
+          
+          // Remove from local state
+          setMessages((prev) => prev.filter((m) => m.id !== messageId));
+        }
+      } catch (err: any) {
+        console.error('Error deleting message:', err);
         setError(err.message);
       }
     },
@@ -191,5 +297,8 @@ export function useDirectMessages(
     error,
     sendMessage,
     markAsRead,
+    markAsDelivered,
+    deleteMessage
   };
 }
+

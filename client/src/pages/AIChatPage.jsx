@@ -167,7 +167,7 @@ const AIChatPage = () => {
 
 
   return (
-    <div className="flex flex-col h-[calc(100vh-64px)] bg-mint-50 dark:bg-charcoal-950">
+    <div className="flex flex-col h-[100dvh] md:h-[calc(100vh-64px)] bg-mint-50 dark:bg-charcoal-950">
       {/* Header */}
       <div className="p-4 bg-gradient-to-r from-violet-600 to-indigo-600 border-b border-violet-500 flex items-center gap-4">
         <button 
@@ -223,8 +223,8 @@ const AIChatPage = () => {
               and provide examples. Let's start learning!
             </p>
             
-            {/* Quick Start Prompts */}
-            <div className="mt-6 flex flex-wrap justify-center gap-2">
+            {/* Quick Start Prompts - Scrollable on mobile */}
+            <div className="mt-6 flex overflow-x-auto pb-2 px-4 -mx-4 sm:mx-0 sm:flex-wrap sm:justify-center gap-2 scrollbar-hide">
               {[
                 `What should I learn first in ${skillName}?`,
                 `Explain the basics of ${skillName}`,
@@ -314,8 +314,8 @@ const AIChatPage = () => {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input Area */}
-      <div className="p-4 bg-white dark:bg-charcoal-900 border-t border-mint-200 dark:border-charcoal-700">
+      {/* Input Area - Fixed at bottom for mobile */}
+      <div className="sticky bottom-0 p-3 sm:p-4 bg-white dark:bg-charcoal-900 border-t border-mint-200 dark:border-charcoal-700 pb-safe">
         <form onSubmit={handleSendMessage} className="flex items-center gap-2">
           <input
             type="text"
@@ -323,7 +323,7 @@ const AIChatPage = () => {
             onChange={(e) => setNewMessage(e.target.value)}
             placeholder={`Ask me about ${skillName}...`}
             disabled={isLoading}
-            className="flex-1 p-3 border border-violet-200 dark:border-charcoal-700 rounded-xl bg-mint-50 dark:bg-charcoal-800 text-charcoal-900 dark:text-mint-100 placeholder-charcoal-500 dark:placeholder-mint-400 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-violet-500 disabled:opacity-50"
+            className="flex-1 p-2.5 sm:p-3 border border-violet-200 dark:border-charcoal-700 rounded-xl bg-mint-50 dark:bg-charcoal-800 text-charcoal-900 dark:text-mint-100 placeholder-charcoal-500 dark:placeholder-mint-400 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-violet-500 disabled:opacity-50 text-base"
           />
           <button
             type="submit"

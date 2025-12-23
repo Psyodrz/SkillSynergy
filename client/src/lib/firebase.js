@@ -30,6 +30,12 @@ export const requestNotificationPermission = async (vapidKey) => {
   }
 
   try {
+    // Check if Notification API is available (not available in mobile/Capacitor apps)
+    if (typeof Notification === 'undefined') {
+      console.warn("Notification API not available in this environment.");
+      return null;
+    }
+    
     const permission = await Notification.requestPermission();
     if (permission === "granted") {
       const token = await getToken(messaging, { 

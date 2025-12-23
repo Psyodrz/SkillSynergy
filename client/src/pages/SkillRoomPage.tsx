@@ -11,6 +11,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { CpuChipIcon } from '@heroicons/react/24/solid';
 import { useAuth } from '../context/AuthContext';
+import { supabase } from '../lib/supabaseClient';
 import config from '../config';
 
 interface Message {
@@ -72,17 +73,47 @@ const SkillRoomPage: React.FC = () => {
     }
   }, [messages.length, scrollToBottom]);
 
-  // Fetch skill details
+  // Fetch skill details - directly from Supabase
   useEffect(() => {
     const fetchSkill = async () => {
       if (!skillId) return;
       
       try {
-        const response = await fetch(`${config.API_URL}/api/skill/${skillId}`);
-        const data = await response.json();
+        // Fetch skill directly from Supabase
+        const { data: skillData, error: skillError } = await supabase
+          .from('skills')
+          .select('*')
+          .eq('id', skillId)
+          .single();
         
-        if (data.success) {
-          setSkill(data.skill);
+        if (skillData && !skillError) {
+          // Get message count
+          const { count: msgCount } = await supabase
+            .from('skill_room_messages')
+            .select('*', { count: 'exact', head: true })
+            .eq('skill_id', skillId);
+          
+          // Get unique participants count
+          const { data: participants } = await supabase
+            .from('skill_room_messages')
+            .select('sender_id')
+            .eq('skill_id', skillId)
+            .not('sender_id', 'is', null);
+          
+          const uniqueParticipants = new Set(participants?.map(p => p.sender_id) || []);
+          
+          setSkill({
+            ...skillData,
+            message_count: msgCount || 0,
+            participant_count: uniqueParticipants.size
+          });
+        } else {
+          // Fallback to API
+          const response = await fetch(`${config.API_URL}/api/skill/${skillId}`);
+          const data = await response.json();
+          if (data.success) {
+            setSkill(data.skill);
+          }
         }
       } catch (err) {
         console.error('Error fetching skill:', err);
@@ -229,7 +260,7 @@ const SkillRoomPage: React.FC = () => {
             </h3>
             <p className="text-xs text-emerald-100 flex items-center gap-1 truncate">
               <UserGroupIcon className="w-3 h-3 flex-shrink-0" />
-              {skill?.participant_count || 0} • {skill?.message_count || 0} msgs
+              {new Set(messages.filter(m => m.sender_id && !m.is_ai).map(m => m.sender_id)).size || 0} • {messages.length} msgs
             </p>
           </div>
         </div>

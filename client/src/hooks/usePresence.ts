@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabaseClient';
 
 
@@ -12,6 +12,7 @@ export interface OnlineUser {
 interface UsePresenceReturn {
   onlineUsers: OnlineUser[];
   isOnline: (userId: string) => boolean;
+  getLastSeen: (userId: string) => Promise<string | null>;
 }
 
 /**
@@ -69,6 +70,8 @@ export function usePresence(
       })
       .on('presence', { event: 'leave' }, ({ key, leftPresences }) => {
         console.log('User left:', key, leftPresences);
+        // When a user leaves, update their last_seen in the database
+        // This is handled by the leaving user's cleanup
       })
       .subscribe(async (status) => {
         if (status === 'SUBSCRIBED') {
@@ -83,13 +86,38 @@ export function usePresence(
         }
       });
 
+    // Update last_seen before page unload
+    const updateLastSeen = async () => {
+      if (currentUserId) {
+        try {
+          await supabase
+            .from('profiles')
+            .update({ last_seen: new Date().toISOString() })
+            .eq('id', currentUserId);
+        } catch (err) {
+          console.error('Error updating last_seen:', err);
+        }
+      }
+    };
 
+    // Handle page visibility changes and unload
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        updateLastSeen();
+      }
+    };
+
+    window.addEventListener('beforeunload', updateLastSeen);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
 
     // Cleanup on unmount
     return () => {
       console.log('Unsubscribing from presence channel');
+      updateLastSeen();
       presenceChannel.untrack();
       presenceChannel.unsubscribe();
+      window.removeEventListener('beforeunload', updateLastSeen);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, [currentUserId, userProfile?.full_name, userProfile?.avatar_url]);
 
@@ -98,8 +126,27 @@ export function usePresence(
     return onlineUsers.some((user) => user.user_id === userId);
   };
 
+  // Get last seen time for a user
+  const getLastSeen = useCallback(async (userId: string): Promise<string | null> => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('last_seen')
+        .eq('id', userId)
+        .single();
+      
+      if (error) throw error;
+      return data?.last_seen || null;
+    } catch (err) {
+      console.error('Error fetching last_seen:', err);
+      return null;
+    }
+  }, []);
+
   return {
     onlineUsers,
     isOnline,
+    getLastSeen,
   };
 }
+

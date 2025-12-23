@@ -74,6 +74,7 @@ const Footer = () => {
               <li><Link to="/terms" className="text-gray-600 dark:text-gray-400 hover:text-emerald-500 dark:hover:text-emerald-400 text-sm transition-colors">Terms of Service</Link></li>
               <li><Link to="/refund" className="text-gray-600 dark:text-gray-400 hover:text-emerald-500 dark:hover:text-emerald-400 text-sm transition-colors">Refund Policy</Link></li>
               <li><Link to="/cookies" className="text-gray-600 dark:text-gray-400 hover:text-emerald-500 dark:hover:text-emerald-400 text-sm transition-colors">Cookie Policy</Link></li>
+              <li><Link to="/disclaimer" className="text-gray-600 dark:text-gray-400 hover:text-emerald-500 dark:hover:text-emerald-400 text-sm transition-colors">Disclaimer</Link></li>
             </ul>
           </div>
         </div>

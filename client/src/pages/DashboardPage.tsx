@@ -79,9 +79,41 @@ const DashboardPage = () => {
       }
     };
 
+    const fetchConnectionsCount = async () => {
+      if (!user) return;
+      try {
+        // First fetch all friend records
+        const { data: friendsData, error: friendsError } = await supabase
+          .from('friends')
+          .select('user1, user2')
+          .or(`user1.eq.${user.id},user2.eq.${user.id}`);
+        
+        if (friendsError) throw friendsError;
+        
+        if (friendsData && friendsData.length > 0) {
+          // Get friend IDs
+          const friendIds = friendsData.map(f => f.user1 === user.id ? f.user2 : f.user1).filter(id => id);
+          
+          // Count only friends who have valid profiles
+          const { count, error } = await supabase
+            .from('profiles')
+            .select('*', { count: 'exact', head: true })
+            .in('id', friendIds);
+          
+          if (error) throw error;
+          setStats(prev => ({ ...prev, connections: count || 0 }));
+        } else {
+          setStats(prev => ({ ...prev, connections: 0 }));
+        }
+      } catch (error) {
+        console.error('Error fetching connections count:', error);
+      }
+    };
+
     fetchSkills();
     fetchProjectsCount();
-  }, []);
+    fetchConnectionsCount();
+  }, [user]);
 
   // Fetch real users from database
   useEffect(() => {
@@ -180,7 +212,8 @@ const DashboardPage = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: 0.1 }}
-            className="bg-mint-100 dark:bg-charcoal-900/80 rounded-xl shadow-premium border border-mint-200 dark:border-charcoal-700 p-4"
+            onClick={() => navigate('/discover')}
+            className="bg-mint-100 dark:bg-charcoal-900/80 rounded-xl shadow-premium border border-mint-200 dark:border-charcoal-700 p-4 cursor-pointer hover:scale-105 hover:shadow-lg transition-all duration-200"
           >
             <div className="text-2xl sm:text-3xl font-bold text-emerald-500 dark:text-emerald-400 mb-1">
               {stats.skills}
@@ -192,7 +225,8 @@ const DashboardPage = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: 0.2 }}
-            className="bg-mint-100 dark:bg-charcoal-900/80 rounded-xl shadow-premium border border-mint-200 dark:border-charcoal-700 p-4"
+            onClick={() => navigate('/instructors')}
+            className="bg-mint-100 dark:bg-charcoal-900/80 rounded-xl shadow-premium border border-mint-200 dark:border-charcoal-700 p-4 cursor-pointer hover:scale-105 hover:shadow-lg transition-all duration-200"
           >
             <div className="text-2xl sm:text-3xl font-bold text-teal-500 dark:text-teal-400 mb-1">
               {stats.professionals}
@@ -206,7 +240,8 @@ const DashboardPage = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: 0.3 }}
-            className="bg-mint-100 dark:bg-charcoal-900/80 rounded-xl shadow-premium border border-mint-200 dark:border-charcoal-700 p-4"
+            onClick={() => navigate('/app/discover-projects')}
+            className="bg-mint-100 dark:bg-charcoal-900/80 rounded-xl shadow-premium border border-mint-200 dark:border-charcoal-700 p-4 cursor-pointer hover:scale-105 hover:shadow-lg transition-all duration-200"
           >
             <div className="text-2xl sm:text-3xl font-bold text-emerald-400 dark:text-emerald-300 mb-1">
               {stats.projects}
@@ -218,7 +253,8 @@ const DashboardPage = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: 0.4 }}
-            className="bg-mint-100 dark:bg-charcoal-900/80 rounded-xl shadow-premium border border-mint-200 dark:border-charcoal-700 p-4"
+            onClick={() => navigate('/messages')}
+            className="bg-mint-100 dark:bg-charcoal-900/80 rounded-xl shadow-premium border border-mint-200 dark:border-charcoal-700 p-4 cursor-pointer hover:scale-105 hover:shadow-lg transition-all duration-200"
           >
             <div className="text-2xl sm:text-3xl font-bold text-emerald-500 dark:text-emerald-400 mb-1">
               {stats.connections}

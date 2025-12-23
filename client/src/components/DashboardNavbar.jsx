@@ -159,7 +159,9 @@ const Navbar = ({ onSearch = null, className = '', onToggleSidebar }) => {
     }
   };
 
-  const [permissionState, setPermissionState] = useState(Notification.permission);
+  const [permissionState, setPermissionState] = useState(
+    typeof Notification !== 'undefined' ? Notification.permission : 'denied'
+  );
 
   const getNotificationIcon = (type) => {
     switch (type) {

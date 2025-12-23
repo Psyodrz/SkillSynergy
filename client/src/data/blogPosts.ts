@@ -17,11 +17,11 @@ export const blogPosts: BlogPost[] = [
     slug: 'future-of-collaboration-2025',
     title: 'The Future of Collaboration: Why Skills Matter More Than Degrees in 2025',
     excerpt: 'As we move further into the digital age, the traditional resume is dying. Here is why skill-based collaboration is the new currency of the professional world.',
-    author: 'Aditya',
+    author: 'Aditya Srivastava',
     date: 'Nov 24, 2025',
     category: 'Trends',
     readTime: '8 min read',
-    image: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=800&q=80',
+    image: 'https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&w=800&q=80',
     content: `
       <p>The landscape of work is undergoing a seismic shift. For decades, the university degree was the golden ticket—a proxy for competence, intelligence, and employability. But as we approach the end of 2025, that ticket is losing its luster. In its place, a new currency is emerging: <strong>demonstrable skills and collaborative history.</strong></p>
 
@@ -50,11 +50,11 @@ export const blogPosts: BlogPost[] = [
     slug: 'how-to-find-perfect-mentor',
     title: 'How to Find the Perfect Mentor (And How to Be One)',
     excerpt: 'Mentorship is a two-way street. Learn the secrets to finding a guide who can accelerate your career, and why teaching others is the best way to learn.',
-    author: 'Sarah Jenkins',
+    author: 'Bhavya Srivastava',
     date: 'Nov 22, 2025',
     category: 'Growth',
     readTime: '6 min read',
-    image: 'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=800&q=80',
+    image: 'https://images.unsplash.com/photo-1531482615713-2afd69097998?auto=format&fit=crop&w=800&q=80',
     content: `
       <p>Finding a mentor is often cited as the number one accelerator for career growth. Yet, most people go about it the wrong way. They send cold emails asking, "Will you be my mentor?" without offering anything in return or showing any genuine engagement.</p>
       <h2>The "Ask" is Broken</h2>
@@ -68,17 +68,46 @@ export const blogPosts: BlogPost[] = [
     slug: 'remote-work-collaboration-tools',
     title: 'Top 10 Tools for Remote Collaboration in 2025',
     excerpt: 'From holographic meetings to AI project managers, here are the tools you need to stay ahead in the remote work revolution.',
-    author: 'David Chen',
+    author: 'Aditya Srivastava',
     date: 'Nov 20, 2025',
     category: 'Productivity',
     readTime: '5 min read',
-    image: 'https://images.unsplash.com/photo-1593642632823-8f78536788c6?auto=format&fit=crop&w=800&q=80',
+    image: 'https://images.unsplash.com/photo-1600880292203-757bb62b4baf?auto=format&fit=crop&w=800&q=80',
     content: `
-      <p>Remote work is no longer a perk; it's the default. But working from home doesn't mean working alone. The tool stack for 2025 has evolved beyond Zoom and Slack.</p>
+      <p>Remote work is no longer a perk; it's the default. But working from home doesn't mean working alone. The tool stack for 2025 has evolved beyond Zoom and Slack. Here are the top 10 tools that are reshaping how distributed teams collaborate.</p>
+
       <h2>1. SkillSynergy Workspaces</h2>
-      <p>We might be biased, but our integrated workspace combines chat, video, and task management in one seamless interface, specifically designed for cross-functional teams.</p>
+      <p>We might be biased, but our integrated workspace combines chat, video, and task management in one seamless interface, specifically designed for cross-functional teams. The skill-based matching helps you find the right collaborators instantly.</p>
+
       <h2>2. AI Note-Takers</h2>
-      <p>Tools that automatically transcribe and summarize meetings are now standard. They allow you to focus on the conversation, not the minutes.</p>
+      <p>Tools like Otter.ai, Fireflies, and Grain automatically transcribe and summarize meetings. They allow you to focus on the conversation, not the minutes. Most now include action item extraction and CRM integration.</p>
+
+      <h2>3. Virtual Whiteboarding (Miro & FigJam)</h2>
+      <p>Brainstorming remotely requires the right canvas. Miro and FigJam have become the digital equivalent of the conference room whiteboard, now with AI-powered templates and real-time collaboration features.</p>
+
+      <h2>4. Asynchronous Video (Loom & Tella)</h2>
+      <p>Sometimes a quick video explains more than a 10-paragraph email. Async video tools let you record your screen and face, share in seconds, and track who watched. Perfect for walkthroughs, feedback, and status updates.</p>
+
+      <h2>5. AI-Powered Project Management (Linear, Height)</h2>
+      <p>Traditional project management tools are getting AI upgrades. These new platforms auto-prioritize tasks, predict bottlenecks, and even draft project updates. They reduce the admin overhead of managing work.</p>
+
+      <h2>6. Documentation & Knowledge Bases (Notion AI, Coda)</h2>
+      <p>Your company wiki needs to be smart. Modern documentation tools now include AI that can answer questions about your internal docs, generate content, and keep information up-to-date automatically.</p>
+
+      <h2>7. Code Collaboration (GitHub Copilot, Cursor)</h2>
+      <p>Pair programming has gone AI. Developers are now coding with AI assistants that understand context, suggest implementations, and explain complex codebases. It's like having a senior developer available 24/7.</p>
+
+      <h2>8. Design Collaboration (Figma + AI Plugins)</h2>
+      <p>Design tools now feature AI that can generate layouts, remove backgrounds, and even create entire design systems from a brief. Real-time collaboration means designers and developers work in perfect sync.</p>
+
+      <h2>9. Immersive Meeting Spaces (Gather, Teamflow)</h2>
+      <p>Video calls are tiring. Spatial audio and virtual office platforms create more natural interactions. Walk up to a colleague's virtual desk, have side conversations, and recreate the serendipity of office life.</p>
+
+      <h2>10. Focus & Deep Work Tools (Centered, Flow)</h2>
+      <p>Remote work brings distractions. New tools help you block notifications, track focus time, and create rituals for deep work. They're the digital equivalent of closing your office door.</p>
+
+      <h2>The Bottom Line</h2>
+      <p>The best remote teams don't just adopt tools—they build systems. The right combination of synchronous and asynchronous tools, paired with clear communication norms, can make a remote team more productive than any traditional office. Start with your biggest pain point and iterate from there.</p>
     `
   },
   {
@@ -86,11 +115,11 @@ export const blogPosts: BlogPost[] = [
     slug: 'networking-for-introverts',
     title: 'Networking for Introverts: A Guide to Meaningful Connections',
     excerpt: 'You don’t need to be the loudest person in the room to build a powerful network. Here is how to leverage your listening skills.',
-    author: 'Elena Rodriguez',
+    author: 'Bhavya Srivastava',
     date: 'Nov 18, 2025',
     category: 'Networking',
     readTime: '7 min read',
-    image: 'https://images.unsplash.com/photo-1515169067750-d51a73b55163?auto=format&fit=crop&w=800&q=80',
+    image: 'https://images.unsplash.com/photo-1573164713988-8665fc963095?auto=format&fit=crop&w=800&q=80',
     content: `
       <p>Networking often conjures images of crowded conference halls and awkward small talk. For introverts, this is a nightmare. But true networking isn't about collecting business cards; it's about building deep, meaningful relationships.</p>
       <p>Digital platforms like SkillSynergy are a haven for introverts. They allow you to connect asynchronously, think before you type, and bond over shared passions rather than forced social niceties.</p>
@@ -101,11 +130,11 @@ export const blogPosts: BlogPost[] = [
     slug: 'building-portfolio-that-hires-you',
     title: 'Building a Portfolio That Gets You Hired',
     excerpt: 'Employers spend less than 3 minutes looking at a portfolio. Make those seconds count with these proven strategies.',
-    author: 'Marcus Johnson',
+    author: 'Aditya Srivastava',
     date: 'Nov 15, 2025',
     category: 'Career',
     readTime: '6 min read',
-    image: 'https://images.unsplash.com/photo-1507238691126-f66f7136cd5e?auto=format&fit=crop&w=800&q=80',
+    image: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=800&q=80',
     content: `
       <p>Your portfolio is your most important asset. But simply dumping screenshots of your work isn't enough. You need to tell a story.</p>
       <h2>Context is King</h2>
@@ -117,7 +146,7 @@ export const blogPosts: BlogPost[] = [
     slug: 'psychology-of-team-dynamics',
     title: 'The Psychology of High-Performing Teams',
     excerpt: 'What makes some teams click while others clash? We dive into the science of psychological safety and shared purpose.',
-    author: 'Dr. Emily Carter',
+    author: 'Bhavya Srivastava',
     date: 'Nov 12, 2025',
     category: 'Leadership',
     readTime: '9 min read',
@@ -132,11 +161,11 @@ export const blogPosts: BlogPost[] = [
     slug: 'mastering-async-communication',
     title: 'Mastering Asynchronous Communication',
     excerpt: 'Stop the meeting madness. Learn how to communicate effectively without requiring everyone to be online at the same time.',
-    author: 'Aditya',
+    author: 'Aditya Srivastava',
     date: 'Nov 10, 2025',
     category: 'Productivity',
     readTime: '5 min read',
-    image: 'https://images.unsplash.com/photo-1556761175-5973dc0f32e7?auto=format&fit=crop&w=800&q=80',
+    image: 'https://images.unsplash.com/photo-1553877522-43269d4ea984?auto=format&fit=crop&w=800&q=80',
     content: `
       <p>The biggest productivity killer in the modern workplace is the "quick sync." Asynchronous communication—writing things down so they can be read later—is the superpower of distributed teams.</p>
       <p>It requires clarity, conciseness, and empathy. When you write a message on SkillSynergy, assume the recipient is sleeping or in deep work. Give them all the context they need to reply without a follow-up question.</p>
@@ -147,7 +176,7 @@ export const blogPosts: BlogPost[] = [
     slug: 'rise-of-solopreneur',
     title: 'The Rise of the Solopreneur Team',
     excerpt: 'You can be a company of one, but you can’t do it alone. How solopreneurs are forming fluid "flash teams" to tackle big projects.',
-    author: 'Sarah Jenkins',
+    author: 'Bhavya Srivastava',
     date: 'Nov 08, 2025',
     category: 'Trends',
     readTime: '6 min read',
@@ -162,11 +191,11 @@ export const blogPosts: BlogPost[] = [
     slug: 'imposter-syndrome-in-tech',
     title: 'Overcoming Imposter Syndrome in Tech',
     excerpt: 'Feeling like a fraud? You are not alone. Practical tips for building confidence and owning your achievements.',
-    author: 'David Chen',
+    author: 'Aditya Srivastava',
     date: 'Nov 05, 2025',
     category: 'Wellness',
     readTime: '7 min read',
-    image: 'https://images.unsplash.com/photo-1499750310159-5b9887039e54?auto=format&fit=crop&w=800&q=80',
+    image: 'https://images.unsplash.com/photo-1544027993-37dbfe43562a?auto=format&fit=crop&w=800&q=80',
     content: `
       <p>Imposter syndrome affects 70% of people at some point in their lives. In the fast-moving world of tech, it's even more prevalent. The feeling that you don't belong, or that you'll be "found out," can be paralyzing.</p>
       <p>The cure is community. Talking to peers, sharing your struggles, and realizing that everyone—even the experts—is just figuring it out as they go.</p>
@@ -177,11 +206,11 @@ export const blogPosts: BlogPost[] = [
     slug: 'web3-and-future-of-work',
     title: 'Web3 and the Future of Work',
     excerpt: 'Decentralized Autonomous Organizations (DAOs) and smart contracts: Hype or the future of employment?',
-    author: 'Aditya',
+    author: 'Bhavya Srivastava',
     date: 'Nov 01, 2025',
     category: 'Technology',
     readTime: '8 min read',
-    image: 'https://images.unsplash.com/photo-1639762681485-074b7f938ba0?auto=format&fit=crop&w=800&q=80',
+    image: 'https://images.unsplash.com/photo-1639322537228-f710d846310a?auto=format&fit=crop&w=800&q=80',
     content: `
       <p>Web3 promises a world where workers own the platforms they contribute to. While the technology is still maturing, the philosophy is already here.</p>
       <p>Ownership, transparency, and community governance are becoming expectations for the next generation of talent.</p>

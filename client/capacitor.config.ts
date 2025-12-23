@@ -7,7 +7,7 @@ const config: CapacitorConfig = {
   plugins: {
     CapacitorUpdater: {
       autoUpdate: true,
-      url: 'https://payment-backend-kiqznlxdt-psyodrzs-projects.vercel.app/api/app-update',
+      url: 'https://payment-backend-jrlfxrc1t-psyodrzs-projects.vercel.app/api/app-update',
     }
   }
 };
