@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../../context/AuthContext';
 import type { DbSkill, UserSkill } from '../../types';
-import { PlusIcon, TrashIcon, PencilIcon, XMarkIcon, CheckIcon, SparklesIcon, AcademicCapIcon } from '@heroicons/react/24/outline';
+import { PlusIcon, SparklesIcon, AcademicCapIcon } from '@heroicons/react/24/outline';
 import SkillPickerModal from '../SkillPickerModal';
 import SkillChip from '../SkillChip';
 import type { SkillPreset } from '../../data/skillPresets';
@@ -13,8 +13,8 @@ interface SelectedSkill extends SkillPreset {
 
 const MySkillsSection = () => {
   const { user } = useAuth();
-  const [userSkills, setUserSkills] = useState<UserSkill[]>([]);
-  const [allSkills, setAllSkills] = useState<DbSkill[]>([]);
+  const [_userSkills, setUserSkills] = useState<UserSkill[]>([]);
+  const [_allSkills, setAllSkills] = useState<DbSkill[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   
@@ -25,11 +25,6 @@ const MySkillsSection = () => {
   // Selected skills for each mode
   const [teachingSkills, setTeachingSkills] = useState<SelectedSkill[]>([]);
   const [learningSkills, setLearningSkills] = useState<SelectedSkill[]>([]);
-
-  // Edit State
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [editLevel, setEditLevel] = useState('');
-  const [editNotes, setEditNotes] = useState('');
 
   useEffect(() => {
     if (user) {

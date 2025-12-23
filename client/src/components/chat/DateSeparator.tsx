@@ -53,7 +53,7 @@ export const groupMessagesByDate = <T extends { created_at: string }>(
     groups.get(dateKey)!.push(msg);
   });
 
-  return Array.from(groups.entries()).map(([date, msgs]) => ({
+  return Array.from(groups.entries()).map(([_date, msgs]) => ({
     date: msgs[0].created_at, // Use first message's date for the separator
     messages: msgs
   }));
