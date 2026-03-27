@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import { useFriends, type FriendStatus } from '../hooks/useFriends';
 import { useNavigate } from 'react-router-dom';
-import { ChatBubbleLeftIcon, UserPlusIcon, ClockIcon, CheckIcon } from '@heroicons/react/24/outline';
+import { ChatBubbleLeftIcon, UserPlusIcon, ClockIcon, CheckIcon, CheckBadgeIcon } from '@heroicons/react/24/outline';
 
 interface UserCardProps {
   user: {
@@ -16,6 +16,7 @@ interface UserCardProps {
     bio?: string | null;
     connections?: number;
     projects?: number;
+    subscription_plan?: string;
   };
   onConnect?: (user: any) => void;
   className?: string;
@@ -100,8 +101,11 @@ const UserCard: React.FC<UserCardProps> = ({ user, onConnect, className = '' }) 
           </div>
         )}
         <div className="flex-1 min-w-0">
-          <h3 className="text-lg font-semibold text-navy-900 dark:text-white truncate">
+          <h3 className="text-lg font-semibold text-navy-900 dark:text-white truncate flex items-center gap-1">
             {user.name}
+            {(user.subscription_plan === 'pro' || user.subscription_plan === 'elite') && (
+              <CheckBadgeIcon className="w-5 h-5 text-emerald-500 flex-shrink-0" title="Verified Member" />
+            )}
           </h3>
           <p className="text-sm text-navy-500 dark:text-warm-400 truncate">
             {user.role}

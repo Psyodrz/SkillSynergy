@@ -12,11 +12,15 @@ import type { AITeacher } from '../components/AITeacherCard';
 import Modal from '../components/Modal';
 import Button from '../components/Button';
 import { useAuth } from '../context/AuthContext';
+import { useSubscription } from '../hooks/useSubscription';
 import { getAllProfiles } from '../api/profileApi';
 import config from '../config';
+import { Link } from 'react-router-dom';
+import { SparklesIcon } from '@heroicons/react/24/solid';
 
 const InstructorsPage = () => {
   const { user: currentUser } = useAuth();
+  const { isPro, isElite } = useSubscription();
   const location = useLocation();
   const [users, setUsers] = useState<any[]>([]);
   const [aiTeachers, setAiTeachers] = useState<AITeacher[]>([]);
@@ -81,6 +85,7 @@ const InstructorsPage = () => {
             skills: u.skills ? u.skills.map((s: any) => s.name) : [],
             avatar: u.avatar_url,
             bio: u.bio,
+            subscription_plan: u.subscription_plan || 'free',
             tagline: 'Passionate Educator' // Placeholder since tagline is not in DB
           }));
 
@@ -119,6 +124,9 @@ const InstructorsPage = () => {
     setSelectedUser(user);
     setIsUserModalOpen(true);
   };
+
+  const displayedAiTeachers = isPro || isElite ? aiTeachers : aiTeachers.slice(0, 1);
+  const hiddenAiTeachersCount = aiTeachers.length - displayedAiTeachers.length;
 
   return (
     <div className="space-y-6">
@@ -176,23 +184,46 @@ const InstructorsPage = () => {
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {/* Show all AI Teachers first */}
-            {aiTeachers.map((teacher, index) => (
-              <AITeacherCard key={`ai-${teacher.id}`} teacher={teacher} index={index} />
-            ))}
-            
-            {/* Then show Human Teachers */}
-            {teachers.map((user, index) => (
-              <motion.div
-                key={`user-${user.id}`}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, delay: (aiTeachers.length + index) * 0.05 }}
-              >
-                <UserCard user={user} onConnect={handleUserConnect} />
-              </motion.div>
-            ))}
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {/* Show allowed AI Teachers first */}
+              {displayedAiTeachers.map((teacher, index) => (
+                <AITeacherCard key={`ai-${teacher.id}`} teacher={teacher} index={index} />
+              ))}
+              
+              {/* Show upgrade prompt if AI teachers are hidden */}
+              {hiddenAiTeachersCount > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl p-6 text-white shadow-lg flex flex-col justify-center items-center text-center h-full min-h-[300px]"
+                >
+                  <SparklesIcon className="h-12 w-12 text-emerald-200 mb-4" />
+                  <h3 className="text-xl font-bold mb-2">Unlock AI Smart Match</h3>
+                  <p className="text-emerald-50 mb-6 font-medium">
+                    {hiddenAiTeachersCount} more personalized AI expert matches available for Pro & Elite members.
+                  </p>
+                  <Link
+                    to="/settings/billing"
+                    className="bg-white text-emerald-600 px-6 py-2.5 rounded-xl font-bold hover:bg-emerald-50 transition-colors shadow-md w-full max-w-[200px]"
+                  >
+                    Upgrade Now
+                  </Link>
+                </motion.div>
+              )}
+              
+              {/* Then show Human Teachers */}
+              {teachers.map((user, index) => (
+                <motion.div
+                  key={`user-${user.id}`}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, delay: (displayedAiTeachers.length + index) * 0.05 }}
+                >
+                  <UserCard user={user} onConnect={handleUserConnect} />
+                </motion.div>
+              ))}
+            </div>
           </div>
         )}
       </motion.div>

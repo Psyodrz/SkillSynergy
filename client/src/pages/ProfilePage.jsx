@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { InlineLoader } from '../components/BrandLoader';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   UserCircleIcon, 
@@ -12,8 +12,12 @@ import {
   CheckIcon,
   AcademicCapIcon,
   SparklesIcon,
-  ChatBubbleLeftIcon,
-  ArrowLeftIcon
+  ArrowLeftIcon,
+  CheckBadgeIcon,
+  CalendarDaysIcon,
+  StarIcon,
+  ShieldCheckIcon,
+  EnvelopeIcon
 } from '@heroicons/react/24/outline';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabaseClient';
@@ -695,15 +699,33 @@ const ProfilePage = () => {
               </div>
             ) : (
               <div className="space-y-2">
-                <h1 className="text-2xl font-bold text-charcoal-900 dark:text-white">
+                {/* Membership Badge next to name */}
+                <h1 className="text-2xl font-bold text-charcoal-900 dark:text-white flex items-center gap-2">
                   {formData.full_name || 'Your Name'}
+                  {(activeProfile?.subscription_plan === 'pro' || activeProfile?.subscription_plan === 'elite') && (
+                    <motion.div
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      className="bg-emerald-500/10 p-1 rounded-full border border-emerald-500/20"
+                    >
+                      <CheckBadgeIcon className="w-6 h-6 text-emerald-500" title="Verified Member" />
+                    </motion.div>
+                  )}
                 </h1>
                 <p className="text-lg text-charcoal-700 dark:text-mint-200">
                   {formData.role || 'Add your role'}
                 </p>
-                <div className="flex items-center gap-2 text-charcoal-500 dark:text-mint-300">
-                  <MapPinIcon className="w-5 h-5" />
-                  <span>{formData.location || 'Add location'}</span>
+                <div className="flex flex-wrap items-center gap-4 text-charcoal-500 dark:text-mint-300">
+                  <div className="flex items-center gap-2">
+                    <MapPinIcon className="w-5 h-5" />
+                    <span>{formData.location || 'Add location'}</span>
+                  </div>
+                  {activeProfile?.settings?.privacy?.showEmail && activeProfile?.email && (
+                    <div className="flex items-center gap-2">
+                      <EnvelopeIcon className="w-5 h-5" />
+                      <span>{activeProfile.email}</span>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
@@ -965,6 +987,86 @@ const ProfilePage = () => {
                   Or browse from 150+ skills →
                 </button>
               )}
+            </motion.div>
+
+            {/* Membership Section */}
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.35 }}
+              className="bg-white dark:bg-charcoal-800 rounded-2xl shadow-premium border border-mint-200 dark:border-charcoal-700 overflow-hidden"
+            >
+              <div className="p-6 border-b border-mint-100 dark:border-charcoal-700 bg-emerald-50/50 dark:bg-emerald-900/10">
+                <h2 className="text-xl font-bold text-charcoal-900 dark:text-white flex items-center gap-2">
+                  <StarIcon className="w-6 h-6 text-emerald-500" />
+                  Membership
+                </h2>
+              </div>
+              
+              <div className="p-6 space-y-6">
+                <div>
+                  <p className="text-xs font-medium text-charcoal-500 dark:text-mint-300 uppercase tracking-widest mb-2">Current Plan</p>
+                  <div className="flex items-center justify-between">
+                    <span className="text-lg font-bold text-charcoal-900 dark:text-white uppercase">
+                      {activeProfile?.subscription_plan || 'Free'}
+                    </span>
+                    <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${
+                      activeProfile?.subscription_status === 'active' 
+                        ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' 
+                        : 'bg-charcoal-100 text-charcoal-600 dark:bg-charcoal-700 dark:text-mint-300'
+                    }`}>
+                      {activeProfile?.subscription_status?.toUpperCase() || 'INACTIVE'}
+                    </span>
+                  </div>
+                </div>
+
+                {activeProfile?.subscription_plan !== 'free' && (
+                  <div className={`flex items-start gap-3 p-3 rounded-xl ${
+                    activeProfile?.subscription_status === 'canceling' 
+                      ? 'bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800' 
+                      : 'bg-mint-50 dark:bg-charcoal-700/50'
+                  }`}>
+                    {activeProfile?.subscription_status === 'canceling' ? (
+                      <InformationCircleIcon className="w-5 h-5 text-amber-500 mt-0.5" />
+                    ) : (
+                      <CalendarDaysIcon className="w-5 h-5 text-emerald-500 mt-0.5" />
+                    )}
+                    <div>
+                      <p className="text-xs font-medium text-charcoal-500 dark:text-mint-300">
+                        {activeProfile?.subscription_status === 'canceling' ? 'Access until' : 'Valid Until'}
+                      </p>
+                      <p className={`text-sm font-semibold ${
+                        activeProfile?.subscription_status === 'canceling' ? 'text-amber-700 dark:text-amber-400' : 'text-charcoal-900 dark:text-white'
+                      }`}>
+                        {activeProfile?.subscription_expires_at ? (
+                          new Date(activeProfile.subscription_expires_at).toLocaleDateString('en-IN', {
+                            day: 'numeric',
+                            month: 'long',
+                            year: 'numeric'
+                          })
+                        ) : (
+                          'Synchronizing...'
+                        )}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {!isOwnProfile && activeProfile?.subscription_plan === 'free' && (
+                  <p className="text-sm text-charcoal-600 dark:text-mint-300 italic">
+                    This user is on the free plan.
+                  </p>
+                )}
+
+                {isOwnProfile && (
+                  <Link 
+                    to={activeProfile?.subscription_plan === 'free' ? '/pricing' : '/settings/billing'} 
+                    className="block w-full text-center px-4 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl font-semibold shadow-emerald-glow hover:from-emerald-600 hover:to-teal-600 transition-all transform hover:scale-[1.02] active:scale-[0.98]"
+                  >
+                    {activeProfile?.subscription_plan === 'free' ? 'Upgrade to Pro' : 'Manage Subscription'}
+                  </Link>
+                )}
+              </div>
             </motion.div>
 
             {/* Stats Card */}

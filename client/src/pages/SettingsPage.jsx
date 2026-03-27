@@ -19,6 +19,8 @@ import {
 } from '@heroicons/react/24/outline';
 import Button from '../components/Button';
 import Modal from '../components/Modal';
+import PricingCard from '../components/PricingCard';
+import { subscriptionPlans } from '../data/plans';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabaseClient';
@@ -160,6 +162,55 @@ const SettingsPage = () => {
     }
   };
 
+  // Handle Subscription Changes
+  const handleCancelSubscription = async () => {
+    if (!profile) return;
+    if (window.confirm('Are you sure you want to cancel your Pro membership? You will keep your Pro features until the end of your current period.')) {
+      setSavingSettings(true);
+      try {
+        const { error } = await supabase
+          .from('profiles')
+          .update({
+            subscription_status: 'canceling'
+          })
+          .eq('id', user.id);
+
+        if (!error) {
+          setSaveSuccess(true);
+          refreshSession();
+          setTimeout(() => setSaveSuccess(false), 2000);
+        }
+      } catch (err) {
+        console.error('Error canceling subscription:', err);
+      } finally {
+        setSavingSettings(false);
+      }
+    }
+  };
+
+  const handleResubscribe = async () => {
+    if (!profile) return;
+    setSavingSettings(true);
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          subscription_status: 'active'
+        })
+        .eq('id', user.id);
+
+      if (!error) {
+        setSaveSuccess(true);
+        refreshSession();
+        setTimeout(() => setSaveSuccess(false), 2000);
+      }
+    } catch (err) {
+      console.error('Error resubscribing:', err);
+    } finally {
+      setSavingSettings(false);
+    }
+  };
+
   // Handle password change
   const handlePasswordChange = async () => {
     setPasswordError('');
@@ -212,6 +263,7 @@ const SettingsPage = () => {
 
   const tabs = [
     { id: 'profile', label: 'Profile', icon: UserCircleIcon },
+    { id: 'billing', label: 'Billing', icon: CreditCardIcon },
     { id: 'notifications', label: 'Notifications', icon: BellIcon },
     { id: 'help', label: 'Help', icon: QuestionMarkCircleIcon },
   ];
@@ -571,70 +623,116 @@ const SettingsPage = () => {
     </motion.div>
   );
 
-  const renderBillingSettings = () => (
-    <div className="space-y-6">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="bg-white dark:bg-charcoal-800 rounded-xl shadow-premium border border-mint-200 dark:border-charcoal-700 p-6"
-      >
-        <div className="flex items-center space-x-3 mb-6">
-          <CreditCardIcon className="h-6 w-6 text-emerald-600" />
-          <h2 className="text-xl font-semibold text-charcoal-900 dark:text-white">
-            Subscription & Billing
-          </h2>
-        </div>
+  const renderBillingSettings = () => {
+    const isPro = profile?.subscription_plan === 'pro' || profile?.subscription_plan === 'elite';
+    const isCanceling = profile?.subscription_status === 'canceling';
+    const isActive = profile?.subscription_status === 'active';
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {/* Current Plan Info */}
-          <div>
-            <h3 className="text-lg font-medium text-charcoal-900 dark:text-white mb-2">
-              Your Plan
-            </h3>
-            <p className="text-charcoal-600 dark:text-mint-200 mb-4">
-              You are currently on the <span className="font-bold text-emerald-600 dark:text-emerald-400 capitalize">{profile?.subscription_plan || 'Free'}</span> plan.
-            </p>
-            {profile?.subscription_status === 'active' && (
-               <div className="inline-flex items-center px-3 py-1 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 text-sm font-medium">
-                 Active
-               </div>
-            )}
+    return (
+      <div className="space-y-6">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-white dark:bg-charcoal-800 rounded-xl shadow-premium border border-mint-200 dark:border-charcoal-700 overflow-hidden"
+        >
+          <div className="p-6 border-b border-mint-100 dark:border-charcoal-700 bg-emerald-50/50 dark:bg-emerald-900/10 flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <CreditCardIcon className="h-6 w-6 text-emerald-600" />
+              <h2 className="text-xl font-semibold text-charcoal-900 dark:text-white">
+                Subscription Management
+              </h2>
+            </div>
           </div>
 
-          {/* Pricing Cards */}
-          <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
-            {/* Free Plan (Visual only) */}
-            <div className="p-8 rounded-2xl border border-mint-200 dark:border-charcoal-700 bg-white dark:bg-charcoal-800 shadow-sm flex flex-col opacity-70">
-              <h3 className="text-xl font-bold text-charcoal-900 dark:text-white mb-2">Free Plan</h3>
-              <div className="flex items-baseline mb-6">
-                <span className="text-4xl font-extrabold text-charcoal-900 dark:text-white">₹0</span>
-                <span className="text-charcoal-500 dark:text-mint-300 ml-2">/month</span>
+          <div className="p-6">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 p-6 bg-mint-50/50 dark:bg-charcoal-700/30 rounded-2xl border border-mint-200 dark:border-charcoal-600">
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-charcoal-500 dark:text-mint-300 uppercase tracking-wider">Current Plan</p>
+                <div className="flex items-center gap-3">
+                  <h3 className="text-2xl font-bold text-charcoal-900 dark:text-white uppercase">
+                    {profile?.subscription_plan || 'Free'}
+                  </h3>
+                  <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${
+                    isActive ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : 
+                    isCanceling ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' :
+                    'bg-charcoal-100 text-charcoal-600 dark:bg-charcoal-700 dark:text-mint-300'
+                  }`}>
+                    {profile?.subscription_status?.toUpperCase() || 'INACTIVE'}
+                  </span>
+                </div>
               </div>
-              <ul className="space-y-4 mb-8 flex-1">
-                <li className="flex items-start">
-                  <CheckIcon className="mr-3 w-5 h-5 text-emerald-500 flex-shrink-0" />
-                  <span className="text-charcoal-700 dark:text-mint-100 text-sm">Basic Project Creation</span>
-                </li>
-                <li className="flex items-start">
-                  <CheckIcon className="mr-3 w-5 h-5 text-emerald-500 flex-shrink-0" />
-                  <span className="text-charcoal-700 dark:text-mint-100 text-sm">Limited AI Matches</span>
-                </li>
-              </ul>
-              <Button variant="outline" disabled>Current Plan</Button>
+
+              {isPro && (
+                <div className="flex items-center gap-4">
+                  <div className="text-right hidden md:block">
+                    <p className="text-sm font-medium text-charcoal-500 dark:text-mint-300">
+                      {isCanceling ? 'Access until' : 'Next Billing'}
+                    </p>
+                    <p className="text-lg font-bold text-charcoal-900 dark:text-white">
+                      {profile?.subscription_expires_at ? (
+                        new Date(profile.subscription_expires_at).toLocaleDateString('en-IN', {
+                          day: 'numeric',
+                          month: 'long',
+                          year: 'numeric'
+                        })
+                      ) : (
+                        'Synchronizing...'
+                      )}
+                    </p>
+                  </div>
+                  
+                  {isCanceling ? (
+                    <Button 
+                      variant="primary" 
+                      onClick={handleResubscribe}
+                      className="bg-emerald-600 hover:bg-emerald-700 shadow-emerald-glow px-6 py-2"
+                    >
+                      Resubscribe
+                    </Button>
+                  ) : (
+                    <Button 
+                      variant="outline" 
+                      onClick={handleCancelSubscription}
+                      className="border-red-200 text-red-600 hover:bg-red-50 dark:border-red-900/30 dark:text-red-400 dark:hover:bg-red-900/10 px-6 py-2"
+                    >
+                      Cancel Membership
+                    </Button>
+                  )}
+                </div>
+              )}
             </div>
 
-            {/* Pro Plan */}
-            <PricingCard 
-              isCurrentPlan={profile?.subscription_plan === 'pro'} 
-              onSuccess={() => {
-                refreshSession(); // Refresh profile to show updated status
-              }}
-            />
+            {!isPro && (
+              <div className="mt-8 text-center">
+                <p className="text-charcoal-600 dark:text-mint-200 mb-6 max-w-lg mx-auto">
+                  You are currently on the free plan. Upgrade to unlock all premium features including certificates, deep scans, and more!
+                </p>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {subscriptionPlans.map((plan) => (
+                    <PricingCard
+                      key={plan.id}
+                      plan={plan}
+                      isCurrentPlan={(profile?.subscription_plan || 'free') === plan.id}
+                      onSuccess={() => refreshSession()}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+            
+            {isCanceling && (
+              <div className="mt-6 flex items-start gap-3 p-4 bg-amber-50 dark:bg-amber-900/20 rounded-xl border border-amber-200 dark:border-amber-800">
+                <InformationCircleIcon className="w-5 h-5 text-amber-600 mt-0.5" />
+                <p className="text-sm text-amber-800 dark:text-amber-200">
+                  Your Pro features were canceled but you will keep access until the end of your billing cycle. If you change your mind, you can resubscribe anytime before then.
+                </p>
+              </div>
+            )}
           </div>
-        </div>
-      </motion.div>
-    </div>
-  );
+        </motion.div>
+      </div>
+    );
+  };
 
   const renderHelpSettings = () => (
     <div className="space-y-6">
@@ -746,17 +844,44 @@ const SettingsPage = () => {
           transition={{ duration: 0.6 }}
           className="mb-6"
         >
-          <h1 className="text-3xl font-bold text-charcoal-900 dark:text-white mb-2 capitalize">
-            {tab === 'profile' ? 'Profile Settings' : tab === 'notifications' ? 'Notifications' : 'Help Center'}
-          </h1>
-          <p className="text-charcoal-700 dark:text-mint-200">
-            {tab === 'profile' 
-              ? 'Manage your account settings and preferences'
-              : tab === 'notifications'
-              ? 'Control how and when you receive updates'
-              : 'Get help and support for SkillSynergy'
-            }
-          </p>
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <h1 className="text-3xl font-bold text-charcoal-900 dark:text-white mb-2 capitalize">
+              {tab === 'profile' ? 'Profile Settings' : tab === 'billing' ? 'Subscription & Billing' : tab === 'notifications' ? 'Notifications' : 'Help Center'}
+            </h1>
+            <p className="text-charcoal-700 dark:text-mint-200">
+              {tab === 'profile' 
+                ? 'Manage your account settings and preferences'
+                : tab === 'billing'
+                ? 'View and manage your subscription plan and billing history'
+                : tab === 'notifications'
+                ? 'Control how and when you receive updates'
+                : 'Get help and support for SkillSynergy'
+              }
+            </p>
+            </div>
+            {(savingSettings || saveSuccess) && (
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium ${
+                  saveSuccess ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-mint-50 text-charcoal-600 dark:bg-charcoal-800 dark:text-mint-300'
+                }`}
+              >
+                {savingSettings ? (
+                  <>
+                    <div className="w-3 h-3 border-2 border-charcoal-400 border-t-transparent rounded-full animate-spin" />
+                    <span>Saving...</span>
+                  </>
+                ) : (
+                  <>
+                    <CheckIcon className="w-4 h-4" />
+                    <span>Saved</span>
+                  </>
+                )}
+              </motion.div>
+            )}
+          </div>
         </motion.div>
 
         {/* Tab Navigation */}
@@ -781,6 +906,7 @@ const SettingsPage = () => {
         </div>
 
         {tab === 'profile' && renderProfileSettings()}
+        {tab === 'billing' && renderBillingSettings()}
         {tab === 'notifications' && renderNotificationSettings()}
         {tab === 'help' && renderHelpSettings()}
       </div>

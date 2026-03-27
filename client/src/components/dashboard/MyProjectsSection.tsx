@@ -2,23 +2,41 @@ import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../../context/AuthContext';
+import { useSubscription } from '../../hooks/useSubscription';
 import type { Project } from '../../types';
-import { PlusIcon, TrashIcon, PencilIcon, UserGroupIcon, EyeIcon } from '@heroicons/react/24/outline';
+import { PlusIcon, TrashIcon, PencilIcon, UserGroupIcon, EyeIcon, SparklesIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { Link } from 'react-router-dom';
 
 const MyProjectsSection = () => {
   const { user } = useAuth();
+  const { canCreateProject, planDetails } = useSubscription();
   const location = useLocation();
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   
+  // Custom Create Handler that checks limits
+  const handleOpenCreateModal = () => {
+    // Check limit based on owned projects only
+    const ownedProjectsCount = projects.filter(p => p.owner_id === user?.id).length;
+    
+    if (!canCreateProject(ownedProjectsCount)) {
+      setShowUpgradeModal(true);
+    } else {
+      setShowCreateModal(true);
+    }
+  };
+
   // Check for action param
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);
-    if (searchParams.get('action') === 'create') {
-      setShowCreateModal(true);
+    if (searchParams.get('action') === 'create' && projects.length > 0) { // Wait for projects to load
+      // Clean up URL so it doesn't trigger again on re-renders
+      window.history.replaceState({}, '', '/app/my-projects');
+      handleOpenCreateModal();
     }
-  }, [location.search]);
+  }, [location.search, projects.length]);
   
   // Create Form State
   const [title, setTitle] = useState('');
@@ -152,7 +170,7 @@ const MyProjectsSection = () => {
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold text-charcoal-900 dark:text-white">My Learning Challenges</h2>
         <button
-          onClick={() => setShowCreateModal(true)}
+          onClick={handleOpenCreateModal}
           className="flex items-center px-4 py-2 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition-colors font-medium"
         >
           <PlusIcon className="w-5 h-5 mr-2" />
@@ -165,7 +183,7 @@ const MyProjectsSection = () => {
           <div className="text-center py-12 bg-gray-50 dark:bg-charcoal-900/50 rounded-xl border border-dashed border-gray-300 dark:border-charcoal-600">
             <p className="text-gray-500 dark:text-gray-400 mb-4">You haven't created any challenges yet.</p>
             <button
-              onClick={() => setShowCreateModal(true)}
+              onClick={handleOpenCreateModal}
               className="text-emerald-600 hover:text-emerald-700 font-medium"
             >
               Start your first challenge
@@ -318,6 +336,45 @@ const MyProjectsSection = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Upgrade Limit Modal */}
+      {showUpgradeModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <div className="bg-white dark:bg-charcoal-900 rounded-2xl w-full max-w-md p-8 shadow-xl border border-gray-200 dark:border-charcoal-700 text-center relative">
+            <button 
+              onClick={() => setShowUpgradeModal(false)}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-white"
+            >
+              <XMarkIcon className="w-6 h-6" />
+            </button>
+            
+            <div className="w-16 h-16 bg-gradient-to-br from-amber-400 to-orange-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg">
+              <SparklesIcon className="w-8 h-8 text-white" />
+            </div>
+            
+            <h3 className="text-2xl font-bold text-charcoal-900 dark:text-white mb-2">Plan Limit Reached</h3>
+            <p className="text-charcoal-600 dark:text-mint-200 mb-6">
+              You are currently on the <strong className="capitalize text-emerald-600 dark:text-emerald-400">{planDetails.name}</strong> plan, which allows up to 1 active project limit.
+              Upgrade to Pro or Elite to create unlimited learning challenges.
+            </p>
+            
+            <div className="flex flex-col gap-3">
+              <Link
+                to="/settings/billing"
+                className="w-full py-3 bg-gradient-emerald text-white font-bold rounded-xl hover:opacity-90 transition-opacity"
+              >
+                View Upgrade Options
+              </Link>
+              <button
+                onClick={() => setShowUpgradeModal(false)}
+                className="w-full py-3 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-white font-medium transition-colors"
+              >
+                Maybe Later
+              </button>
+            </div>
           </div>
         </div>
       )}

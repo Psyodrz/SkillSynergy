@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import {
@@ -15,15 +15,18 @@ import {
 
 const LoginPage = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { signIn, signUp, isAuthenticated } = useAuth();
   const [isLogin, setIsLogin] = useState(true);
+
+  const redirectTo = searchParams.get('redirect') || '/dashboard';
 
   // Redirect if already authenticated
   React.useEffect(() => {
     if (isAuthenticated) {
-      navigate('/dashboard');
+      navigate(redirectTo);
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, navigate, redirectTo]);
 
   // Form State
   const [fullName, setFullName] = useState('');
@@ -51,7 +54,7 @@ const LoginPage = () => {
 
         if (result.success) {
           console.log('Login successful');
-          navigate('/dashboard');
+          navigate(redirectTo);
         } else {
           if (result.error?.includes('Email not confirmed')) {
             setError('Please confirm your email address before logging in. Check your inbox.');
@@ -279,6 +282,17 @@ const LoginPage = () => {
                     {showPassword ? <EyeSlashIcon className="h-5 w-5" /> : <EyeIcon className="h-5 w-5" />}
                   </button>
                 </div>
+                {isLogin && (
+                  <div className="mt-2 text-right">
+                    <button
+                      type="button"
+                      onClick={() => navigate('/forgot-password')}
+                      className="text-xs font-semibold text-charcoal-500 dark:text-mint-400 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
+                    >
+                      Forgot Password?
+                    </button>
+                  </div>
+                )}
               </div>
 
               {/* Confirm Password (Signup only) */}

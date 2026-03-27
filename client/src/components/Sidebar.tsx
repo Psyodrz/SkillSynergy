@@ -11,7 +11,8 @@ import {
   PlusCircleIcon,
   XMarkIcon,
   AcademicCapIcon,
-  UserPlusIcon
+  UserPlusIcon,
+  StarIcon
 } from '@heroicons/react/24/outline';
 
 const Sidebar = ({ isOpen, onClose }: { isOpen?: boolean; onClose?: () => void }) => {
@@ -26,6 +27,7 @@ const Sidebar = ({ isOpen, onClose }: { isOpen?: boolean; onClose?: () => void }
     { name: 'Discussions', href: '/messages', icon: ChatBubbleLeftRightIcon },
     { name: 'Friend Requests', href: '/requests', icon: UserPlusIcon },
     { name: 'Profile', href: '/profile', icon: UserCircleIcon },
+    { name: 'Subscription', href: '/pricing', icon: StarIcon },
     { name: 'Settings', href: '/settings', icon: Cog6ToothIcon }
   ];
 

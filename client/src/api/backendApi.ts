@@ -158,11 +158,11 @@ export const leaveProject = async (projectId: string, _userId: string): Promise<
 /**
  * Create Razorpay Order
  */
-export const createRazorpayOrder = async (amount: number, currency: string = 'INR'): Promise<ApiResponse<any>> => {
+export const createRazorpayOrder = async (amount: number, currency: string = 'INR', plan_id?: string, billing_cycle?: string): Promise<ApiResponse<any>> => {
   try {
     const response = await authFetch('/api/create-order', {
       method: 'POST',
-      body: JSON.stringify({ amount, currency }),
+      body: JSON.stringify({ amount, currency, plan_id, billing_cycle }),
     });
     return await response.json();
   } catch (error: any) {

@@ -40,6 +40,10 @@ export interface UserProfile {
   created_at: string
   skills?: any[]
   experience?: any[]
+  subscription_plan?: string
+  subscription_status?: string
+  subscription_expires_at?: string | null
+  settings?: any | null
 }
 
 // TypeScript interface for project

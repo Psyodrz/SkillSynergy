@@ -42,9 +42,13 @@ export const useOnboardingGuard = () => {
         return;
       }
 
-      // 2. Onboarding Route Bypass
-      // If already on onboarding, don't redirect again
-      if (path.startsWith('/onboarding')) {
+      // 2. Auth & Public Route Bypass
+      // If already on onboarding, reset-password, or forgot-password, don't redirect
+      if (
+        path.startsWith('/onboarding') || 
+        path.startsWith('/reset-password') || 
+        path.startsWith('/forgot-password')
+      ) {
         setIsChecking(false);
         return;
       }

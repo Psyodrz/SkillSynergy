@@ -21,20 +21,27 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
 );
 
 // Register Service Worker for Ad Blocking
+// Register Service Worker for Ad Blocking (Production Only)
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    // Unregister ALL existing service workers to clear invalid state
+    const isDev = import.meta.env.DEV;
+    
+    // Always unregister existing SWs in dev to prevent conflicts
     navigator.serviceWorker.getRegistrations().then(registrations => {
       for(let registration of registrations) {
-        registration.unregister();
+        registration.unregister().then(() => {
+          console.log('Unregistered SW for dev consistency');
+        });
       }
       
-      // Then register the new one
-      navigator.serviceWorker.register('/sw.js').then(registration => {
-        console.log('SW registered: ', registration);
-      }).catch(registrationError => {
-        console.log('SW registration failed: ', registrationError);
-      });
+      // Only register in production
+      if (!isDev) {
+        navigator.serviceWorker.register('/sw.js').then(registration => {
+          console.log('SW registered: ', registration);
+        }).catch(registrationError => {
+          console.log('SW registration failed: ', registrationError);
+        });
+      }
     });
   });
 }

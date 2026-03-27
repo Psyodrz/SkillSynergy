@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { supabase } from '../lib/supabaseClient';
 import BrandLoader from '../components/BrandLoader';
-import { Routes, Route, useLocation, Navigate } from 'react-router-dom';
+import { Routes, Route, useLocation, Navigate, useNavigate } from 'react-router-dom';
 import HomePage from '../components/HomePage';
 import ProtectedRoute from '../components/ProtectedRoute';
 import ProtectedAdminRoute from '../components/ProtectedAdminRoute';
@@ -8,6 +9,8 @@ import Sidebar from '../components/Sidebar';
 import Navbar from '../components/DashboardNavbar';
 import LoginPage from '../pages/LoginPage';
 import DashboardPage from '../pages/DashboardPage';
+import ForgotPasswordPage from '../pages/ForgotPasswordPage';
+import ResetPasswordPage from '../pages/ResetPasswordPage';
 import DiscoverPage from '../pages/DiscoverPage';
 import InstructorsPage from '../pages/InstructorsPage';
 import MessagesPage from '../pages/MessagesPage';
@@ -42,17 +45,34 @@ import AIChatPage from '../pages/AIChatPage';
 import SkillRoomPage from '../pages/SkillRoomPage';
 import ChallengePage from '../pages/ChallengePage';
 import TaskDetailPage from '../pages/TaskDetailPage';
+import PricingPage from '../pages/PricingPage';
+import CertificatePreviewPage from '../pages/CertificatePreviewPage';
 import { useAuth } from '../context/AuthContext';
 
 function WebRoutes() {
   const location = useLocation();
+  const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  // Added listener for password recovery redirection
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        console.log('Recovery event detected in WebRoutes, navigating...');
+        navigate('/reset-password', { replace: true });
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [navigate]);
   
   // Check if current route is a public route
   const publicRoutes = [
     '/', '/login', '/terms', '/privacy', '/refund', '/about', '/contact',
-    '/cookies', '/disclaimer', '/faq', '/connect', '/learn', '/projects', '/chat', '/demo', '/blog'
+    '/cookies', '/disclaimer', '/faq', '/connect', '/learn', '/projects', '/chat', '/demo', '/blog', '/pricing', '/forgot-password', '/reset-password'
   ];
   // Helper to check if path starts with public route (for dynamic routes like /blog/:slug)
   const isPublicRoute = publicRoutes.some(route => location.pathname === route) || location.pathname.startsWith('/blog/');
@@ -85,6 +105,8 @@ function WebRoutes() {
               {/* Public Routes */}
               <Route path="/" element={<HomePage />} />
               <Route path="/login" element={<LoginPage />} />
+              <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+              <Route path="/reset-password" element={<ResetPasswordPage />} />
               <Route path="/terms" element={<TermsPage />} />
               <Route path="/privacy" element={<PrivacyPage />} />
               <Route path="/refund" element={<RefundPage />} />
@@ -94,6 +116,7 @@ function WebRoutes() {
               <Route path="/contact" element={<ContactPage />} />
 
               <Route path="/faq" element={<FAQPage />} />
+              <Route path="/pricing" element={<PricingPage />} />
               
               {/* Feature Pages */}
               <Route path="/connect" element={<ConnectPage />} />
@@ -105,6 +128,7 @@ function WebRoutes() {
               {/* Blog */}
               <Route path="/blog" element={<BlogPage />} />
               <Route path="/blog/:slug" element={<BlogPostPage />} />
+              <Route path="/certificate-preview" element={<CertificatePreviewPage />} />
               
               {/* Protected Routes */}
               <Route path="/dashboard" element={

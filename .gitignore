@@ -37,3 +37,22 @@ yarn-error.log*
 supabase/config.toml
 .vercel
 .env*.local
+
+# Temp / debug files
+*.check
+*.check2
+*.check3
+*.final_check
+*.verify
+tsc_output.txt
+tsc_output_utf8.txt
+ports.txt
+email_preview.html
+
+# Env variants (keep only .env in each subdir)
+**/.env.vercel
+**/.env.vercel.prod
+**/.env.production.clean
+**/.db_url
+**/.db_url_temp
+server_error.log

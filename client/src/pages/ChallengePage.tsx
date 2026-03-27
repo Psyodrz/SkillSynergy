@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { InlineLoader } from '../components/BrandLoader';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -17,6 +17,9 @@ import {
 import { CheckCircleIcon as CheckCircleSolidIcon } from '@heroicons/react/24/solid';
 import { useAuth } from '../context/AuthContext';
 import config from '../config';
+import html2canvas from 'html2canvas';
+import { jsPDF } from 'jspdf';
+import { CertificateTemplate } from '../components/CertificateTemplate';
 
 interface Task {
   id: string;
@@ -60,6 +63,8 @@ const ChallengePage: React.FC = () => {
   // const [completingTask, setCompletingTask] = useState<string | null>(null); // Unused
   // const [aiFeedback, setAiFeedback] = useState<{ taskId: string; feedback: string } | null>(null); // Unused
   const [isGeneratingContent, setIsGeneratingContent] = useState(false);
+  const [isGeneratingCert, setIsGeneratingCert] = useState(false);
+  const certificateRef = useRef<HTMLDivElement>(null);
 
   // Fetch challenge details
   useEffect(() => {
@@ -157,6 +162,33 @@ const ChallengePage: React.FC = () => {
       console.error('Error generating content:', err);
     } finally {
       setIsGeneratingContent(false);
+    }
+  };
+
+  const handleDownloadCertificate = async () => {
+    if (!certificateRef.current || !challenge || !user) return;
+    setIsGeneratingCert(true);
+    
+    try {
+      const canvas = await html2canvas(certificateRef.current, {
+        scale: 2, // High resolution
+        useCORS: true,
+        logging: false
+      });
+      
+      const imgData = canvas.toDataURL('image/png');
+      // A4 Landscape is 297x210 mm
+      const pdf = new jsPDF('landscape', 'mm', 'a4');
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      
+      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+      pdf.save(`${challenge.title.replace(/\s+/g, '_')}_Certificate.pdf`);
+    } catch (err) {
+      console.error('Error generating certificate:', err);
+      alert('Failed to generate certificate. Please try again.');
+    } finally {
+      setIsGeneratingCert(false);
     }
   };
 
@@ -423,12 +455,38 @@ const ChallengePage: React.FC = () => {
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="mt-8 text-center py-12 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-2xl text-white"
+            className="mt-8 text-center py-12 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-2xl text-white shadow-xl"
           >
-            <div className="flex justify-center mb-4"><TrophyIcon className="w-16 h-16" /></div>
-            <h2 className="text-2xl font-bold mb-2">Congratulations!</h2>
-            <p>You've completed this challenge. Keep up the amazing work!</p>
+            <div className="flex justify-center mb-4"><TrophyIcon className="w-16 h-16 text-yellow-300" /></div>
+            <h2 className="text-3xl font-bold mb-2">Congratulations!</h2>
+            <p className="text-emerald-50 mb-6 text-lg">You've successfully completed this challenge. Your journey of mastery continues!</p>
+            
+            <button
+              onClick={handleDownloadCertificate}
+              disabled={isGeneratingCert}
+              className="px-8 py-4 bg-white text-emerald-600 font-bold rounded-xl shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all disabled:opacity-75 flex items-center gap-2 mx-auto"
+            >
+              {isGeneratingCert ? (
+                 <Loader2 className="w-6 h-6 animate-spin" />
+              ) : (
+                 <SparklesIcon className="w-6 h-6" />
+              )}
+              {isGeneratingCert ? 'Generating...' : 'Claim 100% Verified Certificate'}
+            </button>
           </motion.div>
+        )}
+
+        {/* Hidden Certificate Node (Rendered off-screen for html2canvas) */}
+        {challenge && user && progressPercentage === 100 && (
+          <div className="absolute top-[-9999px] left-[-9999px]">
+            <CertificateTemplate
+              ref={certificateRef}
+              userName={user.user_metadata?.full_name || user.email?.split('@')[0] || 'Student'}
+              courseName={challenge.title}
+              date={new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+              certificateId={`SS-${challenge.id.substring(0,8).toUpperCase()}-${Date.now().toString().slice(-6)}`}
+            />
+          </div>
         )}
       </div>
     </div>

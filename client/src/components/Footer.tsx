@@ -51,7 +51,7 @@ const Footer = () => {
               <li><Link to="/projects" className="text-gray-600 dark:text-gray-400 hover:text-emerald-500 dark:hover:text-emerald-400 text-sm transition-colors">Challenges</Link></li>
               <li><Link to="/chat" className="text-gray-600 dark:text-gray-400 hover:text-emerald-500 dark:hover:text-emerald-400 text-sm transition-colors">Discussions</Link></li>
               <li><Link id="watch-demo-footer-link" to="/demo" className="text-gray-600 dark:text-gray-400 hover:text-emerald-500 dark:hover:text-emerald-400 text-sm transition-colors">Watch Demo</Link></li>
-
+              <li><Link to="/pricing" className="text-gray-600 dark:text-gray-400 hover:text-emerald-500 dark:hover:text-emerald-400 text-sm transition-colors">Pricing</Link></li>
             </ul>
           </div>
 

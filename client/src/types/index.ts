@@ -43,6 +43,8 @@ export type Profile = {
   skills: ProfileSkill[];
   experience: Experience[];
   created_at: string;
+  subscription_plan?: string;
+  subscription_status?: string;
 };
 
 export type CreateSkillPayload = {

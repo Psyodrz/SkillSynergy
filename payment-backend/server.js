@@ -25,6 +25,7 @@ const corsOptions = {
     const allowedOrigins = [
       'http://localhost:5173',
       'http://localhost:5174',
+      'http://localhost:5175',
       'http://localhost:3000',
       'https://skillsynergy.online',
       'https://www.skillsynergy.online'
@@ -334,16 +335,20 @@ app.post('/api/smart-match', async (req, res) => {
  */
 app.post('/api/create-order', authMiddleware, async (req, res) => {
   try {
-    const { amount, currency = 'INR', receipt } = req.body;
+    const { amount, currency = 'INR', receipt, plan_id } = req.body;
     
     // Amount is in smallest currency unit (paise for INR)
     // Example: 500 INR = 50000 paise
     
     const options = {
-      amount: amount * 100, 
+      amount: amount * 100, // amount in the smallest currency unit (paise for INR)
       currency,
       receipt,
-      payment_capture: 1
+      payment_capture: 1,
+      notes: {
+        plan_id: plan_id || 'pro',
+        billing_cycle: req.body.billing_cycle || 'monthly'
+      }
     };
 
     const order = await razorpay.orders.create(options);
@@ -377,17 +382,22 @@ app.post('/api/verify-payment', authMiddleware, async (req, res) => {
       // Payment successful - Update user subscription in database
       const userId = req.user.id;
       
-      // Update profile with subscription details
-      // Assuming 'pro' plan for now
+      // Fetch the order from Razorpay to get the plan_id and billing_cycle from notes
+      const order = await razorpay.orders.fetch(razorpay_order_id);
+      const planId = order.notes?.plan_id || 'pro';
+      const billingCycle = order.notes?.billing_cycle || 'monthly';
+      const interval = billingCycle === 'yearly' ? '1 year' : '30 days';
+      
       const updateQuery = `
         UPDATE profiles 
         SET subscription_status = 'active', 
-            subscription_plan = 'pro',
-            subscription_updated_at = NOW()
+            subscription_plan = $2,
+            subscription_updated_at = NOW(),
+            subscription_expires_at = NOW() + INTERVAL '${interval}'
         WHERE id = $1
       `;
       
-      await pool.query(updateQuery, [userId]);
+      await pool.query(updateQuery, [userId, planId]);
 
       res.json({ success: true, message: 'Payment verified successfully' });
     } else {

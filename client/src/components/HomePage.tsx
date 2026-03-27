@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import Footer from './Footer';
 import FeatureShowcase from './FeatureShowcase';
 import ThemeToggle from './ThemeToggle';
+import TrustBadgeStrip from './TrustBadgeStrip';
 import { User, Target, Rocket } from 'lucide-react';
 import { motion } from 'framer-motion';
 import {
@@ -22,6 +23,7 @@ import {
 
 import { Helmet } from 'react-helmet-async';
 import { useAuth } from '../context/AuthContext';
+import { subscriptionPlans } from '../data/plans';
 
 const HomePage = () => {
   const { isAuthenticated } = useAuth();
@@ -69,6 +71,12 @@ const HomePage = () => {
             </Link>
             <div className="flex items-center space-x-2 sm:space-x-4 flex-shrink-0">
               <ThemeToggle />
+              <Link
+                to="/pricing"
+                className="hidden sm:block text-teal-600 dark:text-mint-400 hover:text-teal-800 dark:hover:text-white font-medium transition-colors whitespace-nowrap"
+              >
+                Pricing
+              </Link>
               <Link
                 to="/login"
                 className="hidden sm:block text-teal-600 dark:text-mint-400 hover:text-teal-800 dark:hover:text-white font-medium transition-colors whitespace-nowrap"
@@ -241,6 +249,9 @@ const HomePage = () => {
           </motion.div>
         </div>
       </div>
+
+      {/* Trust Badges Section */}
+      <TrustBadgeStrip />
 
       {/* Features Section */}
       <div className="py-20 relative">
@@ -501,6 +512,92 @@ const HomePage = () => {
               alt="Team collaborating on learning"
               className="w-full max-w-3xl mx-auto rounded-3xl shadow-2xl"
             />
+          </motion.div>
+        </div>
+      </div>
+
+      {/* Pricing Section */}
+      <div className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-charcoal-900 dark:to-charcoal-950">
+        <div className="max-w-7xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-12"
+          >
+            <div className="inline-flex items-center space-x-2 px-4 py-2 rounded-full bg-emerald-500/10 border border-emerald-200/50 dark:border-emerald-700/50 mb-6">
+              <CurrencyDollarIcon className="h-5 w-5 text-emerald-500" />
+              <span className="text-sm font-semibold text-emerald-700 dark:text-emerald-400">Transparent Pricing</span>
+            </div>
+            <h2 className="text-4xl md:text-5xl font-black text-charcoal-900 dark:text-white mb-4">
+              Choose Your <span className="bg-gradient-emerald bg-clip-text text-transparent">Plan</span>
+            </h2>
+            <p className="text-xl text-charcoal-700 dark:text-mint-200 max-w-2xl mx-auto">
+              Start free and upgrade as you grow. Unlock powerful features with our Pro and Elite plans.
+            </p>
+          </motion.div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 max-w-5xl mx-auto">
+            {subscriptionPlans.map((plan, index) => (
+              <motion.div
+                key={plan.id}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: index * 0.1 }}
+                className="relative p-8 rounded-2xl border flex flex-col transition-all bg-white dark:bg-charcoal-800 shadow-premium hover:-translate-y-1"
+                style={{
+                  borderColor: plan.recommended ? '#10B981' : undefined,
+                  boxShadow: plan.recommended ? '0 0 30px rgba(16, 185, 129, 0.15)' : undefined
+                }}
+              >
+                {plan.recommended && (
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-xs font-bold px-4 py-1 rounded-full flex items-center gap-1 shadow-lg">
+                    <SparklesIcon className="h-3.5 w-3.5" />
+                    MOST POPULAR
+                  </div>
+                )}
+                <h3 className="text-xl font-bold text-charcoal-900 dark:text-white mb-2">{plan.name}</h3>
+                <div className="flex items-baseline mb-4">
+                  <span className="text-4xl font-extrabold text-charcoal-900 dark:text-white">
+                    {plan.price === 0 ? 'Free' : `₹${plan.price}`}
+                  </span>
+                  {plan.price > 0 && (
+                    <span className="text-charcoal-500 dark:text-mint-300 ml-2">/month</span>
+                  )}
+                </div>
+                <p className="text-charcoal-600 dark:text-mint-200 mb-6 text-sm">{plan.description}</p>
+                <ul className="space-y-3 mb-8 flex-1">
+                  {plan.features.map((feature, fi) => (
+                    <li key={fi} className="flex items-start">
+                      <CheckBadgeIcon className="h-5 w-5 text-emerald-500 mr-3 flex-shrink-0" />
+                      <span className="text-charcoal-700 dark:text-mint-100 text-sm">{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+                <Link
+                  to="/login"
+                  className={`w-full text-center py-3 rounded-xl font-semibold transition-all ${
+                    plan.recommended
+                      ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white hover:opacity-90 shadow-lg'
+                      : 'border border-emerald-500 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20'
+                  }`}
+                >
+                  {plan.price === 0 ? 'Get Started Free' : 'Upgrade Now'}
+                </Link>
+              </motion.div>
+            ))}
+          </div>
+
+          <motion.div
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            className="text-center mt-8"
+          >
+            <Link to="/pricing" className="text-emerald-600 dark:text-emerald-400 hover:underline font-medium">
+              View full pricing details →
+            </Link>
           </motion.div>
         </div>
       </div>
