@@ -7,7 +7,6 @@ import {
   SparklesIcon
 } from '@heroicons/react/24/outline';
 import { CpuChipIcon } from '@heroicons/react/24/solid';
-import Button from './Button';
 
 export interface AITeacher {
   id: string;
