@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { InlineLoader } from '../components/BrandLoader';
 import { motion } from 'framer-motion';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { Bot } from 'lucide-react';
 import { 
   MagnifyingGlassIcon, 
   StarIcon,
@@ -27,6 +28,8 @@ const DiscoverPage = () => {
   
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 20;
   const [selectedLevel, setSelectedLevel] = useState<SkillLevel | 'All'>('All');
   const [selectedSkill, setSelectedSkill] = useState<Skill | null>(null);
   const [isSkillModalOpen, setIsSkillModalOpen] = useState(false);
@@ -275,6 +278,16 @@ const DiscoverPage = () => {
     return filtered;
   }, [skills, searchQuery, selectedCategory, selectedLevel]);
 
+  const totalPages = Math.ceil(filteredSkills.length / ITEMS_PER_PAGE);
+  const paginatedSkills = useMemo(() => {
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    return filteredSkills.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  }, [filteredSkills, currentPage]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, selectedCategory, selectedLevel]);
+
   // Filter users based on search query
   const filteredUsers = useMemo(() => {
     if (!searchQuery) return users;
@@ -326,7 +339,7 @@ const DiscoverPage = () => {
           description: '',
           color: 'text-emerald-500'
         });
-        alert('✅ Skill created successfully!');
+        alert('Skill created successfully!');
       }
     } catch (error: any) {
       console.error('Error creating skill:', error);
@@ -342,7 +355,7 @@ const DiscoverPage = () => {
     try {
       await deleteSkill(skillId);
       setSkills(skills.filter(s => s.id !== skillId));
-      alert('✅ Skill deleted successfully!');
+      alert('Skill deleted successfully!');
     } catch (error: any) {
       console.error('Error deleting skill:', error);
       alert(error.message || 'Failed to delete skill. You can only delete skills you created.');
@@ -394,17 +407,8 @@ const DiscoverPage = () => {
               />
             </div>
             <select
-              value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value)}
-              className="px-3 py-2 sm:py-2.5 text-sm sm:text-base border border-teal-200 dark:border-charcoal-700 rounded-lg bg-white dark:bg-charcoal-800 text-charcoal-900 dark:text-mint-100 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 sm:min-w-[120px]"
-            >
-              {categories.map(category => (
-                <option key={category} value={category}>{category}</option>
-              ))}
-            </select>
-            <select
               value={selectedLevel}
-              onChange={(e) => setSelectedLevel(e.target.value as SkillLevel | 'All')}
+              onChange={(e) => setSelectedLevel(e.target.value as any)}
               className="px-3 py-2 sm:py-2.5 text-sm sm:text-base border border-teal-200 dark:border-charcoal-700 rounded-lg bg-white dark:bg-charcoal-800 text-charcoal-900 dark:text-mint-100 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 sm:min-w-[120px]"
             >
               {skillLevels.map(level => (
@@ -434,6 +438,23 @@ const DiscoverPage = () => {
             </div>
           </div>
 
+          {/* Category Chips */}
+          <div className="flex flex-wrap gap-2 mb-6">
+            {categories.map(cat => (
+              <button
+                key={cat}
+                onClick={() => setSelectedCategory(cat)}
+                className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
+                  selectedCategory === cat
+                    ? 'bg-emerald-500 text-white shadow-md'
+                    : 'bg-white dark:bg-charcoal-800 text-charcoal-600 dark:text-mint-200 border border-mint-200 dark:border-charcoal-700 hover:bg-mint-50 dark:hover:bg-charcoal-700'
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+
           {/* "Create new skill" prompt if no match found */}
           {searchQuery && !skillExists && filteredSkills.length === 0 && (
             <div className="mb-6 bg-emerald-50 dark:bg-emerald-900/20 border-2 border-dashed border-emerald-300 dark:border-emerald-700 rounded-xl p-6 text-center">
@@ -456,8 +477,8 @@ const DiscoverPage = () => {
               <InlineLoader size="lg" />
             </div>
           ) : filteredSkills.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
-              {filteredSkills.map((skill, index) => (
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+              {paginatedSkills.map((skill, index) => (
                 <motion.div
                   key={skill.id}
                   initial={{ opacity: 0, y: 20 }}
@@ -485,6 +506,28 @@ const DiscoverPage = () => {
                   </div>
                 </motion.div>
               ))}
+              
+              {totalPages > 1 && (
+                <div className="col-span-full flex justify-center items-center gap-4 mt-8">
+                  <button
+                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                    disabled={currentPage === 1}
+                    className="px-4 py-2 rounded-lg bg-white dark:bg-charcoal-800 border border-mint-200 dark:border-charcoal-700 disabled:opacity-50 text-sm font-medium hover:bg-mint-50 dark:hover:bg-charcoal-700 transition-colors"
+                  >
+                    Previous
+                  </button>
+                  <span className="text-sm font-medium text-charcoal-700 dark:text-mint-200">
+                    Page {currentPage} of {totalPages}
+                  </span>
+                  <button
+                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                    disabled={currentPage === totalPages}
+                    className="px-4 py-2 rounded-lg bg-white dark:bg-charcoal-800 border border-mint-200 dark:border-charcoal-700 disabled:opacity-50 text-sm font-medium hover:bg-mint-50 dark:hover:bg-charcoal-700 transition-colors"
+                  >
+                    Next
+                  </button>
+                </div>
+              )}
             </div>
           ) : !searchQuery ? (
             <div className="text-center py-12 bg-white dark:bg-navy-800 rounded-xl shadow-premium border border-warm-200 dark:border-navy-700">
@@ -671,27 +714,27 @@ const DiscoverPage = () => {
         size="md"
       >
         {selectedSkill && (
-          <div className="space-y-4">
+          <div className="space-y-5">
             {/* Header */}
             <div className="flex items-center space-x-4">
-              <div className={`w-16 h-16 ${selectedSkill.color.replace('text-', 'bg-')} rounded-lg flex items-center justify-center`}>
-                <span className="text-white font-bold text-2xl">
+              <div className={`w-14 h-14 ${selectedSkill.color.replace('text-', 'bg-')} rounded-xl flex items-center justify-center shadow-lg`}>
+                <span className="text-white font-bold text-xl">
                   {selectedSkill.name.charAt(0)}
                 </span>
               </div>
               <div>
-                <h3 className="text-lg font-semibold text-navy-900 dark:text-white">
+                <h3 className="text-lg font-semibold text-charcoal-900 dark:text-white">
                   {selectedSkill.name}
                 </h3>
-                <p className="text-navy-600 dark:text-warm-400">
+                <p className="text-sm text-charcoal-600 dark:text-mint-300">
                   {selectedSkill.description || 'No description available'}
                 </p>
                 <div className="flex items-center gap-2 mt-1">
-                  <span className="text-sm text-emerald-600 dark:text-emerald-400">
+                  <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">
                     {selectedSkill.category}
                   </span>
-                  <span className="text-navy-400">•</span>
-                  <span className="text-sm text-navy-600 dark:text-warm-400">
+                  <span className="text-charcoal-400 dark:text-charcoal-600">•</span>
+                  <span className="text-xs text-charcoal-500 dark:text-mint-400">
                     {selectedSkill.level}
                   </span>
                 </div>
@@ -700,38 +743,38 @@ const DiscoverPage = () => {
             
             {/* Content based on view */}
             {skillModalView === 'initial' && (
-              <div className="bg-warm-50 dark:bg-navy-700 rounded-lg p-4">
-                <h4 className="font-medium text-navy-900 dark:text-white mb-2">
+              <div className="bg-mint-50 dark:bg-charcoal-800 rounded-xl p-5 border border-mint-200 dark:border-charcoal-700">
+                <h4 className="font-medium text-charcoal-900 dark:text-white mb-3">
                   What would you like to do?
                 </h4>
-                <div className="space-y-2">
+                <div className="space-y-2.5">
                   {/* Primary: Enter AI Learning Room */}
                   <Button 
                     variant="primary" 
-                    className="w-full bg-gradient-to-r from-emerald-500 to-teal-500" 
+                    className="w-full bg-gradient-to-r from-emerald-500 to-teal-500 rounded-xl py-2.5 shadow-lg shadow-emerald-500/20" 
                     onClick={() => navigate(`/skill/${selectedSkill.id}/room`)}
                   >
-                    🤖 Enter AI Learning Room
+                    <span className="flex items-center gap-2"><Bot className="w-5 h-5" /> Enter AI Learning Room</span>
                   </Button>
                   <Button 
                     variant="outline" 
-                    className="w-full" 
+                    className="w-full rounded-xl py-2.5 border-mint-200 dark:border-charcoal-600" 
                     onClick={handleAddSkillToProfile}
                     disabled={addingSkill}
                   >
                     {addingSkill ? (
                       <>
-                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                        <div className="w-4 h-4 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin mr-2" />
                         Adding...
                       </>
                     ) : (
                       'Add to My Learning Path'
                     )}
                   </Button>
-                  <Button variant="outline" className="w-full" onClick={handleFindProfessionals}>
+                  <Button variant="outline" className="w-full rounded-xl py-2.5 border-mint-200 dark:border-charcoal-600" onClick={handleFindProfessionals}>
                     Find Instructors
                   </Button>
-                  <Button variant="outline" className="w-full" onClick={handleStartProject}>
+                  <Button variant="outline" className="w-full rounded-xl py-2.5 border-mint-200 dark:border-charcoal-600" onClick={handleStartProject}>
                     Start Learning (Challenge / Mentorship)
                   </Button>
                 </div>
@@ -750,7 +793,7 @@ const DiscoverPage = () => {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-3">
                       <div className="w-12 h-12 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center">
-                        <span className="text-white text-xl">🤖</span>
+                        <Bot className="w-5 h-5 text-white" />
                       </div>
                       <div>
                         <p className="font-bold text-emerald-700 dark:text-emerald-300">{selectedSkill?.name} AI Tutor</p>
@@ -774,10 +817,10 @@ const DiscoverPage = () => {
                   </div>
                 ) : instructors.length > 0 ? (
                   <>
-                    <p className="text-xs text-navy-500 dark:text-mint-400 text-center">— or connect with human instructors —</p>
+                    <p className="text-xs text-charcoal-400 dark:text-mint-400 text-center">— or connect with human instructors —</p>
                     <div className="space-y-3 max-h-60 overflow-y-auto">
                       {instructors.map(inst => (
-                        <div key={inst.id} className="flex items-center justify-between p-3 bg-white dark:bg-navy-800 rounded-lg border border-warm-200 dark:border-navy-600">
+                        <div key={inst.id} className="flex items-center justify-between p-3 bg-white dark:bg-charcoal-800 rounded-xl border border-mint-200 dark:border-charcoal-700">
                           <div className="flex items-center space-x-3">
                             <img src={inst.avatar_url || 'https://via.placeholder.com/40'} alt={inst.full_name} className="w-10 h-10 rounded-full" />
                             <div>
@@ -808,23 +851,23 @@ const DiscoverPage = () => {
                 </div>
                 
                 <div className="grid grid-cols-1 gap-3">
-                  <div className="p-4 border border-warm-200 dark:border-navy-600 rounded-lg hover:border-emerald-500 cursor-pointer transition-colors"
+                  <div className="p-4 border border-mint-200 dark:border-charcoal-700 rounded-xl hover:border-emerald-500 dark:hover:border-emerald-600 cursor-pointer transition-colors bg-mint-50/50 dark:bg-charcoal-800"
                        onClick={() => {
                          const title = `${selectedSkill.name} Study Group`;
                          const desc = `${selectedSkill.name} Study Group — 4 weeks, beginner → intermediate.\nGoal: Complete 8 small exercises and a capstone mini-project.\nWeekly format: 2x live sessions, 3x homework tasks.\nExpected workload: ~4 hrs/week.\nTools: Zoom/Discord, GitHub, Google Docs.`;
                          handleCreateChallenge(title, desc);
                        }}>
-                    <h5 className="font-bold text-emerald-600">Create Learning Challenge</h5>
-                    <p className="text-sm text-navy-600 dark:text-warm-400">Start a public study group. We'll fill in a template for you.</p>
+                    <h5 className="font-bold text-emerald-600 dark:text-emerald-400">Create Learning Challenge</h5>
+                    <p className="text-sm text-charcoal-600 dark:text-mint-300">Start a public study group. We'll fill in a template for you.</p>
                   </div>
 
-                  <div className="p-4 border border-warm-200 dark:border-navy-600 rounded-lg hover:border-emerald-500 cursor-pointer transition-colors"
+                  <div className="p-4 border border-mint-200 dark:border-charcoal-700 rounded-xl hover:border-emerald-500 dark:hover:border-emerald-600 cursor-pointer transition-colors bg-mint-50/50 dark:bg-charcoal-800"
                        onClick={() => {
                          const msg = `Hi, I'm ${currentUser?.user_metadata?.full_name || 'a learner'}. I'd like one-on-one help with ${selectedSkill.name}. My current level: Beginner. I can commit 5 hours/week.`;
                          handleRequestMentorship(msg);
                        }}>
-                    <h5 className="font-bold text-emerald-600">Request 1:1 Mentorship</h5>
-                    <p className="text-sm text-navy-600 dark:text-warm-400">Post a general request for any instructor to pick up.</p>
+                    <h5 className="font-bold text-emerald-600 dark:text-emerald-400">Request 1:1 Mentorship</h5>
+                    <p className="text-sm text-charcoal-600 dark:text-mint-300">Post a general request for any instructor to pick up.</p>
                   </div>
                 </div>
               </div>

@@ -92,7 +92,7 @@ const OTAUpdateManager = () => {
       <Modal
         isOpen={!!updateAvailable}
         onClose={() => setUpdateAvailable(null)} // User can dismiss
-        title="✨ New Update Available"
+        title="New Update Available"
         size="sm"
       >
         <div className="space-y-4">
@@ -116,7 +116,7 @@ const OTAUpdateManager = () => {
       <Modal
         isOpen={!!downloadReady}
         onClose={() => {}} // Block closing? Or allow dismiss? Let's allow dismiss.
-        title="🚀 Update Ready"
+        title="Update Ready"
         size="sm"
       >
         <div className="space-y-4">
@@ -125,7 +125,7 @@ const OTAUpdateManager = () => {
             The app needs to restart to apply changes.
           </p>
           <div className="bg-amber-50 dark:bg-amber-900/20 text-amber-800 dark:text-amber-200 p-3 rounded-lg text-sm">
-             ⚠️ This will reload the application immediately.
+             This will reload the application immediately.
           </div>
           <div className="flex gap-3">
              <Button variant="outline" onClick={() => setDownloadReady(null)} className="w-full">

@@ -351,21 +351,21 @@ const ProfilePage = () => {
   };
 
   const handleSave = async () => {
-    console.log('🔵 handleSave called');
-    console.log('🔵 User object:', user);
+    console.log('[Profile] handleSave called');
+    console.log('[Profile] User object:', user);
     
     if (!user) {
-      console.error('❌ No user object, aborting save');
+      console.error('[Error] No user object, aborting save');
       setMessage({ type: 'error', text: 'Not authenticated' });
       return;
     }
     
-    console.log('🔵 Setting saving state to true');
+    console.log('[Profile] Setting saving state to true');
     setSaving(true);
     setMessage(null);
 
     try {
-      console.log('🔵 Current formData:', formData);
+      console.log('[Profile] Current formData:', formData);
       
       const combinedSkills = [
         ...formData.skills.map(s => ({ ...s, type: 'learn' })),
@@ -386,12 +386,12 @@ const ProfilePage = () => {
         experience: formData.experience,
       };
 
-      console.log('🔵 Updates object prepared:', updates);
-      console.log('🔵 Skills type:', Array.isArray(updates.skills) ? 'Array' : typeof updates.skills);
-      console.log('🔵 Experience type:', Array.isArray(updates.experience) ? 'Array' : typeof updates.experience);
-      console.log('🔵 User ID:', user.id);
+      console.log('[Profile] Updates object prepared:', updates);
+      console.log('[Profile] Skills type:', Array.isArray(updates.skills) ? 'Array' : typeof updates.skills);
+      console.log('[Profile] Experience type:', Array.isArray(updates.experience) ? 'Array' : typeof updates.experience);
+      console.log('[Profile] User ID:', user.id);
       
-      console.log('🔵 Calling Supabase update...');
+      console.log('[Profile] Calling Supabase update...');
       
       // Get user's session token from localStorage (Supabase client is hanging)
       const supabaseAuthKey = `sb-${import.meta.env.VITE_SUPABASE_URL?.split('//')[1]?.split('.')[0]}-auth-token`;
@@ -402,7 +402,7 @@ const ProfilePage = () => {
         try {
           const parsed = JSON.parse(sessionData);
           userToken = parsed?.access_token || parsed?.currentSession?.access_token;
-          console.log('🔵 Got token from localStorage:', userToken ? 'Yes' : 'No');
+          console.log('[Profile] Got token from localStorage:', userToken ? 'Yes' : 'No');
         } catch (e) {
           console.error('Failed to parse session from localStorage:', e);
         }
@@ -416,8 +416,8 @@ const ProfilePage = () => {
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
       const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
       
-      console.log('🔵 Using direct fetch to:', `${supabaseUrl}/rest/v1/profiles?id=eq.${user.id}`);
-      console.log('🔵 Using user token:', userToken ? 'Yes (exists)' : 'No (missing)');
+      console.log('[Profile] Using direct fetch to:', `${supabaseUrl}/rest/v1/profiles?id=eq.${user.id}`);
+      console.log('[Profile] Using user token:', userToken ? 'Yes (exists)' : 'No (missing)');
       
       let data = null;
       let error = null;
@@ -434,12 +434,12 @@ const ProfilePage = () => {
           body: JSON.stringify(updates)
         });
 
-        console.log('🔵 Fetch response received');
-        console.log('🔵 Status:', response.status);
-        console.log('🔵 Status Text:', response.statusText);
+        console.log('[Profile] Fetch response received');
+        console.log('[Profile] Status:', response.status);
+        console.log('[Profile] Status Text:', response.statusText);
 
         data = await response.json();
-        console.log('🔵 Response data:', data);
+        console.log('[Profile] Response data:', data);
 
         if (!response.ok) {
           error = new Error(`HTTP ${response.status}: ${JSON.stringify(data)}`);
@@ -447,15 +447,15 @@ const ProfilePage = () => {
         }
 
       } catch (fetchError) {
-        console.error('❌ Fetch error:', fetchError);
+        console.error('[Error] Fetch error:', fetchError);
         error = fetchError;
       }
 
-      console.log('🔵 Data:', data);
-      console.log('🔵 Error:', error);
+      console.log('[Profile] Data:', data);
+      console.log('[Profile] Error:', error);
 
       if (error) {
-        console.error('❌ Supabase error details:', {
+        console.error('[Error] Supabase error details:', {
           message: error.message,
           details: error.details,
           hint: error.hint,
@@ -464,26 +464,26 @@ const ProfilePage = () => {
         throw error;
       }
 
-      console.log('✅ Save successful!');
+      console.log('[Success] Save successful!');
       setMessage({ type: 'success', text: 'Profile updated successfully!' });
       setIsEditing(false);
       
-      console.log('🔵 Calling refreshSession...');
+      console.log('[Profile] Calling refreshSession...');
       await refreshSession();
-      console.log('✅ Session refreshed');
+      console.log('[Success] Session refreshed');
 
     } catch (error) {
-      console.error('❌ Save error:', error);
-      console.error('❌ Error type:', typeof error);
-      console.error('❌ Error message:', error?.message);
-      console.error('❌ Full error object:', JSON.stringify(error, null, 2));
+      console.error('[Error] Save error:', error);
+      console.error('[Error] Error type:', typeof error);
+      console.error('[Error] Error message:', error?.message);
+      console.error('[Error] Full error object:', JSON.stringify(error, null, 2));
       
       setMessage({ 
         type: 'error', 
         text: `Failed to save: ${error.message || 'Unknown error'}` 
       });
     } finally {
-      console.log('🔵 Setting saving state to false');
+      console.log('[Profile] Setting saving state to false');
       setSaving(false);
       setTimeout(() => setMessage(null), 5000); // Increased to 5s for visibility
     }

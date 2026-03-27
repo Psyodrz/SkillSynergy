@@ -13,9 +13,12 @@ import {
   RocketLaunchIcon,
   LightBulbIcon,
   ChatBubbleLeftRightIcon,
-  SparklesIcon
+  SparklesIcon,
+  PaperClipIcon,
+  PencilIcon
 } from '@heroicons/react/24/outline';
 import { CheckCircleIcon as CheckCircleSolidIcon } from '@heroicons/react/24/solid';
+import { Bot, Loader2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import config from '../config';
 
@@ -307,7 +310,7 @@ const TaskDetailPage: React.FC = () => {
             >
               <h2 className="text-lg font-bold text-charcoal-900 dark:text-white mb-3 flex items-center gap-2">
                 <span className="w-8 h-8 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg flex items-center justify-center">
-                  🎯
+                  <CheckCircleIcon className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
                 </span>
                 Objective
               </h2>
@@ -325,7 +328,7 @@ const TaskDetailPage: React.FC = () => {
             >
               <h2 className="text-lg font-bold text-charcoal-900 dark:text-white mb-4 flex items-center gap-2">
                 <span className="w-8 h-8 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
-                  📝
+                  <PencilSquareIcon className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                 </span>
                 Instructions
               </h2>
@@ -351,7 +354,7 @@ const TaskDetailPage: React.FC = () => {
               >
                 <h2 className="text-lg font-bold text-charcoal-900 dark:text-white mb-4 flex items-center gap-2">
                   <span className="w-8 h-8 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center">
-                    ✍️
+                    <PencilIcon className="w-5 h-5 text-purple-600 dark:text-purple-400" />
                   </span>
                   Your Work
                 </h2>
@@ -369,7 +372,7 @@ const TaskDetailPage: React.FC = () => {
                   >
                     {isSubmitting ? (
                       <>
-                        <span className="animate-spin">⚙️</span>
+                        <Loader2 className="w-4 h-4 animate-spin" />
                         Submitting...
                       </>
                     ) : (
@@ -427,7 +430,7 @@ const TaskDetailPage: React.FC = () => {
                   <ul className="mt-4 space-y-2">
                     {task.content.hints.map((hint, index) => (
                       <li key={index} className="text-sm text-charcoal-600 dark:text-mint-300 bg-amber-50 dark:bg-amber-900/20 p-3 rounded-lg">
-                        💡 {hint}
+                        <LightBulbIcon className="w-4 h-4 inline mr-1 -mt-0.5" /> {hint}
                       </li>
                     ))}
                   </ul>
@@ -456,7 +459,7 @@ const TaskDetailPage: React.FC = () => {
                         rel="noopener noreferrer"
                         className="text-sm text-emerald-600 dark:text-emerald-400 hover:underline"
                       >
-                        📎 {resource.title}
+                        <PaperClipIcon className="w-4 h-4 inline mr-1 -mt-0.5" /> {resource.title}
                       </a>
                     </li>
                   ))}
@@ -499,7 +502,11 @@ const TaskDetailPage: React.FC = () => {
                       disabled={isAskingAI || !aiQuestion.trim()}
                       className="px-4 py-3 bg-emerald-500 text-white rounded-xl hover:bg-emerald-600 disabled:opacity-50 text-sm font-medium"
                     >
-                      {isAskingAI ? '⏳' : '🚀 Ask'}
+                      {isAskingAI ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <RocketLaunchIcon className="w-4 h-4 inline mr-1 -mt-0.5" />
+                      )} Ask
                     </button>
                   </div>
                   
@@ -511,7 +518,9 @@ const TaskDetailPage: React.FC = () => {
                       className="p-4 bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-900/30 dark:to-teal-900/30 rounded-xl border border-emerald-200 dark:border-emerald-700 max-h-96 overflow-y-auto custom-scrollbar"
                     >
                       <div className="flex items-start gap-3">
-                        <span className="text-2xl">🤖</span>
+                        <span className="flex-shrink-0 w-8 h-8 rounded-full bg-emerald-100 dark:bg-emerald-900 flex items-center justify-center">
+                          <Bot className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                        </span>
                         <div>
                           <p className="text-xs font-medium text-emerald-600 dark:text-emerald-400 mb-1">AI Tutor Response</p>
                           <p className="text-sm text-charcoal-800 dark:text-mint-100 whitespace-pre-wrap leading-relaxed">
@@ -524,9 +533,9 @@ const TaskDetailPage: React.FC = () => {
                   
                   {/* Loading State */}
                   {isAskingAI && (
-                    <div className="p-4 bg-gray-50 dark:bg-charcoal-900 rounded-xl text-center">
-                      <span className="animate-pulse">🤔 AI is thinking...</span>
-                    </div>
+                      <span className="animate-pulse flex items-center justify-center gap-2">
+                        <Loader2 className="w-4 h-4 animate-spin" /> AI is thinking...
+                      </span>
                   )}
                 </div>
               )}

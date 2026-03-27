@@ -78,8 +78,8 @@ const UserCard: React.FC<UserCardProps> = ({ user, onConnect, className = '' }) 
       whileHover={{ y: -5, scale: 1.02 }}
       transition={{ duration: 0.3 }}
       className={`
-        bg-white dark:bg-navy-800 rounded-xl shadow-premium border border-warm-200 dark:border-navy-700
-        p-6 hover:shadow-xl transition-all duration-300 cursor-pointer flex flex-col h-full
+        bg-white/80 dark:bg-charcoal-900/85 backdrop-blur-md rounded-2xl shadow-sm border border-mint-200 dark:border-charcoal-700
+        p-6 hover:shadow-lg transition-all duration-300 cursor-pointer flex flex-col h-full hover:-translate-y-1
         ${className}
       `}
       onClick={() => navigate(`/profile/${user.id}`)}
@@ -159,7 +159,7 @@ const UserCard: React.FC<UserCardProps> = ({ user, onConnect, className = '' }) 
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={handleMessage}
-              className="w-full bg-gradient-emerald text-white font-medium py-2 px-4 rounded-lg transition-all duration-200 flex items-center justify-center gap-2 shadow-emerald-glow hover:shadow-premium-emerald"
+              className="w-full bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-medium py-2.5 px-4 rounded-xl transition-all duration-200 flex items-center justify-center gap-2 shadow-emerald-glow hover:shadow-lg"
             >
               <ChatBubbleLeftIcon className="w-5 h-5" />
               Message
@@ -167,7 +167,7 @@ const UserCard: React.FC<UserCardProps> = ({ user, onConnect, className = '' }) 
           ) : status === 'pending' ? (
             <button
               disabled
-              className="w-full bg-mint-100 dark:bg-charcoal-800 text-emerald-500 dark:text-emerald-400 font-medium py-2 px-4 rounded-lg cursor-not-allowed flex items-center justify-center gap-2"
+              className="w-full bg-mint-50 dark:bg-charcoal-800 border border-emerald-100 dark:border-charcoal-700 text-emerald-500 dark:text-emerald-400 font-medium py-2.5 px-4 rounded-xl cursor-not-allowed flex items-center justify-center gap-2"
             >
               <ClockIcon className="w-5 h-5" />
               Pending
@@ -186,7 +186,7 @@ const UserCard: React.FC<UserCardProps> = ({ user, onConnect, className = '' }) 
               whileTap={{ scale: 0.98 }}
               onClick={handleConnect}
               disabled={loading}
-              className="w-full bg-white dark:bg-charcoal-900 border-2 border-emerald-600 text-emerald-600 dark:text-emerald-400 hover:bg-mint-100 dark:hover:bg-charcoal-800 font-medium py-2 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center gap-2"
+              className="w-full bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800/50 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 font-medium py-2.5 px-4 rounded-xl transition-colors duration-200 flex items-center justify-center gap-2"
             >
               {loading ? (
                 <div className="w-5 h-5 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin" />

@@ -1,6 +1,6 @@
 import { Helmet } from 'react-helmet-async';
 import Footer from '../components/Footer';
-import { BookOpen, Users, Award, TrendingUp } from 'lucide-react';
+import { BookOpen, Users, Award, TrendingUp, GraduationCap } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const LearnPage = () => {
@@ -38,7 +38,7 @@ const LearnPage = () => {
               {/* Abstract Illustration Placeholder */}
               <div className="aspect-square rounded-3xl bg-gradient-to-tr from-blue-100 to-emerald-100 dark:from-charcoal-800 dark:to-charcoal-700 p-8 flex items-center justify-center">
                 <div className="text-center">
-                  <div className="text-9xl mb-4">🎓</div>
+                  <div className="mb-4"><GraduationCap className="w-24 h-24 mx-auto text-blue-600 dark:text-blue-400" /></div>
                   <p className="text-charcoal-500 dark:text-gray-400 font-medium">Structured Education</p>
                 </div>
               </div>

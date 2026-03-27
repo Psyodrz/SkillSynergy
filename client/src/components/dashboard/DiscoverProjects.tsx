@@ -187,7 +187,7 @@ const DiscoverProjects = () => {
             return (
               <div 
                 key={project.id} 
-                className="bg-white dark:bg-charcoal-800 rounded-2xl shadow-sm border border-gray-200 dark:border-charcoal-700 flex flex-col h-full hover:shadow-lg hover:scale-[1.02] transition-all cursor-pointer overflow-hidden"
+                className="bg-white/80 dark:bg-charcoal-900/85 backdrop-blur-md rounded-2xl shadow-sm border border-mint-200 dark:border-charcoal-700 flex flex-col h-full hover:shadow-lg hover:-translate-y-1 transition-all duration-300 cursor-pointer overflow-hidden"
                 onClick={() => navigate(`/challenge/${project.id}`)}
               >
                 {project.thumbnail_url && (
@@ -242,7 +242,7 @@ const DiscoverProjects = () => {
                   {isOwner ? (
                     <button
                       onClick={() => handleDeleteProject(project.id)}
-                      className="w-full py-2.5 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-xl hover:bg-red-100 dark:hover:bg-red-900/30 font-medium transition-colors flex items-center justify-center"
+                      className="w-full py-2.5 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/50 text-red-600 dark:text-red-400 rounded-xl hover:bg-red-100 dark:hover:bg-red-900/40 font-medium transition-colors flex items-center justify-center"
                     >
                       <TrashIcon className="w-5 h-5 mr-2" /> Delete Challenge
                     </button>

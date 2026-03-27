@@ -51,15 +51,15 @@ const Modal = ({
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Header */}
-            <div className="flex items-center justify-between p-6 border-b border-teal-200 dark:border-navy-700">
-              <h2 className="text-xl font-semibold text-teal-900 dark:text-white">
+            <div className="flex items-center justify-between p-6 border-b border-mint-200 dark:border-charcoal-700">
+              <h2 className="text-xl font-semibold text-charcoal-900 dark:text-white">
                 {title}
               </h2>
               <button
                 onClick={onClose}
-                className="p-2 hover:bg-teal-100 dark:hover:bg-navy-700 rounded-lg transition-colors"
+                className="p-2 hover:bg-mint-100 dark:hover:bg-charcoal-700 rounded-lg transition-colors"
               >
-                <XMarkIcon className="w-5 h-5 text-teal-500 dark:text-warm-400" />
+                <XMarkIcon className="w-5 h-5 text-charcoal-500 dark:text-mint-300" />
               </button>
             </div>
             

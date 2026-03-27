@@ -27,7 +27,7 @@ self.addEventListener("fetch", (event) => {
   event.respondWith(
     fetch(event.request).catch(() => {
       // IMPORTANT: swallow all fetch errors
-      return new Response("", { status: 204 });
+      return new Response('', { status: 404, statusText: 'Not Found' });
     })
   );
 });

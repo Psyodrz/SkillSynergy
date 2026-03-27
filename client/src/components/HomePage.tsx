@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import Footer from './Footer';
 import FeatureShowcase from './FeatureShowcase';
 import ThemeToggle from './ThemeToggle';
+import { User, Target, Rocket } from 'lucide-react';
 import { motion } from 'framer-motion';
 import {
   RocketLaunchIcon,
@@ -10,7 +11,13 @@ import {
   FireIcon,
   SparklesIcon,
   ChatBubbleLeftRightIcon,
-  GlobeAltIcon
+  GlobeAltIcon,
+  CodeBracketIcon,
+  PaintBrushIcon,
+  MegaphoneIcon,
+  BriefcaseIcon,
+  PencilSquareIcon,
+  CurrencyDollarIcon
 } from '@heroicons/react/24/outline';
 
 import { Helmet } from 'react-helmet-async';
@@ -27,12 +34,12 @@ const HomePage = () => {
   ];
 
   const skillCategories = [
-    { name: 'Technology', description: 'Learn coding, AI, and emerging tech skills.', image: '/images/skill_technology.png', color: 'bg-teal-500' },
-    { name: 'Design', description: 'Explore UI/UX, graphics, illustration, and creative arts.', image: '/images/skill_design.png', color: 'bg-emerald-500' },
-    { name: 'Marketing', description: 'Build digital marketing and branding expertise.', image: '/images/skill_marketing.png', color: 'bg-cyan-500' },
-    { name: 'Business', description: 'Improve entrepreneurship, leadership, and strategy.', image: '/images/skill_business.png', color: 'bg-teal-600' },
-    { name: 'Writing', description: 'Develop creative writing and communication skills.', image: '/images/skill_writing.png', color: 'bg-emerald-600' },
-    { name: 'Finance', description: 'Learn money management, investing, and financial literacy.', image: '/images/skill_finance.png', color: 'bg-teal-400' }
+    { name: 'Technology', description: 'Learn coding, AI, and emerging tech skills.', icon: CodeBracketIcon, color: 'text-teal-500', bg: 'bg-teal-500/10' },
+    { name: 'Design', description: 'Explore UI/UX, graphics, illustration, and creative arts.', icon: PaintBrushIcon, color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
+    { name: 'Marketing', description: 'Build digital marketing and branding expertise.', icon: MegaphoneIcon, color: 'text-cyan-500', bg: 'bg-cyan-500/10' },
+    { name: 'Business', description: 'Improve entrepreneurship, leadership, and strategy.', icon: BriefcaseIcon, color: 'text-teal-600', bg: 'bg-teal-600/10' },
+    { name: 'Writing', description: 'Develop creative writing and communication skills.', icon: PencilSquareIcon, color: 'text-emerald-600', bg: 'bg-emerald-600/10' },
+    { name: 'Finance', description: 'Learn money management, investing, and financial literacy.', icon: CurrencyDollarIcon, color: 'text-teal-400', bg: 'bg-teal-400/10' }
   ];
 
   return (
@@ -282,8 +289,8 @@ const HomePage = () => {
                 transition={{ delay: index * 0.05 }}
                 className="group p-6 rounded-2xl bg-white/80 dark:bg-charcoal-800/80 backdrop-blur-xl border border-teal-200/50 dark:border-charcoal-700/50 hover:bg-white dark:hover:bg-charcoal-800 hover:shadow-xl hover:scale-110 transition-all duration-300 cursor-pointer"
               >
-                <div className="w-16 h-16 mb-3 mx-auto group-hover:scale-125 transition-transform duration-300">
-                  <img src={category.image} alt={category.name} className="w-full h-full object-contain" />
+                <div className={`w-16 h-16 mb-4 mx-auto rounded-2xl flex items-center justify-center ${category.bg} group-hover:scale-110 group-hover:rotate-3 transition-all duration-300`}>
+                  <category.icon className={`w-8 h-8 ${category.color}`} />
                 </div>
                 <h3 className="font-bold text-charcoal-900 dark:text-white mb-1">
                   {category.name}
@@ -448,19 +455,19 @@ const HomePage = () => {
                 step: '01',
                 title: 'Create Your Profile',
                 description: 'Sign up for free and tell us about your skills, interests, and learning goals.',
-                icon: '👤'
+                icon: User
               },
               {
                 step: '02',
                 title: 'Choose Your Path',
                 description: 'Browse our curated learning paths or let our AI recommend the best one for you.',
-                icon: '🎯'
+                icon: Target
               },
               {
                 step: '03',
                 title: 'Start Learning',
                 description: 'Dive into interactive modules, practice challenges, and get AI-powered doubt support.',
-                icon: '🚀'
+                icon: Rocket
               }
             ].map((item, index) => (
               <motion.div
@@ -474,7 +481,9 @@ const HomePage = () => {
                 <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 w-10 h-10 bg-gradient-emerald rounded-full flex items-center justify-center text-white font-bold text-sm">
                   {item.step}
                 </div>
-                <div className="text-5xl mb-4 mt-4">{item.icon}</div>
+                <div className="flex justify-center mb-4 mt-4">
+                  <item.icon className="w-12 h-12 text-teal-600 dark:text-teal-400" />
+                </div>
                 <h3 className="text-xl font-bold text-charcoal-900 dark:text-white mb-3">{item.title}</h3>
                 <p className="text-charcoal-600 dark:text-mint-200">{item.description}</p>
               </motion.div>

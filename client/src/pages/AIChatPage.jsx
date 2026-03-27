@@ -139,7 +139,7 @@ const AIChatPage = () => {
           // Show placeholder while waiting for image ID
           return (
             <div key={i} className="my-4 p-4 rounded-xl border border-teal-500/30 bg-teal-950/30">
-              <p className="text-teal-300 text-sm">🎨 Generating visual...</p>
+              <p className="text-teal-300 text-sm">Generating visual...</p>
             </div>
           );
         }

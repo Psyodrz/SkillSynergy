@@ -193,8 +193,8 @@ const DashboardPage = () => {
             <div>
               <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-slate-50 mb-1">
                 {isNewUser 
-                  ? `Welcome to SkillSynergy, ${profile?.full_name || user?.email || 'User'}! 🎉`
-                  : `Welcome back, ${profile?.full_name || user?.email || 'User'}! 👋`
+                  ? `Welcome to SkillSynergy, ${profile?.full_name || user?.email || 'User'}!`
+                  : `Welcome back, ${profile?.full_name || user?.email || 'User'}!`
                 }
               </h1>
               <p className="text-sm sm:text-base text-slate-600 dark:text-slate-300">

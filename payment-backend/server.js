@@ -1,4 +1,5 @@
 require('dotenv').config();
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 const express = require('express');
 const Razorpay = require('razorpay');
 const crypto = require('crypto');
@@ -2596,7 +2597,17 @@ app.post('/api/notifications/test', authMiddleware, async (req, res) => {
 });
 
 // ============================================
-// 5. VERCEL SERVERLESS COMPATIBILITY
+// 5. BACKGROUND TASKS & EMAIL SCHEDULER
+// ============================================
+const { startEmailScheduler } = require('./emailScheduler');
+
+// Start the continuous cron job (Only recommended for long-running servers, not Vercel Serverless)
+if (process.env.VERCEL !== '1' && !process.env.VERCEL) {
+  startEmailScheduler();
+}
+
+// ============================================
+// 6. VERCEL SERVERLESS COMPATIBILITY
 // ============================================
 // Only call app.listen() when running locally (not on Vercel)
 if (process.env.VERCEL !== '1' && !process.env.VERCEL) {

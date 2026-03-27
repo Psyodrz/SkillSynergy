@@ -2,19 +2,20 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
+  UserCircleIcon,
   BellIcon, 
-  ShieldCheckIcon, 
+  QuestionMarkCircleIcon,
   PaintBrushIcon,
+  ShieldCheckIcon, 
   GlobeAltIcon,
   KeyIcon,
   TrashIcon,
-  UserIcon,
-  QuestionMarkCircleIcon,
-  EnvelopeIcon,
-  ChatBubbleLeftRightIcon,
+  CreditCardIcon,
+  ExclamationCircleIcon,
   BookOpenIcon,
-  CheckCircleIcon,
-  ExclamationCircleIcon
+  ChatBubbleLeftRightIcon,
+  EnvelopeIcon,
+  CheckIcon
 } from '@heroicons/react/24/outline';
 import Button from '../components/Button';
 import Modal from '../components/Modal';
@@ -210,7 +211,7 @@ const SettingsPage = () => {
   };
 
   const tabs = [
-    { id: 'profile', label: 'Profile', icon: UserIcon },
+    { id: 'profile', label: 'Profile', icon: UserCircleIcon },
     { id: 'notifications', label: 'Notifications', icon: BellIcon },
     { id: 'help', label: 'Help', icon: QuestionMarkCircleIcon },
   ];
@@ -611,11 +612,11 @@ const SettingsPage = () => {
               </div>
               <ul className="space-y-4 mb-8 flex-1">
                 <li className="flex items-start">
-                  <span className="mr-3 text-emerald-500">✓</span>
+                  <CheckIcon className="mr-3 w-5 h-5 text-emerald-500 flex-shrink-0" />
                   <span className="text-charcoal-700 dark:text-mint-100 text-sm">Basic Project Creation</span>
                 </li>
                 <li className="flex items-start">
-                  <span className="mr-3 text-emerald-500">✓</span>
+                  <CheckIcon className="mr-3 w-5 h-5 text-emerald-500 flex-shrink-0" />
                   <span className="text-charcoal-700 dark:text-mint-100 text-sm">Limited AI Matches</span>
                 </li>
               </ul>

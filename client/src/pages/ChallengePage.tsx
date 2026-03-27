@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { InlineLoader } from '../components/BrandLoader';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { Bot, Loader2 } from 'lucide-react';
 import {
   ArrowLeftIcon,
   ClockIcon,
@@ -239,7 +240,7 @@ const ChallengePage: React.FC = () => {
                 onClick={startChallenge}
                 className="px-6 py-3 bg-white text-emerald-600 font-bold rounded-xl hover:bg-emerald-50 transition-colors shadow-lg"
               >
-                Start Challenge 🚀
+                <span className="flex items-center gap-1">Start Challenge <RocketLaunchIcon className="w-5 h-5" /></span>
               </button>
             ) : (
               <div className="text-right">
@@ -286,11 +287,11 @@ const ChallengePage: React.FC = () => {
             >
               {isGeneratingContent ? (
                 <>
-                  <span className="inline-block animate-spin mr-2">⚙️</span>
+                  <Loader2 className="inline-block w-5 h-5 animate-spin mr-2" />
                   Generating...
                 </>
               ) : (
-                <>🤖 Generate Learning Content with AI</>
+                <span className="flex items-center gap-2"><Bot className="w-5 h-5" /> Generate Learning Content with AI</span>
               )}
             </button>
           </motion.div>
@@ -400,7 +401,7 @@ const ChallengePage: React.FC = () => {
                             className="mt-2 p-4 bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-900/30 dark:to-teal-900/30 rounded-xl border border-emerald-200 dark:border-emerald-700"
                           >
                             <div className="flex items-start gap-2">
-                              <span className="text-xl">🤖</span>
+                              <Bot className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
                               <div>
                                 <p className="text-sm font-medium text-emerald-700 dark:text-emerald-300 mb-1">AI Tutor Feedback</p>
                                 <p className="text-charcoal-700 dark:text-mint-200">{aiFeedback.feedback}</p>
@@ -424,7 +425,7 @@ const ChallengePage: React.FC = () => {
             animate={{ opacity: 1, scale: 1 }}
             className="mt-8 text-center py-12 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-2xl text-white"
           >
-            <span className="text-6xl mb-4 block">🎉</span>
+            <div className="flex justify-center mb-4"><TrophyIcon className="w-16 h-16" /></div>
             <h2 className="text-2xl font-bold mb-2">Congratulations!</h2>
             <p>You've completed this challenge. Keep up the amazing work!</p>
           </motion.div>

@@ -42,7 +42,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Fetch user profile from the profiles table
   const fetchUserProfile = async (userId: string): Promise<UserProfile | null> => {
     try {
-      console.log('🟢 Fetching profile for user:', userId);
+      console.log('[Auth] Fetching profile for user:', userId);
       
       // Get user's session token from localStorage
       const supabaseAuthKey = `sb-${import.meta.env.VITE_SUPABASE_URL?.split('//')[1]?.split('.')[0]}-auth-token`;
@@ -72,7 +72,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
 
       const data = await response.json();
-      console.log('🟢 fetchUserProfile response:', { status: response.status, data });
+      console.log('[Auth] fetchUserProfile response:', { status: response.status, data });
 
       // If empty array, profile doesn't exist
       if (!data || data.length === 0) {
@@ -129,7 +129,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
       }
 
-      console.log('🟢 Profile fetched successfully:', userProfile);
+      console.log('[Auth] Profile fetched successfully:', userProfile);
       return userProfile;
     } catch (error) {
       console.error('Error fetching user profile:', error);
