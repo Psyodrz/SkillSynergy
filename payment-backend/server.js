@@ -2664,7 +2664,31 @@ app.post('/api/notifications/test', authMiddleware, async (req, res) => {
 // ============================================
 // 5. BACKGROUND TASKS & EMAIL SCHEDULER
 // ============================================
-const { startEmailScheduler } = require('./emailScheduler');
+const { startEmailScheduler, sendPromotionalEmails } = require('./emailScheduler');
+
+/**
+ * GET /api/cron/promote
+ * Securely trigger daily promotional emails via Vercel Cron
+ */
+app.get('/api/cron/promote', async (req, res) => {
+  const authHeader = req.headers['authorization'];
+  
+  // Verify Cron Secret (Only in Vercel environment)
+  if (process.env.VERCEL === '1' || process.env.VERCEL) {
+    if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+      console.error('[Cron] Unauthorized attempt to trigger promotion');
+      return res.status(401).json({ success: false, error: 'Unauthorized' });
+    }
+  }
+
+  try {
+    const result = await sendPromotionalEmails();
+    res.json({ success: true, ...result });
+  } catch (error) {
+    console.error('[Cron] Error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
 
 // Start the continuous cron job (Only recommended for long-running servers, not Vercel Serverless)
 if (process.env.VERCEL !== '1' && !process.env.VERCEL) {

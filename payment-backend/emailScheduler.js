@@ -236,46 +236,57 @@ function buildEmailHTML(userName) {
   `;
 }
 
-const startEmailScheduler = () => {
-  cron.schedule('0 10 * * *', async () => {
-    console.log('[Email Scheduler] Running daily promotional email job...');
-    
-    if (!process.env.RESEND_API_KEY) {
-      console.error('[Email Scheduler] Error: RESEND_API_KEY is missing from .env');
-      return;
+const sendPromotionalEmails = async () => {
+  console.log('[Email Scheduler] Running daily promotional email job...');
+  
+  if (!process.env.RESEND_API_KEY) {
+    throw new Error('RESEND_API_KEY is missing from environment');
+  }
+
+  try {
+    const sqlQuery = "SELECT full_name, email FROM profiles WHERE email IS NOT NULL AND email != ''";
+    const result = await pool.query(sqlQuery);
+
+    const users = result.rows;
+    console.log('[Email Scheduler] Found ' + users.length + ' users to email.');
+
+    if (users.length === 0) return { success: true, count: 0 };
+
+    const BATCH_SIZE = 100;
+    const sentBatches = [];
+    for (let i = 0; i < users.length; i += BATCH_SIZE) {
+      const batch = users.slice(i, i + BATCH_SIZE);
+      
+      const emailsToSend = batch.map(user => ({
+        from: 'SkillSynergy <noreply@skillsynergy.online>',
+        to: user.email,
+        subject: '\uD83D\uDE80 New skills & mentors are waiting for you on SkillSynergy!',
+        html: buildEmailHTML(user.full_name || 'Learner')
+      }));
+
+      const response = await resend.batch.send(emailsToSend);
+      sentBatches.push(response);
+      console.log('[Email Scheduler] Batch ' + (Math.floor(i/BATCH_SIZE) + 1) + ' sent.');
     }
 
+    console.log('[Email Scheduler] Daily promotional job completed successfully.');
+    return { success: true, count: users.length, batches: sentBatches.length };
+  } catch (error) {
+    console.error('[Email Scheduler] Error running job:', error);
+    throw error;
+  }
+};
+
+const startEmailScheduler = () => {
+  cron.schedule('0 10 * * *', async () => {
     try {
-      const sqlQuery = "SELECT full_name, email FROM profiles WHERE email IS NOT NULL AND email != ''";
-      const result = await pool.query(sqlQuery);
-
-      const users = result.rows;
-      console.log('[Email Scheduler] Found ' + users.length + ' users to email.');
-
-      if (users.length === 0) return;
-
-      const BATCH_SIZE = 100;
-      for (let i = 0; i < users.length; i += BATCH_SIZE) {
-        const batch = users.slice(i, i + BATCH_SIZE);
-        
-        const emailsToSend = batch.map(user => ({
-          from: 'SkillSynergy <noreply@skillsynergy.online>',
-          to: user.email,
-          subject: '\uD83D\uDE80 New skills & mentors are waiting for you on SkillSynergy!',
-          html: buildEmailHTML(user.full_name || 'Learner')
-        }));
-
-        const response = await resend.batch.send(emailsToSend);
-        console.log('[Email Scheduler] Batch ' + (Math.floor(i/BATCH_SIZE) + 1) + ' sent. Response:', response.data ? 'Success' : 'Error');
-      }
-
-      console.log('[Email Scheduler] Daily promotional job completed successfully.');
-    } catch (error) {
-      console.error('[Email Scheduler] Error running job:', error);
+      await sendPromotionalEmails();
+    } catch (e) {
+      // Error already logged in sendPromotionalEmails
     }
   });
 
   console.log('[Email Scheduler] Cron job initialized. Will run every day at 10:00 AM.');
 };
 
-module.exports = { startEmailScheduler, buildEmailHTML };
+module.exports = { startEmailScheduler, buildEmailHTML, sendPromotionalEmails };
