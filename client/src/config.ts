@@ -5,8 +5,8 @@ const isProd = import.meta.env.PROD;
 let API_URL = import.meta.env.VITE_API_URL || '';
 
 if (isProd) {
-  // Use a dedicated, stable backend alias to avoid 508 Infinite Loop errors with the generic projects alias
-  API_URL = 'https://skill-synergy-backend-api.vercel.app';
+  // Use the local project's serverless function (/api/contact.js)
+  API_URL = '';
 }
 
 export const config = {
