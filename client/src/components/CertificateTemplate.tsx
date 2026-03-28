@@ -62,7 +62,7 @@ export const CertificateTemplate = React.forwardRef<HTMLDivElement, CertificateT
 
             <div className="flex flex-col items-center justify-center">
               <p className="text-xs font-bold tracking-widest text-gray-400 uppercase mb-4">
-                Recognized & Certified By
+                Curriculum Aligned With
               </p>
               <div className="flex items-center gap-8">
                 {/* Google */}
