@@ -73,10 +73,7 @@ export default async function handler(req, res) {
     console.error('Contact API Error:', error);
     return res.status(500).json({ 
       success: false, 
-      error: 'Failed to send message',
-      details: error.message || 'Unknown error',
-      rawError: error,
-      version
+      error: 'Failed to send message'
     });
   }
 }
