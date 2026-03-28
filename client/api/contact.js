@@ -74,8 +74,9 @@ export default async function handler(req, res) {
     return res.status(500).json({ 
       success: false, 
       error: 'Failed to send message',
-      details: error.message,
-      code: error.status || error.code
+      details: error.message || 'Unknown error',
+      rawError: error,
+      version
     });
   }
 }
