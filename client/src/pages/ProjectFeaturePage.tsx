@@ -75,11 +75,13 @@ const ProjectFeaturePage = () => {
                 </div>
               </div>
             </div>
-            <div className="bg-gray-100 dark:bg-charcoal-800 rounded-3xl p-8 aspect-video flex items-center justify-center">
-              <div className="text-center">
-                <p className="text-charcoal-500 dark:text-gray-500">Project Dashboard Preview</p>
-                {/* Placeholder for UI Screenshot */}
-              </div>
+            <div className="rounded-3xl overflow-hidden shadow-2xl relative aspect-video flex items-center justify-center group bg-white/5 dark:bg-charcoal-800/20 backdrop-blur-sm border border-gray-200 dark:border-charcoal-700">
+              <img 
+                src="/images/project_dashboard_mockup.png" 
+                alt="Project Dashboard Preview" 
+                className="object-cover w-full h-full transform group-hover:scale-105 transition-transform duration-500"
+              />
+              <div className="absolute inset-0 bg-purple-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
             </div>
           </div>
         </div>
