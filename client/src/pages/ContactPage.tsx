@@ -113,7 +113,7 @@ const ContactPage = () => {
               </p>
               <div className="mt-3 pt-3 border-t border-gray-200 dark:border-charcoal-700">
                 <p className="text-xs text-gray-600 dark:text-gray-400">
-                  <strong className="text-gray-900 dark:text-white">Founders:</strong> Aditya Srivastava (Owner) & Bhavya Srivastava (CEO)
+                  <strong className="text-gray-900 dark:text-white">Founder:</strong> Aditya Srivastava (Owner & CEO)
                 </p>
               </div>
             </div>

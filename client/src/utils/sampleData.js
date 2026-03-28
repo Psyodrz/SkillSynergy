@@ -108,7 +108,7 @@ export const sampleConnections = [
     id: 1,
     user: sampleUsers[0],
     status: 'connected',
-    connectedAt: '2024-01-15'
+    connectedAt: '2025-01-15'
   },
   {
     id: 2,
@@ -120,6 +120,6 @@ export const sampleConnections = [
     id: 3,
     user: sampleUsers[2],
     status: 'connected',
-    connectedAt: '2024-02-03'
+    connectedAt: '2025-02-03'
   }
 ];

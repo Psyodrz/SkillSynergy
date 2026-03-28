@@ -41,7 +41,7 @@ const TermsPage = () => {
               <p className="text-gray-600 dark:text-gray-400">Entity Name: SkillSynergy</p>
               <p className="text-gray-600 dark:text-gray-400">Registered Address: Lucknow, Uttar Pradesh, India</p>
               <p className="text-gray-600 dark:text-gray-400">Contact Email: aditya.s70222@gmail.com</p>
-              <p className="text-gray-600 dark:text-gray-400">Founders: Aditya Srivastava (Owner) & Bhavya Srivastava (CEO)</p>
+              <p className="text-gray-600 dark:text-gray-400">Founder: Aditya Srivastava (Owner & CEO)</p>
             </div>
           </section>
 

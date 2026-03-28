@@ -21,7 +21,7 @@ const DateSeparator: React.FC<DateSeparatorProps> = ({ date }) => {
     } else if (msgDateOnly.getTime() === yesterdayOnly.getTime()) {
       return 'Yesterday';
     } else {
-      // Format as "December 23, 2024"
+      // Format as "December 23, 2025"
       return messageDate.toLocaleDateString('en-US', {
         month: 'long',
         day: 'numeric',
