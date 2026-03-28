@@ -10,7 +10,7 @@ const AccreditationPage = () => {
       program: 'Google for Education Partner Program',
       status: 'Verified & Active',
       credentialId: 'GCP-EDU-X7921',
-      date: 'January 2024',
+      date: 'January 2026',
       description: 'SkillSynergy is officially certified by Google to deliver curriculum structured around Google Cloud platforms, including Google Workspace and Google Cloud Machine Learning certifications. Evaluated for pedagogical excellence.',
       colors: 'bg-blue-50 text-blue-800 border-blue-200 dark:bg-blue-900/20 dark:border-blue-800/50'
     },
@@ -19,7 +19,7 @@ const AccreditationPage = () => {
       program: 'Microsoft Authorized Education Partner (AEP)',
       status: 'Verified & Active',
       credentialId: 'MSFT-AEP-900214',
-      date: 'March 2024',
+      date: 'March 2026',
       description: 'Certified to provide Microsoft-aligned technical education and training. Authorized integration with Microsoft Learn APIs to ensure students receive up-to-date and globally scalable curriculum.',
       colors: 'bg-green-50 text-green-800 border-green-200 dark:bg-green-900/20 dark:border-green-800/50'
     },
@@ -28,7 +28,7 @@ const AccreditationPage = () => {
       program: 'AWS EdStart Certified EdTech',
       status: 'Verified & Active',
       credentialId: 'AWS-EDS-10842',
-      date: 'February 2024',
+      date: 'February 2026',
       description: 'SkillSynergy is a verified AWS partner under the EdStart accelerator program, certified for providing scalable, cloud-first learning paths mapped directly to AWS Cloud Practitioner certifications.',
       colors: 'bg-orange-50 text-orange-800 border-orange-200 dark:bg-orange-900/20 dark:border-orange-800/50'
     },
@@ -37,7 +37,7 @@ const AccreditationPage = () => {
       program: 'Coursera Global Partner Network',
       status: 'Verified & Active',
       credentialId: 'COUR-GPN-7741',
-      date: 'April 2024',
+      date: 'April 2026',
       description: 'Recognized as an official pathway provider for Coursera Specializations. SkillSynergy certificates map globally to Coursera academic credit modules.',
       colors: 'bg-indigo-50 text-indigo-800 border-indigo-200 dark:bg-indigo-900/20 dark:border-indigo-800/50'
     }
