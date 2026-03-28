@@ -3,6 +3,12 @@ import { Resend } from 'resend';
 export default async function handler(req, res) {
   // Initialize Resend inside the handler to ensure env vars are fresh
   const resend = new Resend(process.env.RESEND_API_KEY);
+  const version = "v1.0.4"; // Incrementing this to track deploy
+
+  // Check if API KEY exists
+  if (!process.env.RESEND_API_KEY) {
+    return res.status(500).json({ success: false, error: 'Internal Server Error: Missing Config', version });
+  }
 
   // Only allow POST requests
   if (req.method !== 'POST') {
