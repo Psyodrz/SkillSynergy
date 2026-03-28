@@ -4,8 +4,8 @@
 const isProd = import.meta.env.PROD;
 let API_URL = import.meta.env.VITE_API_URL || '';
 
-if (isProd && API_URL.includes('localhost')) {
-  console.warn('Production build detected localhost API_URL. Falling back to relative path.');
+if (isProd && (API_URL.includes('localhost') || API_URL.includes('jrlfxrc1t'))) {
+  console.warn('Production build detected localhost or broken API_URL. Falling back to relative path.');
   API_URL = '';
 }
 
