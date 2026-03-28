@@ -560,9 +560,9 @@ const HomePage = () => {
                 <h3 className="text-xl font-bold text-charcoal-900 dark:text-white mb-2">{plan.name}</h3>
                 <div className="flex items-baseline mb-4">
                   <span className="text-4xl font-extrabold text-charcoal-900 dark:text-white">
-                    {plan.price === 0 ? 'Free' : `₹${plan.price}`}
+                    {plan.monthlyPrice === 0 ? 'Free' : `₹${plan.monthlyPrice}`}
                   </span>
-                  {plan.price > 0 && (
+                  {plan.monthlyPrice > 0 && (
                     <span className="text-charcoal-500 dark:text-mint-300 ml-2">/month</span>
                   )}
                 </div>
@@ -583,7 +583,7 @@ const HomePage = () => {
                       : 'border border-emerald-500 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20'
                   }`}
                 >
-                  {plan.price === 0 ? 'Get Started Free' : 'Upgrade Now'}
+                  {plan.monthlyPrice === 0 ? 'Get Started Free' : 'Upgrade Now'}
                 </Link>
               </motion.div>
             ))}

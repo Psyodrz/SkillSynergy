@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { CertificateTemplate } from '../components/CertificateTemplate';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
