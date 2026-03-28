@@ -1,3 +1,5 @@
+import { Resend } from 'resend';
+
 export default async function handler(req, res) {
   // Initialize Resend inside the handler to ensure env vars are fresh
   const resend = new Resend(process.env.RESEND_API_KEY);
