@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
-import { ShieldCheckIcon } from '@heroicons/react/24/solid';
+import { ShieldCheckIcon, DocumentCheckIcon } from '@heroicons/react/24/solid';
+import { Link } from 'react-router-dom';
 
 const badges = [
   { name: 'Google for Education', color: 'text-blue-500' },
@@ -47,6 +48,19 @@ const TrustBadgeStrip = () => {
               </div>
             ))}
           </motion.div>
+        </div>
+
+        {/* Link to Accreditation Page */}
+        <div className="mt-8 flex justify-center">
+          <Link
+            to="/accreditation"
+            className="group flex items-center gap-2 px-6 py-2.5 bg-white dark:bg-charcoal-700 hover:bg-emerald-50 dark:hover:bg-charcoal-600 rounded-full border border-gray-200 dark:border-charcoal-600 shadow-sm transition-all focus:ring-2 focus:ring-emerald-500 focus:outline-none focus:ring-offset-2"
+          >
+            <DocumentCheckIcon className="w-5 h-5 text-emerald-500 group-hover:text-emerald-600 dark:group-hover:text-emerald-400" />
+            <span className="text-sm font-semibold text-gray-700 dark:text-gray-200 group-hover:text-emerald-700 dark:group-hover:text-emerald-400">
+              View Official Accreditation
+            </span>
+          </Link>
         </div>
       </div>
       <style>{`

@@ -47,6 +47,7 @@ import ChallengePage from '../pages/ChallengePage';
 import TaskDetailPage from '../pages/TaskDetailPage';
 import PricingPage from '../pages/PricingPage';
 import CertificatePreviewPage from '../pages/CertificatePreviewPage';
+import AccreditationPage from '../pages/AccreditationPage';
 import { useAuth } from '../context/AuthContext';
 
 function WebRoutes() {
@@ -72,7 +73,7 @@ function WebRoutes() {
   // Check if current route is a public route
   const publicRoutes = [
     '/', '/login', '/terms', '/privacy', '/refund', '/about', '/contact',
-    '/cookies', '/disclaimer', '/faq', '/connect', '/learn', '/projects', '/chat', '/demo', '/blog', '/pricing', '/forgot-password', '/reset-password'
+    '/cookies', '/disclaimer', '/faq', '/connect', '/learn', '/projects', '/chat', '/demo', '/blog', '/pricing', '/forgot-password', '/reset-password', '/accreditation'
   ];
   // Helper to check if path starts with public route (for dynamic routes like /blog/:slug)
   const isPublicRoute = publicRoutes.some(route => location.pathname === route) || location.pathname.startsWith('/blog/');
@@ -129,6 +130,7 @@ function WebRoutes() {
               <Route path="/blog" element={<BlogPage />} />
               <Route path="/blog/:slug" element={<BlogPostPage />} />
               <Route path="/certificate-preview" element={<CertificatePreviewPage />} />
+              <Route path="/accreditation" element={<AccreditationPage />} />
               
               {/* Protected Routes */}
               <Route path="/dashboard" element={
