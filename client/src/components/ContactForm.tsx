@@ -32,6 +32,7 @@ const ContactForm = () => {
       });
 
       const data = await response.json();
+      console.log('Contact API Response:', { ok: response.ok, status: response.status, data });
 
       if (response.ok && data.success) {
         setStatus('success');
