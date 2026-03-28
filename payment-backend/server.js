@@ -9,7 +9,10 @@ const OpenAI = require('openai');
 const { HfInference } = require('@huggingface/inference');
 const { createClient } = require('@supabase/supabase-js');
 const authMiddleware = require('./middleware/auth');
+const { Resend } = require('resend');
 const { generateImage: generateGoogleImage, buildEducationalPrompt } = require('./services/googleImageService');
+
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 const app = express();
 
@@ -100,6 +103,58 @@ const imageCache = new Map();
 // Health check endpoint
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', endpoints: ['/api/smart-match', '/api/match/teachers', '/api/create-order', '/api/generate-image'], timestamp: new Date().toISOString() });
+});
+
+/**
+ * POST /api/contact
+ * Handle contact form submissions and send email notifications
+ * Public Route
+ */
+app.post('/api/contact', async (req, res) => {
+  try {
+    const { name, email, message } = req.body;
+
+    if (!name || !email || !message) {
+      return res.status(400).json({ success: false, error: 'Missing required fields' });
+    }
+
+    // 1. Notify the owner (Aditya)
+    await resend.emails.send({
+      from: 'SkillSynergy <noreply@skillsynergy.online>',
+      to: 'aditya.s70222@gmail.com',
+      subject: `New Contact: ${name} via SkillSynergy`,
+      html: `
+        <div style="font-family: sans-serif; padding: 20px; color: #333;">
+          <h2 style="color: #10b981;">New Message Received</h2>
+          <p><strong>From:</strong> ${name} (${email})</p>
+          <p><strong>Message:</strong></p>
+          <div style="background: #f4f4f4; padding: 15px; border-radius: 8px;">
+            ${message.replace(/\\n/g, '<br/>')}
+          </div>
+        </div>
+      `
+    });
+
+    // 2. Send confirmation to the user
+    await resend.emails.send({
+      from: 'SkillSynergy <support@skillsynergy.online>',
+      to: email,
+      subject: 'We received your message!',
+      html: `
+        <div style="font-family: sans-serif; padding: 20px; color: #333;">
+          <h2 style="color: #10b981;">Hi ${name},</h2>
+          <p>Thank you for reaching out to SkillSynergy. We've received your message and our team will get back to you shortly.</p>
+          <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;"/>
+          <p style="font-size: 12px; color: #666;">This is an automated confirmation. Please do not reply directly to this email.</p>
+        </div>
+      `
+    });
+
+    res.json({ success: true, message: 'Message sent successfully' });
+  } catch (error) {
+    console.error('Contact API Error:', error);
+    res.status(500).json({ success: false, error: 'Failed to send message' });
+  }
 });
 
 /**
