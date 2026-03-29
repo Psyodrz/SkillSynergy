@@ -451,6 +451,7 @@ app.post('/api/smart-match', async (req, res) => {
  * POST /api/create-order
  * Create a Razorpay order
  * Protected Route
+ * Deployed: 2026-03-29 - Env vars loaded
  */
 app.post('/api/create-order', authMiddleware, async (req, res) => {
   try {
@@ -458,6 +459,12 @@ app.post('/api/create-order', authMiddleware, async (req, res) => {
     const amount = typeof req.body.amount === 'string' ? parseFloat(req.body.amount) : Number(req.body.amount);
     
     console.log('[Payment] Creating order:', { amount, currency, receipt, plan_id, user: req.user?.id });
+    console.log('[Payment] Environment check:', { 
+      hasRazorpayKeyId: !!process.env.RAZORPAY_KEY_ID, 
+      hasRazorpayKeySecret: !!process.env.RAZORPAY_KEY_SECRET,
+      hasDatabaseUrl: !!process.env.DATABASE_URL,
+      nodeEnv: process.env.NODE_ENV || 'not set'
+    });
 
     if (!Number.isFinite(amount) || amount <= 0) {
       console.error('[Payment] Invalid amount received:', req.body.amount);
