@@ -496,72 +496,94 @@ app.post('/api/smart-match', async (req, res) => {
 });
 
 /**
+ * GET /api/create-order
+ * Handle GET requests with instructions
+ */
+app.get('/api/create-order', (req, res) => {
+  res.json({ message: 'Use POST method to create an order' });
+});
+
+/**
  * POST /api/create-order
  * Create a Razorpay order
  * Protected Route
- * Deployed: 2026-03-29 - Env vars loaded
+ * Deployed: 2026-03-29 - Debug version
  */
 app.post('/api/create-order', authMiddleware, async (req, res) => {
+  console.log('[Payment] ====== START CREATE ORDER ======');
+  console.log('[Payment] Request body:', JSON.stringify(req.body));
+  console.log('[Payment] User:', req.user?.id);
+  
   try {
-    const { currency = 'INR', receipt, plan_id } = req.body;
-    const amount = typeof req.body.amount === 'string' ? parseFloat(req.body.amount) : Number(req.body.amount);
+    const { currency = 'INR', receipt, plan_id, billing_cycle } = req.body;
     
-    console.log('[Payment] Creating order:', { amount, currency, receipt, plan_id, user: req.user?.id });
-    console.log('[Payment] Environment check:', { 
-      hasRazorpayKeyId: !!process.env.RAZORPAY_KEY_ID, 
-      hasRazorpayKeySecret: !!process.env.RAZORPAY_KEY_SECRET,
-      hasDatabaseUrl: !!process.env.DATABASE_URL,
-      nodeEnv: process.env.NODE_ENV || 'not set'
-    });
+    // Validate amount
+    const rawAmount = req.body.amount;
+    console.log('[Payment] Raw amount:', rawAmount, 'Type:', typeof rawAmount);
+    
+    const amount = typeof rawAmount === 'string' ? parseFloat(rawAmount) : Number(rawAmount);
+    console.log('[Payment] Parsed amount:', amount);
 
     if (!Number.isFinite(amount) || amount <= 0) {
-      console.error('[Payment] Invalid amount received:', req.body.amount);
-      return res.status(400).json({ success: false, error: 'Invalid amount' });
+      console.error('[Payment] Invalid amount:', amount);
+      return res.status(400).json({ success: false, error: 'Invalid amount: ' + rawAmount });
     }
 
+    // Check env vars
+    console.log('[Payment] Checking env vars...');
+    console.log('[Payment] RAZORPAY_KEY_ID exists:', !!process.env.RAZORPAY_KEY_ID);
+    console.log('[Payment] RAZORPAY_KEY_SECRET exists:', !!process.env.RAZORPAY_KEY_SECRET);
+    
     if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
-      console.error('[Payment] Razorpay keys missing in production environment');
+      console.error('[Payment] Missing Razorpay keys');
       return res.status(503).json({
         success: false,
-        error: 'Payment gateway is not configured. Set RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET on the payment backend deployment.'
+        error: 'Payment gateway not configured'
       });
     }
     
-    // Amount is in smallest currency unit (paise for INR)
-    // Example: 500 INR = 50000 paise
-    
+    // Create order options
     const options = {
-      amount: Math.round(amount * 100), // amount in the smallest currency unit (paise for INR)
+      amount: Math.round(amount * 100),
       currency,
       receipt: receipt || `rcpt_${Date.now()}`,
       payment_capture: 1,
       notes: {
         plan_id: plan_id || 'pro',
-        billing_cycle: req.body.billing_cycle || 'monthly',
+        billing_cycle: billing_cycle || 'monthly',
         user_id: req.user?.id
       }
     };
-
+    
+    console.log('[Payment] Creating Razorpay order with options:', JSON.stringify(options));
+    
+    // Create the order
+    let order;
     try {
-      const order = await razorpay.orders.create(options);
-      console.log('[Payment] Razorpay order created successfully:', order.id);
-      res.json({ success: true, order });
-    } catch (razorPayError) {
-      console.error('[Payment] Razorpay SDK Error:', razorPayError);
-      const desc = razorPayError.error?.description || razorPayError.description;
-      const msg = desc || razorPayError.message || 'Razorpay rejected the request';
-      res.status(502).json({
+      order = await razorpay.orders.create(options);
+      console.log('[Payment] Order created:', order.id);
+    } catch (rzpError) {
+      console.error('[Payment] Razorpay error:', rzpError);
+      console.error('[Payment] Razorpay error details:', rzpError.error || rzpError);
+      return res.status(502).json({
         success: false,
-        error: 'Failed to create Razorpay order',
-        details: msg,
-        code: razorPayError.error?.code || razorPayError.code
+        error: 'Razorpay error: ' + (rzpError.error?.description || rzpError.message || 'Unknown'),
+        code: rzpError.code || rzpError.error?.code
       });
     }
+    
+    console.log('[Payment] ====== SUCCESS ======');
+    res.json({ success: true, order });
+    
   } catch (error) {
-    console.error('[Payment] Unhandled error in create-order:', error);
-    console.error('[Payment] Error stack:', error.stack);
-    console.error('[Payment] Request body:', req.body);
-    res.status(500).json({ success: false, error: error.message, stack: error.stack });
+    console.error('[Payment] ====== UNHANDLED ERROR ======');
+    console.error('[Payment] Error:', error);
+    console.error('[Payment] Stack:', error.stack);
+    res.status(500).json({ 
+      success: false, 
+      error: error.message,
+      stack: error.stack 
+    });
   }
 });
 
