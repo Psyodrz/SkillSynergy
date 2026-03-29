@@ -510,8 +510,10 @@ app.post('/api/create-order', authMiddleware, async (req, res) => {
       });
     }
   } catch (error) {
-    console.error('Error creating Razorpay order:', error);
-    res.status(500).json({ success: false, error: error.message });
+    console.error('[Payment] Unhandled error in create-order:', error);
+    console.error('[Payment] Error stack:', error.stack);
+    console.error('[Payment] Request body:', req.body);
+    res.status(500).json({ success: false, error: error.message, stack: error.stack });
   }
 });
 
