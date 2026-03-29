@@ -2879,6 +2879,18 @@ if (process.env.VERCEL !== '1' && !process.env.VERCEL) {
   });
 }
 
+// Global error handler
+app.use((err, req, res, next) => {
+  console.error('[Global Error]', err);
+  console.error('[Global Error] Stack:', err.stack);
+  res.status(500).json({ 
+    success: false, 
+    error: err.message,
+    stack: err.stack,
+    type: err.name 
+  });
+});
+
 // Export for Vercel serverless
 module.exports = app;
 
