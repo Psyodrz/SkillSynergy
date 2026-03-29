@@ -125,32 +125,26 @@ app.get('/api/health', (req, res) => {
 });
 
 /**
- * GET /api/test-simple
- * Simple test endpoint - no auth required
+ * GET /api/ping
+ * Ultra simple ping test
  */
-app.get('/api/test-simple', (req, res) => {
-  res.json({
-    success: true,
-    message: 'Test endpoint works',
-    env: {
-      hasRazorpayKeyId: !!process.env.RAZORPAY_KEY_ID,
-      hasRazorpayKeySecret: !!process.env.RAZORPAY_KEY_SECRET,
-      keyIdPrefix: process.env.RAZORPAY_KEY_ID ? process.env.RAZORPAY_KEY_ID.substring(0, 8) : 'none'
-    },
-    timestamp: new Date().toISOString()
-  });
+app.get('/api/ping', (req, res) => {
+  res.json({ pong: true, time: Date.now() });
 });
 
 /**
- * POST /api/test-simple
- * POST test endpoint - no auth required
+ * POST /api/ping
+ * Ultra simple ping test with body echo
  */
-app.post('/api/test-simple', (req, res) => {
-  res.json({
-    success: true,
-    message: 'POST test endpoint works',
-    receivedBody: req.body,
-    timestamp: new Date().toISOString()
+app.post('/api/ping', (req, res) => {
+  res.json({ 
+    pong: true, 
+    time: Date.now(),
+    body: req.body,
+    envKeys: {
+      hasRazorpayKeyId: !!process.env.RAZORPAY_KEY_ID,
+      hasRazorpayKeySecret: !!process.env.RAZORPAY_KEY_SECRET
+    }
   });
 });
 
