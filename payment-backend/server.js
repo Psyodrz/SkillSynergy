@@ -487,11 +487,41 @@ app.post('/api/smart-match', async (req, res) => {
 });
 
 /**
- * GET /api/create-order
- * Handle GET requests with instructions
+ * POST /api/create-order-noauth
+ * Create order WITHOUT auth - for debugging only
  */
-app.get('/api/create-order', (req, res) => {
-  res.json({ message: 'Use POST method to create an order' });
+app.post('/api/create-order-noauth', async (req, res) => {
+  console.log('[NoAuth] Create order called');
+  console.log('[NoAuth] Body:', req.body);
+  
+  try {
+    const { amount, currency = 'INR' } = req.body;
+    
+    if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
+      return res.status(503).json({
+        success: false,
+        error: 'Razorpay not configured',
+        hasKeyId: !!process.env.RAZORPAY_KEY_ID,
+        hasKeySecret: !!process.env.RAZORPAY_KEY_SECRET
+      });
+    }
+    
+    const order = await razorpay.orders.create({
+      amount: Math.round(Number(amount) * 100),
+      currency,
+      receipt: `rcpt_${Date.now()}`,
+      payment_capture: 1
+    });
+    
+    res.json({ success: true, order });
+  } catch (error) {
+    console.error('[NoAuth] Error:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message,
+      stack: error.stack
+    });
+  }
 });
 
 /**
