@@ -149,6 +149,38 @@ app.post('/api/ping', (req, res) => {
 });
 
 /**
+ * GET /api/status-v2
+ * New status endpoint - forces fresh deployment
+ */
+app.get('/api/status-v2', (req, res) => {
+  res.json({
+    status: 'ok',
+    version: '2026-03-29-v2',
+    env: {
+      hasRazorpayKeyId: !!process.env.RAZORPAY_KEY_ID,
+      hasRazorpayKeySecret: !!process.env.RAZORPAY_KEY_SECRET,
+      keyPrefix: process.env.RAZORPAY_KEY_ID ? process.env.RAZORPAY_KEY_ID.substring(0, 10) : 'MISSING'
+    },
+    time: new Date().toISOString()
+  });
+});
+
+/**
+ * POST /api/status-v2
+ * Test POST with body echo
+ */
+app.post('/api/status-v2', (req, res) => {
+  res.json({
+    received: req.body,
+    env: {
+      hasRazorpayKeyId: !!process.env.RAZORPAY_KEY_ID,
+      hasRazorpayKeySecret: !!process.env.RAZORPAY_KEY_SECRET
+    },
+    time: new Date().toISOString()
+  });
+});
+
+/**
  * POST /api/contact
  * Handle contact form submissions and send email notifications
  * Public Route
