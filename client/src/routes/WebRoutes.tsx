@@ -51,6 +51,8 @@ import CertificatePreviewPage from '../pages/CertificatePreviewPage';
 import AccreditationPage from '../pages/AccreditationPage';
 import { useAuth } from '../context/AuthContext';
 
+import { StudentFeedbackWidget } from '../components/StudentFeedbackWidget';
+
 function WebRoutes() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -108,6 +110,7 @@ function WebRoutes() {
           )}
           
           <div className="flex-1 relative">
+            <StudentFeedbackWidget />
             <AnimatePresence mode="wait">
               <motion.div
                 key={location.pathname}

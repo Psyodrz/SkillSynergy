@@ -49,10 +49,15 @@ tsc_output_utf8.txt
 ports.txt
 email_preview.html
 
-# Env variants (keep only .env in each subdir)
+# Env variants (keep only .env in each subdir — never commit real keys)
 **/.env.vercel
+**/.env.vercel.*
 **/.env.vercel.prod
 **/.env.production.clean
 **/.db_url
 **/.db_url_temp
 server_error.log
+
+# Local log dumps (never commit)
+payment-backend/vercel_logs*.txt
+payment-backend/vercel_full_logs.txt

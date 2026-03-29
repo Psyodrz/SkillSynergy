@@ -13,6 +13,11 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 
 const authMiddleware = async (req, res, next) => {
   try {
+    if (!supabaseUrl || !supabaseKey) {
+      console.error('Auth middleware: Supabase URL or anon key is not configured');
+      return res.status(503).json({ success: false, error: 'Authentication service unavailable' });
+    }
+
     const authHeader = req.headers.authorization;
     
     if (!authHeader) {
@@ -25,20 +30,22 @@ const authMiddleware = async (req, res, next) => {
       return res.status(401).json({ success: false, error: 'Invalid Authorization header format' });
     }
 
-    // Verify token using Supabase Auth
     const { data: { user }, error } = await supabase.auth.getUser(token);
 
-    if (error || !user) {
-      console.error('Auth Error:', error?.message);
+    if (error) {
+      console.error('Auth Error:', error.message);
+      return res.status(401).json({ success: false, error: error.message || 'Invalid or expired token' });
+    }
+
+    if (!user) {
       return res.status(401).json({ success: false, error: 'Invalid or expired token' });
     }
 
-    // Attach user to request
     req.user = user;
     next();
   } catch (error) {
     console.error('Auth Middleware Error:', error);
-    res.status(500).json({ success: false, error: 'Internal Server Error' });
+    return res.status(500).json({ success: false, error: 'Internal Server Error' });
   }
 };
 

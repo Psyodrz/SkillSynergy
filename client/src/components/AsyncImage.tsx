@@ -12,6 +12,8 @@ interface AsyncImageProps {
   triggerOnMount?: boolean;
 }
 
+import config from '../config';
+
 const AsyncImage: React.FC<AsyncImageProps> = ({ 
   entityType, 
   entityId, 
@@ -26,7 +28,7 @@ const AsyncImage: React.FC<AsyncImageProps> = ({
   const pollIntervalRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [retryCount, setRetryCount] = useState(0);
 
-  const API_BASE = 'http://localhost:5000/api'; // Or usage of environment variable
+  const API_BASE = config.API_URL;
 
   const clearPolling = () => {
     if (pollIntervalRef.current) {

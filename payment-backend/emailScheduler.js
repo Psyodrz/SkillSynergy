@@ -3,7 +3,7 @@ const { Resend } = require('resend');
 const { Pool } = require('pg');
 require('dotenv').config();
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,

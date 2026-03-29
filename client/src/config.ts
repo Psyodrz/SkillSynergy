@@ -1,13 +1,13 @@
 // Logic to handle production vs development API URL
-// In production, we want to use the relative path (to use Vercel rewrites)
-// or the explicit production URL, but NEVER localhost.
+// In production, use the deployed backend URL.
+// In development, use the env variable (defaults to localhost:5005).
 const isProd = import.meta.env.PROD;
-let API_URL = import.meta.env.VITE_API_URL || '';
 
-if (isProd) {
-  // Use the local project's serverless function (/api/contact.js)
-  API_URL = '';
-}
+// VITE_API_URL should be set in Vercel env vars for the client project
+// pointing to the payment-backend deployment URL.
+const API_URL = isProd
+  ? (import.meta.env.VITE_API_URL || 'https://payment-backend-two.vercel.app')
+  : (import.meta.env.VITE_API_URL || 'http://localhost:5005');
 
 export const config = {
   API_URL,

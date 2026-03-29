@@ -12,7 +12,8 @@ import {
   XMarkIcon,
   AcademicCapIcon,
   UserPlusIcon,
-  StarIcon
+  StarIcon,
+  ChatBubbleBottomCenterTextIcon
 } from '@heroicons/react/24/outline';
 
 const Sidebar = ({ isOpen, onClose }: { isOpen?: boolean; onClose?: () => void }) => {
@@ -129,6 +130,16 @@ const Sidebar = ({ isOpen, onClose }: { isOpen?: boolean; onClose?: () => void }
                 </p>
               </div>
             </div>
+            <button
+              onClick={() => {
+                window.dispatchEvent(new CustomEvent('open-feedback'));
+                if (onClose) onClose();
+              }}
+              className="flex items-center w-full px-3 py-2 text-sm font-medium mb-1 text-indigo-600 dark:text-indigo-400 rounded-xl hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-colors duration-200"
+            >
+              <ChatBubbleBottomCenterTextIcon className="w-5 h-5 mr-3" />
+              Give Feedback
+            </button>
             <button
               onClick={() => signOut()}
               className="flex items-center w-full px-3 py-2 text-sm font-medium text-red-600 dark:text-red-400 rounded-xl hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors duration-200"

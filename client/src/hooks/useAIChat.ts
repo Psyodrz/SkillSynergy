@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 import config from '../config';
 
-const API_URL = config.API_URL || '';
+const API_URL = config.API_URL;
 
 export interface AIMessage {
   id: string;

@@ -1,8 +1,13 @@
 {
+  "cleanUrls": true,
   "rewrites": [
     {
       "source": "/api/contact",
       "destination": "/api/contact.js"
+    },
+    {
+      "source": "/(auth|api|static|assets)/(.*)",
+      "destination": "/$1/$2"
     },
     {
       "source": "/(.*)",

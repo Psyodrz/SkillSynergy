@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import type { User } from '@supabase/supabase-js';
 import type { UserProfile } from '../lib/supabaseClient';
@@ -36,10 +36,17 @@ export const useAuth = () => {
   return context;
 };
 
+function isInvalidRefreshAuthError(err: unknown): boolean {
+  const msg = err instanceof Error ? err.message : String(err ?? '');
+  return msg.includes('Refresh Token Not Found') || msg.includes('Invalid Refresh Token');
+}
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  /** Avoids stale closure: skip redundant profile fetches on TOKEN_REFRESHED and duplicate INITIAL_SESSION */
+  const lastProfileUserIdRef = useRef<string | null>(null);
 
   // Fetch user profile from the profiles table
   const fetchUserProfile = async (userId: string): Promise<UserProfile | null> => {
@@ -149,35 +156,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     }, 10000); // 10 seconds timeout
 
-    // Check for existing Supabase session
+    // Probe session for corrupt / revoked refresh tokens; profile loads via onAuthStateChange
     const initializeAuth = async () => {
       console.log('Initializing auth...');
       try {
-        // Get the current session from Supabase
-        // getSession() is fast as it checks localStorage first
-        const { data: { session }, error } = await supabase.auth.getSession();
+        const { error } = await supabase.auth.getSession();
 
         if (error) {
           console.error('Error getting session:', error);
-          setLoading(false);
-          return;
-        }
-
-        if (session?.user) {
-          console.log('Found existing session for:', session.user.email);
-          // User is authenticated
-          setUser(session.user);
-          
-          // Fetch their profile
-          const userProfile = await fetchUserProfile(session.user.id);
-          setProfile(userProfile);
-        } else {
-          console.log('No existing session found');
+          if (isInvalidRefreshAuthError(error)) {
+            console.warn('Auth session expired or invalid. Clearing local session...');
+            await supabase.auth.signOut({ scope: 'local' });
+          }
         }
       } catch (error) {
         console.error('Error initializing auth:', error);
+        if (isInvalidRefreshAuthError(error)) {
+          await supabase.auth.signOut({ scope: 'local' });
+        }
       } finally {
-        setLoading(false);
         clearTimeout(safetyTimeout);
       }
     };
@@ -190,26 +187,36 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         console.log('Auth state changed:', event);
 
         if (event === 'SIGNED_OUT') {
+          console.log('[Auth] User signed out accurately');
+          lastProfileUserIdRef.current = null;
           setUser(null);
           setProfile(null);
+          localStorage.removeItem('supabase.auth.token'); // Safety clear
           setLoading(false);
           return;
         }
 
         if (session?.user) {
           setUser(session.user);
-          
-          // Only fetch profile if we don't have it or if it's a login/initial event
-          // For token refresh, we might not need to refetch profile every time, 
-          // but it's safer to ensure consistency.
-          if (!profile || event === 'SIGNED_IN' || event === 'INITIAL_SESSION') {
-             const userProfile = await fetchUserProfile(session.user.id);
-             setProfile(userProfile);
+
+          if (event === 'TOKEN_REFRESHED') {
+            setLoading(false);
+            return;
           }
+
+          const uid = session.user.id;
+          if (event !== 'SIGNED_IN' && lastProfileUserIdRef.current === uid) {
+            setLoading(false);
+            return;
+          }
+
+          const userProfile = await fetchUserProfile(uid);
+          setProfile(userProfile);
+          lastProfileUserIdRef.current = uid;
         } else if (!session) {
-           // Handle case where session is null but event wasn't SIGNED_OUT (e.g. generic change)
-           setUser(null);
-           setProfile(null);
+          lastProfileUserIdRef.current = null;
+          setUser(null);
+          setProfile(null);
         }
 
         setLoading(false);
@@ -243,14 +250,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       if (data.user) {
-        // Explicitly set state immediately to avoid race conditions
         setUser(data.user);
-        
-        // Fetch profile immediately
-        const userProfile = await fetchUserProfile(data.user.id);
-        setProfile(userProfile);
-        
         console.log('Sign in successful:', data.user.email);
+        // Profile is loaded by onAuthStateChange (SIGNED_IN) only, to avoid duplicate fetches
         return { success: true };
       }
 
@@ -356,11 +358,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (error) throw error;
       if (data.user) {
         setUser(data.user);
+        lastProfileUserIdRef.current = data.user.id;
         const userProfile = await fetchUserProfile(data.user.id);
         setProfile(userProfile);
       }
     } catch (error) {
       console.error('Error refreshing session:', error);
+      if (isInvalidRefreshAuthError(error)) {
+        lastProfileUserIdRef.current = null;
+        await supabase.auth.signOut({ scope: 'local' });
+      }
     }
   };
 

@@ -12,7 +12,7 @@ const authMiddleware = require('./middleware/auth');
 const { Resend } = require('resend');
 const { generateImage: generateGoogleImage, buildEducationalPrompt } = require('./services/googleImageService');
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 
 const app = express();
 
@@ -77,6 +77,10 @@ const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID,
   key_secret: process.env.RAZORPAY_KEY_SECRET
 });
+
+if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
+  console.warn('WARNING: Razorpay keys are missing from environment variables!');
+}
 
 // OpenAI instance
 const openai = new OpenAI({
@@ -154,6 +158,66 @@ app.post('/api/contact', async (req, res) => {
   } catch (error) {
     console.error('Contact API Error:', error);
     res.status(500).json({ success: false, error: 'Failed to send message' });
+  }
+});
+
+/**
+ * POST /api/feedback
+ * Submit student feedback, ratings, and bug reports
+ */
+app.post('/api/feedback', async (req, res) => {
+  try {
+    const { user_id, rating, category, message, url } = req.body;
+
+    if (!rating || !category || !message) {
+      return res.status(400).json({ success: false, error: 'Missing required feedback fields' });
+    }
+
+    // Save to database
+    const query = `
+      INSERT INTO student_feedback (user_id, rating, category, message, url)
+      VALUES ($1, $2, $3, $4, $5)
+      RETURNING *
+    `;
+    const result = await pool.query(query, [
+      user_id || null, 
+      parseInt(rating) || 5, 
+      category || 'General', 
+      message || '', 
+      url || ''
+    ]);
+
+    // Send admin notification for bugs or 1-star ratings if resend is available
+    if (resend && (parseInt(rating) === 1 || category === 'Bug')) {
+      try {
+        await resend.emails.send({
+          from: 'SkillSynergy <noreply@skillsynergy.online>',
+          to: 'aditya.s70222@gmail.com', // Admin Email
+          subject: `⚠️ Critical Feedback Alert: ${category} (${rating} Stars)`,
+          html: `
+            <div style="font-family: sans-serif; padding: 20px; color: #333;">
+              <h2 style="color: #e11d48;">Critical Support Required</h2>
+              <p><strong>Category:</strong> ${category}</p>
+              <p><strong>Rating:</strong> ${rating}/5</p>
+              <p><strong>User ID:</strong> ${user_id || 'Anonymous'}</p>
+              <p><strong>URL Context:</strong> ${url || 'N/A'}</p>
+              <hr />
+              <p><strong>Message:</strong></p>
+              <div style="background: #f4f4f4; padding: 15px; border-radius: 8px;">
+                ${message ? message.replace(/\n/g, '<br/>') : 'No message'}
+              </div>
+            </div>
+          `
+        });
+      } catch (emailErr) {
+        console.error('Feedback Alert Email Error:', emailErr);
+      }
+    }
+
+    res.json({ success: true, feedback: result.rows[0] });
+  } catch (error) {
+    console.error('Detailed Feedback API Error:', error);
+    res.status(500).json({ success: false, error: 'Failed to submit feedback', details: error.message });
   }
 });
 
@@ -390,25 +454,54 @@ app.post('/api/smart-match', async (req, res) => {
  */
 app.post('/api/create-order', authMiddleware, async (req, res) => {
   try {
-    const { amount, currency = 'INR', receipt, plan_id } = req.body;
+    const { currency = 'INR', receipt, plan_id } = req.body;
+    const amount = typeof req.body.amount === 'string' ? parseFloat(req.body.amount) : Number(req.body.amount);
+    
+    console.log('[Payment] Creating order:', { amount, currency, receipt, plan_id, user: req.user?.id });
+
+    if (!Number.isFinite(amount) || amount <= 0) {
+      console.error('[Payment] Invalid amount received:', req.body.amount);
+      return res.status(400).json({ success: false, error: 'Invalid amount' });
+    }
+
+    if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
+      console.error('[Payment] Razorpay keys missing in production environment');
+      return res.status(503).json({
+        success: false,
+        error: 'Payment gateway is not configured. Set RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET on the payment backend deployment.'
+      });
+    }
     
     // Amount is in smallest currency unit (paise for INR)
     // Example: 500 INR = 50000 paise
     
     const options = {
-      amount: amount * 100, // amount in the smallest currency unit (paise for INR)
+      amount: Math.round(amount * 100), // amount in the smallest currency unit (paise for INR)
       currency,
-      receipt,
+      receipt: receipt || `rcpt_${Date.now()}`,
       payment_capture: 1,
       notes: {
         plan_id: plan_id || 'pro',
-        billing_cycle: req.body.billing_cycle || 'monthly'
+        billing_cycle: req.body.billing_cycle || 'monthly',
+        user_id: req.user?.id
       }
     };
 
-    const order = await razorpay.orders.create(options);
-    
-    res.json({ success: true, order });
+    try {
+      const order = await razorpay.orders.create(options);
+      console.log('[Payment] Razorpay order created successfully:', order.id);
+      res.json({ success: true, order });
+    } catch (razorPayError) {
+      console.error('[Payment] Razorpay SDK Error:', razorPayError);
+      const desc = razorPayError.error?.description || razorPayError.description;
+      const msg = desc || razorPayError.message || 'Razorpay rejected the request';
+      res.status(502).json({
+        success: false,
+        error: 'Failed to create Razorpay order',
+        details: msg,
+        code: razorPayError.error?.code || razorPayError.code
+      });
+    }
   } catch (error) {
     console.error('Error creating Razorpay order:', error);
     res.status(500).json({ success: false, error: error.message });

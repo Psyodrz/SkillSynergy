@@ -1,6 +1,6 @@
 import config from '../config';
 
-const API_URL = config.API_URL || 'http://localhost:5000';
+const API_URL = config.API_URL;
 
 interface ApiResponse<T> {
   success: boolean;
@@ -51,6 +51,16 @@ const authFetch = async (endpoint: string, options: RequestInit = {}): Promise<R
     headers
   });
 };
+
+async function parseJsonResponse<T = unknown>(response: Response): Promise<T | null> {
+  const text = await response.text();
+  if (!text) return null;
+  try {
+    return JSON.parse(text) as T;
+  } catch {
+    return null;
+  }
+}
 
 /**
  * Add a skill to the user's profile
@@ -164,9 +174,27 @@ export const createRazorpayOrder = async (amount: number, currency: string = 'IN
       method: 'POST',
       body: JSON.stringify({ amount, currency, plan_id, billing_cycle }),
     });
-    return await response.json();
-  } catch (error: any) {
-    return { success: false, error: error.message };
+    const body = await parseJsonResponse<{
+      success?: boolean;
+      order?: unknown;
+      error?: string;
+      details?: string;
+      message?: string;
+    }>(response);
+
+    if (!response.ok || !body) {
+      const serverMsg =
+        body?.error ||
+        body?.details ||
+        body?.message ||
+        (response.status === 401 ? 'Please sign in again to continue checkout.' : null) ||
+        `Payment server error (${response.status}).`;
+      return { success: false, error: serverMsg };
+    }
+
+    return body as ApiResponse<any>;
+  } catch (error: unknown) {
+    return { success: false, error: error instanceof Error ? error.message : 'Network error creating order' };
   }
 };
 
