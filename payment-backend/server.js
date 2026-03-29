@@ -119,42 +119,33 @@ app.get('/api/health', (req, res) => {
 });
 
 /**
- * GET /api/test-razorpay
- * Test Razorpay configuration
- * Public endpoint for diagnostics
+ * GET /api/test-simple
+ * Simple test endpoint - no auth required
  */
-app.get('/api/test-razorpay', async (req, res) => {
-  try {
-    const keyId = process.env.RAZORPAY_KEY_ID;
-    const keySecret = process.env.RAZORPAY_KEY_SECRET;
-    
-    if (!keyId || !keySecret) {
-      return res.status(503).json({
-        success: false,
-        error: 'Razorpay keys not configured',
-        hasKeyId: !!keyId,
-        hasKeySecret: !!keySecret
-      });
-    }
-    
-    // Try to fetch orders (lightweight test of credentials)
-    const orders = await razorpay.orders.all({ count: 1 });
-    
-    res.json({
-      success: true,
-      message: 'Razorpay connection successful',
-      keyIdPrefix: keyId.substring(0, 8),
-      ordersAccessible: true
-    });
-  } catch (error) {
-    console.error('[Test Razorpay] Error:', error);
-    res.status(500).json({
-      success: false,
-      error: error.message,
-      code: error.code,
-      description: error.description || error.error?.description
-    });
-  }
+app.get('/api/test-simple', (req, res) => {
+  res.json({
+    success: true,
+    message: 'Test endpoint works',
+    env: {
+      hasRazorpayKeyId: !!process.env.RAZORPAY_KEY_ID,
+      hasRazorpayKeySecret: !!process.env.RAZORPAY_KEY_SECRET,
+      keyIdPrefix: process.env.RAZORPAY_KEY_ID ? process.env.RAZORPAY_KEY_ID.substring(0, 8) : 'none'
+    },
+    timestamp: new Date().toISOString()
+  });
+});
+
+/**
+ * POST /api/test-simple
+ * POST test endpoint - no auth required
+ */
+app.post('/api/test-simple', (req, res) => {
+  res.json({
+    success: true,
+    message: 'POST test endpoint works',
+    receivedBody: req.body,
+    timestamp: new Date().toISOString()
+  });
 });
 
 /**
