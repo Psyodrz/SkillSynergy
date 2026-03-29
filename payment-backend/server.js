@@ -56,6 +56,12 @@ app.use(cors(corsOptions));
 app.options('*', cors(corsOptions)); // Enable pre-flight for all routes
 app.use(express.json());
 
+// Request logging middleware - log ALL requests
+app.use((req, res, next) => {
+  console.log(`[Request] ${req.method} ${req.path} - Body:`, JSON.stringify(req.body));
+  next();
+});
+
 // ============================================
 // 2. SERVERLESS-SAFE PG POOL (global reuse)
 // ============================================
