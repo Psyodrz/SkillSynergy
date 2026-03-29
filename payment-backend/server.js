@@ -571,19 +571,23 @@ app.post('/api/create-order', async (req, res) => {
     const amount = typeof rawAmount === 'string' ? parseFloat(rawAmount) : Number(rawAmount);
 
     if (!Number.isFinite(amount) || amount <= 0) {
+      console.error('[Payment] Invalid amount received:', rawAmount);
       return res.status(400).json({ success: false, error: 'Invalid amount: ' + rawAmount });
     }
 
     if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
+      console.error('[Payment] CRITICAL: Razorpay keys missing from environment!');
       return res.status(503).json({
         success: false,
         error: 'Payment gateway not configured',
+        details: 'Server is missing RAZORPAY_KEY_ID or RAZORPAY_KEY_SECRET',
         hasKeyId: !!process.env.RAZORPAY_KEY_ID,
         hasKeySecret: !!process.env.RAZORPAY_KEY_SECRET
       });
     }
     
-    const order = await razorpay.orders.create({
+    console.log('[Payment] Creating Razorpay order for amount:', amount);
+    const orderOptions = {
       amount: Math.round(amount * 100),
       currency,
       receipt: receipt || `rcpt_${Date.now()}`,
@@ -593,15 +597,21 @@ app.post('/api/create-order', async (req, res) => {
         billing_cycle: billing_cycle || 'monthly',
         user_id: req.body.user_id || 'unknown'
       }
-    });
+    };
+    
+    console.log('[Payment] Razorpay options:', JSON.stringify(orderOptions));
+    const order = await razorpay.orders.create(orderOptions);
+    console.log('[Payment] Razorpay order created successfully:', order.id);
     
     res.json({ success: true, order });
   } catch (error) {
-    console.error('[Payment] Error:', error);
+    console.error('[Payment] Razorpay Order Creation Error:', error);
     res.status(500).json({ 
       success: false, 
-      error: error.message,
-      stack: error.stack 
+      error: error.message || 'Failed to create payment order',
+      code: error.code,
+      metadata: error.metadata,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined 
     });
   }
 });
