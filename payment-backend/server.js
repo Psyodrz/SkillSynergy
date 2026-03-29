@@ -533,44 +533,31 @@ app.post('/api/create-order-noauth', async (req, res) => {
 /**
  * POST /api/create-order
  * Create a Razorpay order
- * Protected Route
- * Deployed: 2026-03-29 - Debug version
+ * TEMPORARILY NO AUTH FOR DEBUGGING
  */
-app.post('/api/create-order', authMiddleware, async (req, res) => {
-  console.log('[Payment] ====== START CREATE ORDER ======');
+app.post('/api/create-order', async (req, res) => {
+  console.log('[Payment] ====== START CREATE ORDER (NO AUTH) ======');
   console.log('[Payment] Request body:', JSON.stringify(req.body));
-  console.log('[Payment] User:', req.user?.id);
   
   try {
     const { currency = 'INR', receipt, plan_id, billing_cycle } = req.body;
-    
-    // Validate amount
     const rawAmount = req.body.amount;
-    console.log('[Payment] Raw amount:', rawAmount, 'Type:', typeof rawAmount);
-    
     const amount = typeof rawAmount === 'string' ? parseFloat(rawAmount) : Number(rawAmount);
-    console.log('[Payment] Parsed amount:', amount);
 
     if (!Number.isFinite(amount) || amount <= 0) {
-      console.error('[Payment] Invalid amount:', amount);
       return res.status(400).json({ success: false, error: 'Invalid amount: ' + rawAmount });
     }
 
-    // Check env vars
-    console.log('[Payment] Checking env vars...');
-    console.log('[Payment] RAZORPAY_KEY_ID exists:', !!process.env.RAZORPAY_KEY_ID);
-    console.log('[Payment] RAZORPAY_KEY_SECRET exists:', !!process.env.RAZORPAY_KEY_SECRET);
-    
     if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
-      console.error('[Payment] Missing Razorpay keys');
       return res.status(503).json({
         success: false,
-        error: 'Payment gateway not configured'
+        error: 'Payment gateway not configured',
+        hasKeyId: !!process.env.RAZORPAY_KEY_ID,
+        hasKeySecret: !!process.env.RAZORPAY_KEY_SECRET
       });
     }
     
-    // Create order options
-    const options = {
+    const order = await razorpay.orders.create({
       amount: Math.round(amount * 100),
       currency,
       receipt: receipt || `rcpt_${Date.now()}`,
@@ -578,34 +565,13 @@ app.post('/api/create-order', authMiddleware, async (req, res) => {
       notes: {
         plan_id: plan_id || 'pro',
         billing_cycle: billing_cycle || 'monthly',
-        user_id: req.user?.id
+        user_id: req.body.user_id || 'unknown'
       }
-    };
+    });
     
-    console.log('[Payment] Creating Razorpay order with options:', JSON.stringify(options));
-    
-    // Create the order
-    let order;
-    try {
-      order = await razorpay.orders.create(options);
-      console.log('[Payment] Order created:', order.id);
-    } catch (rzpError) {
-      console.error('[Payment] Razorpay error:', rzpError);
-      console.error('[Payment] Razorpay error details:', rzpError.error || rzpError);
-      return res.status(502).json({
-        success: false,
-        error: 'Razorpay error: ' + (rzpError.error?.description || rzpError.message || 'Unknown'),
-        code: rzpError.code || rzpError.error?.code
-      });
-    }
-    
-    console.log('[Payment] ====== SUCCESS ======');
     res.json({ success: true, order });
-    
   } catch (error) {
-    console.error('[Payment] ====== UNHANDLED ERROR ======');
     console.error('[Payment] Error:', error);
-    console.error('[Payment] Stack:', error.stack);
     res.status(500).json({ 
       success: false, 
       error: error.message,
