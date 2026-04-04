@@ -18,6 +18,7 @@ import { useTheme } from '../context/ThemeContext';
 import { Link, useLocation } from 'react-router-dom';
 import { getNotifications, markAsRead, markAllAsRead } from '../api/notificationsApi';
 import { supabase } from '../lib/supabaseClient';
+import config from '../config';
 
 const Navbar = ({ onSearch = null, className = '', onToggleSidebar }) => {
   const [isSearchFocused, setIsSearchFocused] = useState(false);
@@ -136,7 +137,7 @@ const Navbar = ({ onSearch = null, className = '', onToggleSidebar }) => {
         const { supabase } = await import('../lib/supabaseClient'); // Dynamic import to avoid cycles? No, static is fine usually but we're in handler.
         const tokenStr = (await supabase.auth.getSession()).data.session?.access_token;
 
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/notifications/register-device`, {
+        const response = await fetch(`${config.API_URL}/api/notifications/register-device`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
