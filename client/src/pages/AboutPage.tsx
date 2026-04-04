@@ -91,7 +91,7 @@ const AboutPage = () => {
               It started in 2025 with a simple observation: <strong>Talent is everywhere, but opportunity is not.</strong>
             </p>
             <p className="mb-6">
-              Our founder, <strong>Aditya Srivastava</strong>, noticed a recurring pattern in the tech industry. Developers had great ideas but lacked design skills. Designers had beautiful concepts but couldn't code. Marketers wanted to build products but needed technical partners. These professionals were often siloed, struggling to find reliable collaborators outside their immediate circles.
+              Our founder, <strong>Bhavya Srivastava</strong>, noticed a recurring pattern in the tech industry. Developers had great ideas but lacked design skills. Designers had beautiful concepts but couldn't code. Marketers wanted to build products but needed technical partners. These professionals were often siloed, struggling to find reliable collaborators outside their immediate circles.
             </p>
             <p className="mb-6">
               Existing platforms were transactional—focused on hiring freelancers for short-term gigs. There was no dedicated space for <strong>long-term, skill-based partnership</strong> where the primary currency was expertise, not just money.
@@ -175,8 +175,13 @@ const AboutPage = () => {
               <h3 className="font-semibold text-gray-900 dark:text-white mb-4">Founders & Leadership</h3>
               <div className="grid md:grid-cols-1 gap-4">
                 <div className="bg-emerald-50 dark:bg-emerald-900/10 rounded-lg p-6">
-                  <p className="font-bold text-gray-900 dark:text-white text-lg">Aditya Srivastava</p>
+                  <p className="font-bold text-gray-900 dark:text-white text-lg">Bhavya Srivastava</p>
                   <p className="text-sm text-emerald-700 dark:text-emerald-400 font-semibold uppercase tracking-wider mt-1">Founder & CEO</p>
+                  <p className="text-xs text-gray-600 dark:text-gray-400 mt-2">Visionary & Business Leader</p>
+                </div>
+                <div className="bg-emerald-50 dark:bg-emerald-900/10 rounded-lg p-6">
+                  <p className="font-bold text-gray-900 dark:text-white text-lg">Aditya Srivastava</p>
+                  <p className="text-sm text-emerald-700 dark:text-emerald-400 font-semibold uppercase tracking-wider mt-1">Co-Founder</p>
                   <p className="text-xs text-gray-600 dark:text-gray-400 mt-2">Lead Developer, Grievance Officer, & Business Strategy</p>
                 </div>
               </div>

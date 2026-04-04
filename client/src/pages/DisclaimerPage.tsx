@@ -202,6 +202,7 @@ const DisclaimerPage = () => {
             </p>
             <div className="bg-gray-50 dark:bg-charcoal-800 rounded-lg p-6">
               <p className="font-bold text-gray-900 dark:text-white">SkillSynergy</p>
+              <p className="text-gray-600 dark:text-gray-400">Founders: Bhavya Srivastava (CEO) & Aditya Srivastava</p>
               <p className="text-gray-600 dark:text-gray-400">Email: aditya.s70222@gmail.com</p>
               <p className="text-gray-600 dark:text-gray-400">Address: Lucknow, Uttar Pradesh, India</p>
             </div>

@@ -54,9 +54,9 @@ export const CertificateTemplate = React.forwardRef<HTMLDivElement, CertificateT
             <div className="text-center flex flex-col items-center">
               <div className="w-48 border-b-2 border-gray-400 mb-2 pb-2">
                 {/* Dummy Signature Font */}
-                <span className="text-3xl" style={{ fontFamily: "'Brush Script MT', cursive" }}>Aditya S.</span>
+                <span className="text-3xl" style={{ fontFamily: "'Brush Script MT', cursive" }}>Bhavya S.</span>
               </div>
-              <p className="font-bold text-gray-700">Aditya Srivastava</p>
+              <p className="font-bold text-gray-700">Bhavya Srivastava</p>
               <p className="text-sm text-gray-500">Founder, SkillSynergy</p>
             </div>
 

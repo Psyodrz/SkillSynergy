@@ -85,7 +85,7 @@ const ContactPage = () => {
               <div className="space-y-2 text-sm">
                 <div className="flex items-center gap-2">
                   <User className="w-4 h-4 text-gray-400" />
-                  <span className="text-gray-600 dark:text-gray-400">Name: <strong className="text-gray-900 dark:text-white">Aditya Srivastava</strong></span>
+                  <span className="text-gray-600 dark:text-gray-400">Name: <strong className="text-gray-900 dark:text-white">Bhavya Srivastava & Aditya Srivastava</strong></span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Building className="w-4 h-4 text-gray-400" />
@@ -113,7 +113,8 @@ const ContactPage = () => {
               </p>
               <div className="mt-3 pt-3 border-t border-gray-200 dark:border-charcoal-700">
                 <p className="text-xs text-gray-600 dark:text-gray-400">
-                  <strong className="text-gray-900 dark:text-white">Founder:</strong> Aditya Srivastava (Owner & CEO)
+                  <strong className="text-gray-900 dark:text-white">Founder & CEO:</strong> Bhavya Srivastava<br/>
+                  <strong className="text-gray-900 dark:text-white">Co-Founder:</strong> Aditya Srivastava
                 </p>
               </div>
             </div>

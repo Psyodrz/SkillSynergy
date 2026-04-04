@@ -100,7 +100,7 @@ const Footer = () => {
               All transactions are for digital services only.
             </p>
             <p>
-              Registered Address: Lucknow, Uttar Pradesh, India. Contact: aditya.s70222@gmail.com
+              Registered Address: Lucknow, Uttar Pradesh, India. Contact: aditya.s70222@gmail.com (Co-Founder) & bhavya@skillsynergy.online (CEO)
             </p>
           </div>
         </div>
