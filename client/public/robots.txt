@@ -1,0 +1,18 @@
+User-agent: *
+Allow: /
+Allow: /blog
+Allow: /about
+Allow: /contact
+Allow: /terms
+Allow: /privacy
+Allow: /disclaimer
+Allow: /cookies
+Disallow: /dashboard
+Disallow: /settings
+Disallow: /messages
+Disallow: /connections
+Disallow: /search
+Disallow: /checkout
+Disallow: /*?*
+
+Sitemap: https://www.skillsynergy.online/sitemap.xml

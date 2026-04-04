@@ -3,6 +3,7 @@ import Footer from '../components/Footer';
 import { blogPosts } from '../data/blogPosts';
 import { Link } from 'react-router-dom';
 import { Calendar, Clock, User } from 'lucide-react';
+import GoogleAd from '../components/GoogleAd';
 
 const BlogPage = () => {
   return (
@@ -25,7 +26,9 @@ const BlogPage = () => {
       </div>
 
       {/* Blog Grid */}
-      <div className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+      <div className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <GoogleAd className="mb-12" adFormat="horizontal" adSlot="0000000000" />
+        
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
           {blogPosts.map((post) => (
             <Link 

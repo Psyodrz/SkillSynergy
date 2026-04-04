@@ -3,6 +3,7 @@ import Footer from '../components/Footer';
 import { useParams, Navigate, Link } from 'react-router-dom';
 import { blogPosts } from '../data/blogPosts';
 import { Clock, User, ArrowLeft, Share2 } from 'lucide-react';
+import GoogleAd from '../components/GoogleAd';
 
 const BlogPostPage = () => {
   const { slug } = useParams();
@@ -63,11 +64,14 @@ const BlogPostPage = () => {
         </div>
 
         {/* Content */}
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <GoogleAd className="mb-10" adFormat="fluid" adSlot="0000000000" />
+          
           <div 
             className="prose prose-lg dark:prose-invert max-w-none prose-emerald prose-headings:font-bold prose-a:text-emerald-600"
             dangerouslySetInnerHTML={{ __html: post.content }}
           />
+          <GoogleAd className="mt-12" adFormat="auto" adSlot="0000000000" />
 
           {/* Share / Tags */}
           <div className="mt-16 pt-8 border-t border-gray-200 dark:border-charcoal-700 flex justify-between items-center">
